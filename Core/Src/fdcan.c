@@ -88,6 +88,7 @@ void MX_FDCAN2_Init(void)
 
   /* USER CODE END FDCAN2_Init 1 */
   hfdcan2.Instance = FDCAN2;
+  // Make FDCAN2 use classic frame format like FDCAN1 and FDCAN3 (ignore CubeMX)
   hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
   hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan2.Init.AutoRetransmission = DISABLE;
@@ -97,13 +98,15 @@ void MX_FDCAN2_Init(void)
   hfdcan2.Init.NominalSyncJumpWidth = 5;
   hfdcan2.Init.NominalTimeSeg1 = 14;
   hfdcan2.Init.NominalTimeSeg2 = 5;
-  hfdcan2.Init.DataPrescaler = 1;
+  // Data timing set same as FDCAN1/FDCAN3
+  hfdcan2.Init.DataPrescaler = 5;
   hfdcan2.Init.DataSyncJumpWidth = 5;
   hfdcan2.Init.DataTimeSeg1 = 14;
   hfdcan2.Init.DataTimeSeg2 = 5;
   hfdcan2.Init.MessageRAMOffset = 853;
   hfdcan2.Init.StdFiltersNbr = 1;
   hfdcan2.Init.ExtFiltersNbr = 0;
+  // Keep FIFO1 enabled (8 elements) to match existing filter setup in bsp_can.c
   hfdcan2.Init.RxFifo0ElmtsNbr = 0;
   hfdcan2.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
   hfdcan2.Init.RxFifo1ElmtsNbr = 8;

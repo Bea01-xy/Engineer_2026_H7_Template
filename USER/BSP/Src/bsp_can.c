@@ -24,6 +24,11 @@
 FDCAN_RxFrame_TypeDef FDCAN_RxFIFO0Frame;
 FDCAN_RxFrame_TypeDef FDCAN_RxFIFO1Frame;
 
+// Debug helpers for FDCAN2 receive
+volatile uint32_t debug_fdcan2_last_id = 0;
+volatile uint8_t debug_fdcan2_last_data[8] = {0};
+volatile uint32_t debug_fdcan2_rx_count = 0;
+
 /**
  * @brief The structure that contains the Information of FDCAN1 Transmit(CLASSIC_CAN).
  */
@@ -48,9 +53,10 @@ FDCAN_TxFrame_TypeDef FDCAN2_TxFrame = {
   .Header.TxFrameType = FDCAN_DATA_FRAME,
   .Header.DataLength = 8,
 	.Header.ErrorStateIndicator =  FDCAN_ESI_ACTIVE,
-  .Header.BitRateSwitch = FDCAN_BRS_ON,
-  .Header.FDFormat =  FDCAN_FD_CAN,           
-  .Header.TxEventFifoControl =  FDCAN_NO_TX_EVENTS,  
+  // Make FDCAN2 transmit settings consistent with FDCAN1/FDCAN3 (classic CAN)
+  .Header.BitRateSwitch = FDCAN_BRS_OFF,
+  .Header.FDFormat =  FDCAN_CLASSIC_CAN,
+  .Header.TxEventFifoControl =  FDCAN_NO_TX_EVENTS,
   .Header.MessageMarker = 0,
 };
 
@@ -71,7 +77,7 @@ FDCAN_TxFrame_TypeDef FDCAN3_TxFrame = {
 
 /**
   * @brief  Configures the FDCAN Filter. 
-            FDCAN1:CLASSIC_CAN  FDCAN2:FDCAN  FDCAN3:CLASSIC_CAN
+            FDCAN1:CLASSIC_CAN  FDCAN2:CLASSIC_CAN  FDCAN3:CLASSIC_CAN
   * @param  None
   * @retval None
   */
@@ -203,24 +209,24 @@ static void FDCAN2_RxFifo1RxHandler(uint32_t *Identifier,uint8_t Data[8])
   * @retval None
   */
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
-{ 
-  
-	HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &FDCAN_RxFIFO0Frame.Header, FDCAN_RxFIFO0Frame.Data);
-	
-  if(hfdcan == &hfdcan1){	
-	
-   FDCAN1_RxFifo0RxHandler(&FDCAN_RxFIFO0Frame.Header.Identifier,FDCAN_RxFIFO0Frame.Data);
-	 
-	}
+ {
 
-  if(hfdcan == &hfdcan3){
-	
+	HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &FDCAN_RxFIFO0Frame.Header, FDCAN_RxFIFO0Frame.Data);
+
+   if(hfdcan == &hfdcan1){
+
+    FDCAN1_RxFifo0RxHandler(&FDCAN_RxFIFO0Frame.Header.Identifier,FDCAN_RxFIFO0Frame.Data);
+
+ 	}
+
+   if(hfdcan == &hfdcan3){
+
 	 FDCAN3_RxFifo0RxHandler(&FDCAN_RxFIFO0Frame.Header.Identifier,FDCAN_RxFIFO0Frame.Data);
-	
-	}
-	
-}
-	
+
+   }
+
+ }
+
 /**
   * @brief  Rx FIFO 1 callback.
   * @param  hfdcan pointer to an FDCAN_HandleTypeDef structure that contains
@@ -230,10 +236,8 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
   * @retval None
   */
 void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
-{ 
-  
+{
+
 	HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO1, &FDCAN_RxFIFO1Frame.Header, FDCAN_RxFIFO1Frame.Data);
-	
-  FDCAN2_RxFifo1RxHandler(&FDCAN_RxFIFO1Frame.Header.Identifier,FDCAN_RxFIFO1Frame.Data);
-	 
+	FDCAN2_RxFifo1RxHandler(&FDCAN_RxFIFO1Frame.Header.Identifier,FDCAN_RxFIFO1Frame.Data);
 }

@@ -49,5 +49,5 @@ extern  FDCAN_TxFrame_TypeDef   FDCAN3_TxFrame;
 extern void  USER_FDCAN_AddMessageToTxFifoQ(FDCAN_TxFrame_TypeDef *FDCAN_TxFrame);
 extern void BSP_FDCAN_Init(void);
 
-	   
+
 #endif

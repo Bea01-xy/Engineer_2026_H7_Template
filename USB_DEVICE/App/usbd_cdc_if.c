@@ -85,7 +85,7 @@
   * @brief Private variables.
   * @{
   */
-
+float joint_data_receive[12];
 /* Create buffer for reception and transmission           */
 /* It's up to user to redefine and/or remove those define */
 /** Received data over USB are stored in this buffer      */
@@ -125,7 +125,7 @@ extern USBD_HandleTypeDef hUsbDeviceHS;
 static int8_t CDC_Init_HS(void);
 static int8_t CDC_DeInit_HS(void);
 static int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length);
-static int8_t CDC_Receive_HS(uint8_t* pbuf, uint32_t *Len);
+int8_t CDC_Receive_HS(uint8_t* pbuf, uint32_t *Len);
 static int8_t CDC_TransmitCplt_HS(uint8_t *pbuf, uint32_t *Len, uint8_t epnum);
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_DECLARATION */
@@ -245,7 +245,30 @@ static int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   return (USBD_OK);
   /* USER CODE END 10 */
 }
+typedef union {
+  float f;
+  uint8_t bytes[4];
+} FloatConverter;
 
+float bytes_to_float_union(const uint8_t *buffer) {
+  FloatConverter converter;
+
+  for(int i = 0; i < 4; i++) {
+    converter.bytes[i] = buffer[i];
+  }
+
+  return converter.f;
+}
+
+void float_to_bytes_union(float value, uint8_t *buffer) {
+  FloatConverter converter;
+  converter.f = value;
+
+  for(int i = 0; i < 4; i++) {
+    buffer[i] = converter.bytes[i];
+  }
+
+}
 /**
   * @brief Data received over USB OUT endpoint are sent over CDC interface
   *         through this function.
@@ -261,12 +284,26 @@ static int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   * @param  Len: Number of data received (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAILL
   */
-static int8_t CDC_Receive_HS(uint8_t* Buf, uint32_t *Len)
+int8_t CDC_Receive_HS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 11 */
   USBD_CDC_SetRxBuffer(&hUsbDeviceHS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceHS);
-  return (USBD_OK);
+
+  uint8_t verification = 0;
+  for (uint8_t i = 1; i < 49; i++)
+  {
+    verification += Buf[i];
+  }
+  if (Buf[0] == 0xAA && Buf[50] == 0x55 && Buf[49] == verification)
+  {
+    for (uint8_t i = 0; i < 12; i++)
+    {
+      joint_data_receive[i] = bytes_to_float_union(&Buf[1 + i * 4]);
+    }
+    return (USBD_OK);
+  }
+  return (USBD_FAIL);
   /* USER CODE END 11 */
 }
 
