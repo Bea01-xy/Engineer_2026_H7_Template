@@ -38,7 +38,7 @@ typedef enum{
  */
 typedef enum
 {
-  MIT,
+	MIT,
 	POSITION_VELOCITY,
 	VELOCITY,
 }DM_Motor_Control_Mode_Type_e;
@@ -84,8 +84,8 @@ typedef struct
 typedef struct 
 {
   float  P_MAX;
-	float  V_MAX;
-	float  T_MAX;
+  float  V_MAX;
+  float  T_MAX;
 }DM_Motor_Param_Range_Typedef;
 
 /**
@@ -97,13 +97,13 @@ typedef struct
   bool Initlized;    /*!< init flag */
   uint8_t  State; 	 /*!< Motor Message */
   uint16_t  P_int;   /*!< Motor Positon  uint16 */
-	uint16_t  V_int;   /*!< Motor Velocity uint16 */
-	uint16_t  T_int;   /*!< Motor Torque   uint16 */
-	float  Position;   /*!< Motor Positon  */
+  uint16_t  V_int;   /*!< Motor Velocity uint16 */
+  uint16_t  T_int;   /*!< Motor Torque   uint16 */
+  float  Position;   /*!< Motor Positon  */
   float  Velocity;   /*!< Motor Velocity */
   float  Torque;     /*!< Motor Torque   */
   float  Temperature_MOS;   /*!< Motor Temperature_MOS   */
-	float  Temperature_Rotor; /*!< Motor Temperature_Rotor */
+  float  Temperature_Rotor; /*!< Motor Temperature_Rotor */
   float  Angle;	
 	
 }DM_Motor_Data_Typedef;

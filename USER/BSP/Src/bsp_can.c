@@ -111,9 +111,9 @@ void BSP_FDCAN_Init(void){
   
   HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO1_NEW_MESSAGE, 0);//使能中断，FIFO1新消息中断
 
-  HAL_FDCAN_EnableTxDelayCompensation(&hfdcan2);//使能FDCAN发送延时补偿
+  //HAL_FDCAN_EnableTxDelayCompensation(&hfdcan2);//使能FDCAN发送延时补偿
  
-  HAL_FDCAN_ConfigTxDelayCompensation(&hfdcan2,14,14);//FDCAN发送延时补偿时间设置
+  //HAL_FDCAN_ConfigTxDelayCompensation(&hfdcan2,14,14);//FDCAN发送延时补偿时间设置
 
   HAL_FDCAN_Start(&hfdcan2);//FDCAN开始工作
 	
@@ -187,11 +187,11 @@ static void FDCAN2_RxFifo1RxHandler(uint32_t *Identifier,uint8_t Data[8])
 {
 	
 	DM_Motor_Info_Update(Identifier,Data,&DM_8009_Motor[0]);
-  DM_Motor_Info_Update(Identifier,Data,&DM_8009_Motor[1]);
+	DM_Motor_Info_Update(Identifier,Data,&DM_8009_Motor[1]);
 	DM_Motor_Info_Update(Identifier,Data,&DM_8009_Motor[2]);
 	DM_Motor_Info_Update(Identifier,Data,&DM_8009_Motor[3]);
 	
-
+	DJI_Motor_Info_Update(Identifier,Data,&DJI_Yaw_Motor);
 }
 
 /**

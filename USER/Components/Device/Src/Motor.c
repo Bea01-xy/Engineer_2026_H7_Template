@@ -23,7 +23,7 @@ DJI_Motor_Info_Typedef DJI_Yaw_Motor =
 	  .Type = DJI_GM6020,
 		.FDCANFrame = {
 					  .TxIdentifier = 0x1ff,
-					  .RxIdentifier = 0x206,
+					  .RxIdentifier = 0x207,
 		}
 
 };
@@ -131,7 +131,7 @@ DM_Motor_Info_Typedef DM_8009_Motor[4]= {
 //------------------------------------------------------------------------------
 
 /**
-  * @brief  编码器值转化为角度(累加 最到到float最大值)
+  * @brief  编码器值转化为角度(累加 最大到float最大值)
   */
 static float DJI_Motor_Encoder_To_Anglesum(DJI_Motor_Data_Typedef *,float ,uint16_t );
 /**
@@ -334,10 +334,10 @@ float DJI_Motor_Encoder_To_Angle(DJI_Motor_Data_Typedef *Data,float torque_ratio
   */
 void DM_Motor_Command(FDCAN_TxFrame_TypeDef *FDCAN_TxFrame,DM_Motor_Info_Typedef *DM_Motor,uint8_t CMD){
 
-	 FDCAN_TxFrame->Header.Identifier = DM_Motor->FDCANFrame.RxIdentifier;
+	 FDCAN_TxFrame->Header.Identifier = DM_Motor->FDCANFrame.TxIdentifier;
   	
 	 FDCAN_TxFrame->Data[0] = 0xFF;
-   FDCAN_TxFrame->Data[1] = 0xFF;
+	 FDCAN_TxFrame->Data[1] = 0xFF;
  	 FDCAN_TxFrame->Data[2] = 0xFF;
 	 FDCAN_TxFrame->Data[3] = 0xFF;
 	 FDCAN_TxFrame->Data[4] = 0xFF;

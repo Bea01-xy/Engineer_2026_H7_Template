@@ -27,7 +27,7 @@ static void Control_Target_Update(Control_Info_Typedef *Control_Info);
 static void Control_Info_Update(Control_Info_Typedef *Control_Info);
 
 Control_Info_Typedef Control_Info;
-//                                  KP   KI   KD  Alpha Deadband  I_MAX   Output_MAX
+//                                   KP   KI   KD  Alpha Deadband  I_MAX   Output_MAX
 static float Chassis_PID_Param[7] = {13.f,0.1f,0.f,0.f,  0.f,      5000.f,  12000.f};
 
 PID_Info_TypeDef Chassis_PID;
@@ -62,7 +62,7 @@ static void Control_Init(Control_Info_Typedef *Control_Info){
 
 static void Control_Measure_Update(Control_Info_Typedef *Control_Info){
 
-  Control_Info->Measure.Chassis_Velocity = Chassis_Motor[0].Data.Velocity;
+	Control_Info->Measure.Chassis_Velocity = Chassis_Motor[0].Data.Velocity;
 
 }
 
@@ -76,8 +76,7 @@ static void Control_Target_Update(Control_Info_Typedef *Control_Info){
 static void Control_Info_Update(Control_Info_Typedef *Control_Info){
   
    PID_Calculate(&Chassis_PID, Control_Info->Target.Chassis_Velocity, Control_Info->Measure.Chassis_Velocity);
-
-	 Control_Info->SendValue[0] = (int16_t)(Chassis_PID.Output);
+	Control_Info->SendValue[0] = (int16_t)(Chassis_PID.Output);
 	
 }
 
