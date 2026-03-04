@@ -52,7 +52,7 @@ uint8_t receive_data[51];
 		CAN_Task_SysTick = osKernelSysTick();
 
 	 // CAN-FD
-		DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame,&DM_8009_Motor[1],2,1,0,0.3,0.1);
+		DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame,&DM_8009_Motor[0],2,1,0,0.3,0.1);
 		//DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&DM_8009_Motor[1],0,0,0,0,0);
 	    //DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&DM_8009_Motor[2],0,0,0,0,0);
 	    //DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&DM_8009_Motor[3],0,0,0,0,0);

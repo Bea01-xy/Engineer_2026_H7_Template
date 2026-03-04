@@ -115,6 +115,10 @@ void BSP_FDCAN_Init(void){
   //配置 FDCAN 全局过滤器
   HAL_FDCAN_ConfigGlobalFilter(&hfdcan2, FDCAN_REJECT, FDCAN_REJECT, FDCAN_FILTER_REMOTE, FDCAN_FILTER_REMOTE);
   
+  // Ensure FIFO1 new-message interrupt is assigned to interrupt line 1 for FDCAN2
+  // This maps the RF1NE interrupt to FDCAN interrupt line 1 so the NVIC handler FDCAN2_IT1_IRQHandler fires.
+  HAL_FDCAN_ConfigInterruptLines(&hfdcan2, FDCAN_IT_RX_FIFO1_NEW_MESSAGE, FDCAN_INTERRUPT_LINE1);
+
   HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO1_NEW_MESSAGE, 0);//使能中断，FIFO1新消息中断
 
   //HAL_FDCAN_EnableTxDelayCompensation(&hfdcan2);//使能FDCAN发送延时补偿
@@ -239,5 +243,13 @@ void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
 
 	HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO1, &FDCAN_RxFIFO1Frame.Header, FDCAN_RxFIFO1Frame.Data);
-	FDCAN2_RxFifo1RxHandler(&FDCAN_RxFIFO1Frame.Header.Identifier,FDCAN_RxFIFO1Frame.Data);
+	// If this message came from FDCAN2, store debug info and dispatch to the FDCAN2 handler
+	if(hfdcan == &hfdcan2)
+	{
+		// debug_fdcan2_last_id = FDCAN_RxFIFO1Frame.Header.Identifier;
+		// for(int i=0;i<8;i++) debug_fdcan2_last_data[i] = FDCAN_RxFIFO1Frame.Data[i];
+		// debug_fdcan2_rx_count++;
+		FDCAN2_RxFifo1RxHandler(&FDCAN_RxFIFO1Frame.Header.Identifier,FDCAN_RxFIFO1Frame.Data);
+	}
+	// Add handling for other FDCAN instances if needed in future
 }
