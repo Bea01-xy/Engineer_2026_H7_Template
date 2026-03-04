@@ -13,7 +13,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "MiniPC.h"
+#include "Minipc.h"
 #include "usbd_cdc_if.h"
 
 

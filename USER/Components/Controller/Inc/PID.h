@@ -17,8 +17,8 @@
 #define CONTROLLER_PID_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "config.h"
-#include "lpf.h"
+#include "Config.h"
+#include "LPF.h"
 /* Exported defines -----------------------------------------------------------*/
 /**
  * @brief macro definition of the VAL_LIMIT that restricts the value of the specified variable.

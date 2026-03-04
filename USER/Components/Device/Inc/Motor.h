@@ -19,7 +19,7 @@
 
 
 /* Includes ------------------------------------------------------------------*/
-#include "config.h"
+#include "Config.h"
 #include "stm32h723xx.h"
 #include "bsp_can.h"
 
