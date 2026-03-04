@@ -43,7 +43,6 @@ void Detect_Task(void)
     for(;;)
     {
         Remote_Message_Moniter(&remote_ctrl);
-        USART_Vofa_Justfloat_Transmit(INS_Info.Pitch_Angle,INS_Info.Roll_Angle,INS_Info.Yaw_Angle);
         osDelay(1);
     }
     /* USER CODE END Detect_Task */
