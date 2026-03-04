@@ -105,3 +105,6 @@ set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -mfloat-abi=hard -mfpu=fpv5-d16")
 # 可选：如果需要使用DSP库
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mthumb -mthumb-interwork -march=armv7e-m -mtune=cortex-m7")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthumb -mthumb-interwork -march=armv7e-m -mtune=cortex-m7")
+
+# Generate compile_commands.json for clangd/LSP
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

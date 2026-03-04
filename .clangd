@@ -1,0 +1,17 @@
+CompileFlags:
+  Add: [
+    "-Wno-unknown-argument",
+    "-Wno-implicit-function-declaration"
+  ]
+  Remove: [
+    "-mthumb-interwork", 
+    "-mabi=*", 
+    "-fno-allow-store-data-races",
+    "-mfpu=*"
+  ]
+  CompilationDatabase: .
+Index:
+  Background: Build
+Diagnostics:
+  UnusedIncludes: None
+  MissingIncludes: None
