@@ -145,7 +145,6 @@ void INS_Task(void const * argument)
   		BMI088_Temp_Control(BMI088_Info.Temperature);
   	}
 
-    USART_Vofa_Justfloat_Transmit(INS_Info.Pitch_Angle,INS_Info.Roll_Angle,INS_Info.Yaw_Angle);
     osDelayUntil(&INS_Task_SysTick,1);
 		
   }

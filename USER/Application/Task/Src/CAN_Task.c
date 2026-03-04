@@ -24,6 +24,7 @@
 #include "Motor_drv.h"
 #include "fdcan.h"
 #include "Minipc.h"
+#include "Bmi088.h"
 
 /* USER CODE BEGIN Header_CAN_Task */
 /**
@@ -71,6 +72,8 @@ void CAN_Task(void)
 		MiniPC_Transmit_Info(joint_data, 6);
 		MiniPC_Receive_Info(receive_data);
 
+        USART_Vofa_Justfloat_Transmit(INS_Info.Roll_Angle,INS_Info.Pitch_Angle,INS_Info.Yaw_Angle);
+        //USART_Vofa_Justfloat_Transmit(BMI088_Info.Offsets_Gyro_X,BMI088_Info.Offsets_Gyro_Y,BMI088_Info.Offsets_Gyro_Z);
 		osDelay(1);
     }
 }

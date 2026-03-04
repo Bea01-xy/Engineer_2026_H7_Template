@@ -215,7 +215,7 @@ static BMI088_Status_e BMI088_Gyro_Init(void)
     return BMI088_NO_ERROR;
 }
 
-#define IMU_Calibration_ENABLE  1U
+#define IMU_Calibration_ENABLE  0U
 
 static void BMI088_Offset_Update(BMI088_Info_Typedef *BMI088_Info)
 {
@@ -255,9 +255,9 @@ static void BMI088_Offset_Update(BMI088_Info_Typedef *BMI088_Info)
 	
 #else /* DISABLE the BMI088 Calibration */
 	/* store the previous offsets */
-  BMI088_Info->Offsets_Gyro_X =  0.00379787781f;
-  BMI088_Info->Offsets_Gyro_Y =  -0.00349405757f;
-  BMI088_Info->Offsets_Gyro_Z =  9.18259611e-05f;
+  BMI088_Info->Offsets_Gyro_X =  0.003358f;
+  BMI088_Info->Offsets_Gyro_Y =  -0.000408f;
+  BMI088_Info->Offsets_Gyro_Z =  0.000536f;
 #endif
 
   /* set the offset init flag */
