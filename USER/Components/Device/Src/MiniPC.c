@@ -37,7 +37,7 @@ uint8_t MiniPC_Transmit_Info(float* Buf, uint16_t FloatLen){
 }
 
 //usbd_cdc_if.c -> CDC_Receive_HS
-void MiniPC_Recvive_Info(uint8_t* Buff){
+void MiniPC_Receive_Info(uint8_t* Buff){
 
     CDC_Receive_HS(Buff, 0);
 

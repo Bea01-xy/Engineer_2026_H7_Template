@@ -24,5 +24,5 @@
 
 extern uint8_t MiniPC_Transmit_Info(float* Buf, uint16_t FloatLen);
 
-extern void MiniPC_Recvive_Info(uint8_t* Buff);
+extern void MiniPC_Receive_Info(uint8_t* Buff);
 #endif
