@@ -18,6 +18,8 @@
 #include "Control_Task.h"
 #include "Remote_Control.h"
 #include "bsp_gpio.h"
+#include "Bmi088.h"
+#include "INS_Task.h"
 
 /**
   * @note turn on:  800
@@ -31,20 +33,20 @@
 * @retval None
 */
 /* USER CODE END Header_Detect_Task */
-void Detect_Task(void const * argument)
+void Detect_Task(void)
 {
-  /* USER CODE BEGIN Detect_Task */
-//  TickType_t systick = 0;
+    /* USER CODE BEGIN Detect_Task */
+    //  TickType_t systick = 0;
 	
 
-  /* Infinite loop */
-  for(;;)
-  {
-
-    Remote_Message_Moniter(&remote_ctrl); 
-    osDelay(1);
-  }
-  /* USER CODE END Detect_Task */
+    /* Infinite loop */
+    for(;;)
+    {
+        Remote_Message_Moniter(&remote_ctrl);
+        USART_Vofa_Justfloat_Transmit(INS_Info.Pitch_Angle,INS_Info.Roll_Angle,INS_Info.Yaw_Angle);
+        osDelay(1);
+    }
+    /* USER CODE END Detect_Task */
 }
 
 		

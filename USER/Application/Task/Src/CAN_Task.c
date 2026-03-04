@@ -18,6 +18,7 @@
 #include "INS_Task.h"
 #include "Motor.h"
 #include "bsp_can.h"
+#include "bsp_uart.h"
 #include "Remote_Control.h"
 #include "Control_Task.h"
 #include "Motor_drv.h"
@@ -34,6 +35,7 @@
 float joint_data[6] = {1.1f,1.2f,1.3f,1.4f,3.2f,1.6f};
 extern float joint_data_receive[12];
 uint8_t receive_data[51];
+
 void CAN_Task(void)
 {
     TickType_t CAN_Task_SysTick = 0;
@@ -50,7 +52,7 @@ void CAN_Task(void)
 		CAN_Task_SysTick = osKernelSysTick();
 
 	    // CAN-FD
-		DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame,&DM_8009_Motor[0],2,-1,0,0.3,0.1);
+		DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame,&DM_8009_Motor[0],2,1,0,0.3,0.1);
 		//DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&DM_8009_Motor[1],0,0,0,0,0);
 	    //DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&DM_8009_Motor[2],0,0,0,0,0);
 	    //DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&DM_8009_Motor[3],0,0,0,0,0);
@@ -68,6 +70,7 @@ void CAN_Task(void)
 
 		MiniPC_Transmit_Info(joint_data, 6);
 		MiniPC_Receive_Info(receive_data);
+
 		osDelay(1);
     }
 }
