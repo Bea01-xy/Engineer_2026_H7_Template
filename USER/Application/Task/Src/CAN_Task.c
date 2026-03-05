@@ -33,10 +33,6 @@
 * @retval None
 */
 /* USER CODE END Header_CAN_Task */
-float joint_data[6] = {1.1f,1.2f,1.3f,1.4f,3.2f,1.6f};
-extern float joint_data_receive[12];
-uint8_t receive_data[51];
-
 
 extern float cascade_pid_output;
 
@@ -68,18 +64,17 @@ void CAN_Task(void)
 
 	    }
 
+        //another CAN-FD transmit
 		//FDCAN1_TxFrame.Data[0] = (uint8_t)(Control_Info.SendValue[0]>>8);
 		//FDCAN1_TxFrame.Data[1] = (uint8_t)(Control_Info.SendValue[0]);
 		//FDCAN1_TxFrame.Data[2] = (uint8_t)(Control_Info.SendValue[1]>>8);
 		//FDCAN1_TxFrame.Data[3] = (uint8_t)(Control_Info.SendValue[1]);
 		//USER_FDCAN_AddMessageToTxFifoQ(&FDCAN1_TxFrame);
 
-		MiniPC_Transmit_Info(joint_data, 6);
-		MiniPC_Receive_Info(receive_data);
-
+        //vofa transmit test
         //USART_Vofa_Justfloat_Transmit(INS_Info.Roll_Angle,INS_Info.Pitch_Angle,INS_Info.Yaw_Angle);
         //USART_Vofa_Justfloat_Transmit(DM_8009_Motor->Data.Position,DM_8009_Motor[0].Data.Velocity,DM_8009_Motor[0].Data.Torque);
-        USART_Vofa_Justfloat_Transmit(DJI_Yaw_Motor.Data.Angle,DJI_Yaw_Motor.Data.Velocity,cascade_pid_output);
+        //USART_Vofa_Justfloat_Transmit(DJI_Yaw_Motor.Data.Angle,DJI_Yaw_Motor.Data.Velocity,cascade_pid_output);
 		osDelay(1);
     }
 }

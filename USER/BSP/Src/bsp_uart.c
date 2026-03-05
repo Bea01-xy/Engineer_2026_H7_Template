@@ -342,7 +342,5 @@ void USART_Vofa_Justfloat_Transmit(float SendValue1,float SendValue2,float SendV
 		Rx_Buf[14] =  0x80;
 		Rx_Buf[15] =  0x7F;
 		HAL_UART_Transmit_DMA(&huart7,Rx_Buf,sizeof(Rx_Buf));
-	
-
 }
 

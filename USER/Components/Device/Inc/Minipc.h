@@ -22,7 +22,7 @@
 #include "stdbool.h" 
 
 
-extern uint8_t MiniPC_Transmit_Info(float* Buf, uint16_t FloatLen);
+extern uint8_t MiniPC_Transmit_Info(float* Buf, uint16_t Len);
 
-extern void MiniPC_Receive_Info(uint8_t* Buff);
+extern void MiniPC_Receive_Info(uint8_t* Buff, uint32_t Len);
 #endif

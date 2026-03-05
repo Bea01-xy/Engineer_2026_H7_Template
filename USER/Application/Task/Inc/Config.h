@@ -36,10 +36,6 @@
  
 #define GravityAccel  9.788f
 
-#define Angle_to_rad  0.01745329f
-
-#define Rad_to_angle  57.2957732f
-
 /**
   * @brief Euler's Number
   */
@@ -137,5 +133,4 @@
 #define REMOTE_FRAME_USART_CAN   0U
 
 #endif //ROBOT_CONFIG_H
-
 

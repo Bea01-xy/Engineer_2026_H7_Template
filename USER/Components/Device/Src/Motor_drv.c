@@ -1,6 +1,6 @@
 //
 // Created by asus on 26-1-20.
-//
+// From another project.
 #include "Motor_drv.h"
 
 uint8_t fdcanx_send_data(FDCAN_HandleTypeDef *hfdcan, uint16_t id, uint8_t *data, uint32_t len)

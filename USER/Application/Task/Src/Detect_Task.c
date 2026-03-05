@@ -27,6 +27,9 @@
 	*/
 
 /* USER CODE BEGIN Header_Detect_Task */
+float joint_data[6] = {1.1f,1.2f,1.3f,1.4f,3.2f,1.6f};
+uint8_t receive_data[51];
+extern float joint_data_receive[12]; //to be used
 /**
 * @brief Function implementing the StartDetectTask thread.
 * @param argument: Not used
@@ -43,6 +46,8 @@ void Detect_Task(void)
     for(;;)
     {
         Remote_Message_Moniter(&remote_ctrl);
+		MiniPC_Receive_Info(receive_data, 12);
+		//MiniPC_Transmit_Info(joint_data, 6);
         osDelay(1);
     }
     /* USER CODE END Detect_Task */

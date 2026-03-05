@@ -291,15 +291,15 @@ int8_t CDC_Receive_HS(uint8_t* Buf, uint32_t *Len)
   USBD_CDC_ReceivePacket(&hUsbDeviceHS);
 
   uint8_t verification = 0;
-  for (uint8_t i = 1; i < 49; i++)
+  for (uint8_t i = 1; i < *Len * 4 + 1; i++)
   {
     verification += Buf[i];
   }
-  if (Buf[0] == 0xAA && Buf[50] == 0x55 && Buf[49] == verification)
+  if (Buf[0] == 0xAA && Buf[*Len * 4 + 2] == 0x55 && Buf[*Len * 4 + 1] == verification)
   {
-    for (uint8_t i = 0; i < 12; i++)
+    for (uint8_t i = 0; i < *Len; i++)
     {
-      joint_data_receive[i] = bytes_to_float_union(&Buf[1 + i * 4]);
+        joint_data_receive[i] = bytes_to_float_union(&Buf[1 + i * 4]);
     }
     return (USBD_OK);
   }
