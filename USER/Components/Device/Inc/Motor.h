@@ -125,7 +125,7 @@ typedef struct
 {
   
 	DM_Motor_Control_Mode_Type_e	Control_Mode;
-  Motor_CANFrameInfo_typedef FDCANFrame;   
+    Motor_CANFrameInfo_typedef FDCANFrame;   
 	DM_Motor_Param_Range_Typedef Param_Range; 
 	DM_Motor_Data_Typedef Data;   
 
