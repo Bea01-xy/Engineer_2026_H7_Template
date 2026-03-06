@@ -31,6 +31,8 @@
 #include "usbd_cdc.h"
 
 /* USER CODE BEGIN INCLUDE */
+extern uint8_t MiniPC_Transmit_Info(float* Buf, uint16_t Len);
+extern void MiniPC_Receive_Info(uint8_t* Buff, uint32_t Len);
 
 /* USER CODE END INCLUDE */
 

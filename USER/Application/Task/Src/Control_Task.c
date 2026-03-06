@@ -82,7 +82,7 @@ static void Control_Measure_Update(Control_Info_Typedef *Control_Info)
 static void Control_Target_Update(Control_Info_Typedef *Control_Info)
 {
     Control_Info->Target.Chassis_Velocity = remote_ctrl.rc.ch[3];
-    USART_Vofa_Justfloat_Transmit(Control_Info->Target.Chassis_Velocity,0.f,0.f);
+    //USART_Vofa_Justfloat_Transmit(Control_Info->Target.Chassis_Velocity,0.f,0.f);
 }
 
 float cascade_pid_output;
@@ -91,8 +91,8 @@ static void Control_Info_Update(Control_Info_Typedef *Control_Info)
     PID_Calculate(&Chassis_PID, Control_Info->Target.Chassis_Velocity, Control_Info->Measure.Chassis_Velocity);
     Control_Info->SendValue[0] = (int16_t)(Chassis_PID.Output);
 
-    cascade_pid_output = Cascade_PID_Control(&angle_outer_pid, &speed_inner_pid, 180.0f,
-                                                   DJI_Yaw_Motor.Data.Angle,
+    cascade_pid_output = Cascade_PID_Control(&angle_outer_pid, &speed_inner_pid, 0.0f,
+                                                    DJI_Yaw_Motor.Data.Angle,
                                                     DJI_Yaw_Motor.Data.Velocity);
 }
 

@@ -20,7 +20,7 @@
 #include "bsp_gpio.h"
 #include "Bmi088.h"
 #include "INS_Task.h"
-
+#include "usbd_cdc_if.h"
 /**
   * @note turn on:  800
 	*       turn off: 4150
@@ -47,7 +47,7 @@ void Detect_Task(void)
     {
         Remote_Message_Moniter(&remote_ctrl);
 		MiniPC_Receive_Info(receive_data, 12);
-		//MiniPC_Transmit_Info(joint_data, 6);
+		MiniPC_Transmit_Info(joint_data, 6);
         osDelay(1);
     }
     /* USER CODE END Detect_Task */

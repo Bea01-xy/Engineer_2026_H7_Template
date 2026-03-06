@@ -75,6 +75,7 @@ void CAN_Task(void)
         //USART_Vofa_Justfloat_Transmit(INS_Info.Roll_Angle,INS_Info.Pitch_Angle,INS_Info.Yaw_Angle);
         //USART_Vofa_Justfloat_Transmit(DM_8009_Motor->Data.Position,DM_8009_Motor[0].Data.Velocity,DM_8009_Motor[0].Data.Torque);
         //USART_Vofa_Justfloat_Transmit(DJI_Yaw_Motor.Data.Angle,DJI_Yaw_Motor.Data.Velocity,cascade_pid_output);
+        USART_Vofa_Justfloat_Transmit(0,0,1);
 		osDelay(1);
     }
 }

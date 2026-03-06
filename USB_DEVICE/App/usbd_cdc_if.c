@@ -269,6 +269,7 @@ void float_to_bytes_union(float value, uint8_t *buffer) {
   }
 
 }
+
 /**
   * @brief Data received over USB OUT endpoint are sent over CDC interface
   *         through this function.
@@ -352,7 +353,27 @@ static int8_t CDC_TransmitCplt_HS(uint8_t *Buf, uint32_t *Len, uint8_t epnum)
 }
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
+uint8_t joint_data_transmit[27] = {0};
+uint8_t MiniPC_Transmit_Info(float* Buf, uint16_t Len){
+    //校验位置零覆盖上一次校验位
+    joint_data_transmit[Len*4+1] = 0;
+    joint_data_transmit[0] = 0xAA;
+    for (uint8_t i = 0; i < Len; i++)
+    {
+        float_to_bytes_union(Buf[i], &joint_data_transmit[1 + i * 4]);
+    }
+    for (uint8_t i = 1; i < Len*4+1; i++)
+    {
+        joint_data_transmit[Len*4+1] += joint_data_transmit[i];
+    }
+    joint_data_transmit[Len*4+2] = 0x55;
+    return CDC_Transmit_HS(joint_data_transmit, Len*4 + 3);
+}
 
+//usbd_cdc_if.c -> CDC_Receive_HS
+void MiniPC_Receive_Info(uint8_t* Buff, uint32_t Len){
+    CDC_Receive_HS(Buff, &Len);
+}
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
 /**
