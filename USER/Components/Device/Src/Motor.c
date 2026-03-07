@@ -14,13 +14,14 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "Motor.h"
+#include "Chassis_Config.h"
 
 /**
  * @brief The structure that contains the Information of yaw motor.Use DJI GM6020 motor.
  */
 DJI_Motor_Info_Typedef DJI_Yaw_Motor =
 {
-	    .Type = DJI_GM6020,
+	  .Type = DJI_GM6020,
 		.FDCANFrame = {
 					  .TxIdentifier = 0x1ff,
 					  .RxIdentifier = 0x207,
@@ -34,28 +35,28 @@ DJI_Motor_Info_Typedef DJI_Yaw_Motor =
  */ 
 DJI_Motor_Info_Typedef Chassis_Motor[4] = {
 
-    [0] = {	
+    [LF] = {	
         .Type = DJI_M3508,
 		    .FDCANFrame = {
 					  .TxIdentifier = 0x200,
 					  .RxIdentifier = 0x201,
 				}
     },
-    [1] = {	
+    [LB] = {	
         .Type = DJI_M3508,
 		    .FDCANFrame = {
 					  .TxIdentifier = 0x200,
 					  .RxIdentifier = 0x202,
 				}
     },
-	  [2] = {	
+	[RB] = {	
         .Type = DJI_M3508,
 		    .FDCANFrame = {
 					  .TxIdentifier = 0x200,
 					  .RxIdentifier = 0x203,
 				}
 		},
-		[3] = {	
+	[RF] = {	
         .Type = DJI_M3508,
 		    .FDCANFrame = {
 					  .TxIdentifier = 0x200,
@@ -70,8 +71,8 @@ DJI_Motor_Info_Typedef Chassis_Motor[4] = {
  * @brief The structure that contains the Information of joint motor.Use DM 8009 motor.
  */
 DM_Motor_Info_Typedef DM_8009_Motor[4]= {
-    
-	  [0] = {
+
+	[0] = {
 			.Control_Mode = MIT,
 			.Param_Range ={
 			   .P_MAX = 3.141593f,
@@ -130,13 +131,8 @@ DM_Motor_Info_Typedef DM_8009_Motor[4]= {
 };
 //------------------------------------------------------------------------------
 
-/**
-  * @brief  编码器值转化为角度(累加 最大到float最大值)
-  */
 static float DJI_Motor_Encoder_To_Anglesum(DJI_Motor_Data_Typedef *,float ,uint16_t );
-/**
-  * @brief  编码器值转化为角度(范围 正负180度)
-  */
+
 static float DJI_Motor_Encoder_To_Angle(DJI_Motor_Data_Typedef *,float ,uint16_t );
 
 float F_Loop_Constrain(float Input, float Min_Value, float Max_Value);
@@ -451,7 +447,7 @@ void DM_Motor_Info_Update(uint32_t *Identifier,uint8_t *Rx_Buf,DM_Motor_Info_Typ
 		DM_Motor->Data.P_int = ((uint16_t)(Rx_Buf[1]) <<8) | ((uint16_t)(Rx_Buf[2]));
 		DM_Motor->Data.V_int = ((uint16_t)(Rx_Buf[3]) <<4) | ((uint16_t)(Rx_Buf[4])>>4);
 		DM_Motor->Data.T_int = ((uint16_t)(Rx_Buf[4]&0xF) <<8) | ((uint16_t)(Rx_Buf[5]));
-		DM_Motor->Data.Torque=  uint_to_float(DM_Motor->Data.T_int,-DM_Motor->Param_Range.T_MAX,DM_Motor->Param_Range.T_MAX,12);
+		DM_Motor->Data.Torque  =uint_to_float(DM_Motor->Data.T_int,-DM_Motor->Param_Range.T_MAX,DM_Motor->Param_Range.T_MAX,12);
 		DM_Motor->Data.Position=uint_to_float(DM_Motor->Data.P_int,-DM_Motor->Param_Range.P_MAX,DM_Motor->Param_Range.P_MAX,16);
         DM_Motor->Data.Velocity=uint_to_float(DM_Motor->Data.V_int,-DM_Motor->Param_Range.V_MAX,DM_Motor->Param_Range.V_MAX,12);
 

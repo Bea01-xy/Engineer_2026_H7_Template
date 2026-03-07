@@ -40,6 +40,11 @@
 #define RC_TO_VY  (MAX_CHASSIS_VY_SPEED/-MAX_RC_CH_VALUE)
 #define RC_TO_VW  (MAX_CHASSIS_VW_SPEED/-MAX_RC_CH_VALUE)    //MAX_CHASSIS_VR_SPEED / RC_MAX_VALUE
 
+#define ROTATE_RATIO 0.6f
+#define WHEEL_RPM_RATIO 2000.0f
+#define M3508_FF_SPEED_COEF 0.005f
+#define M3508_FF_ACCEL_COEF 120.0f
+
 /* ----------------------- RC Switch Definition----------------------------- */
 #define RC_SW_UP                ((uint16_t)1)
 #define RC_SW_MID               ((uint16_t)3)
@@ -83,6 +88,7 @@ typedef struct
 
     bool activated_flag;
 } Chassis_Info_Typedef;
+
 /* Exported functions prototypes ---------------------------------------------*/
 
 #endif /* CHASSIS_CONFIG_H */

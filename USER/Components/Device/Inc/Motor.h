@@ -68,14 +68,16 @@ typedef struct
  */
 typedef struct 
 {
-  bool Initlized;   /*!< init flag */
-  int16_t  Current;   /*!< Motor electric current */
-  int16_t  Velocity;    /*!< Motor rotate velocity (RPM)*/
-  int16_t  Encoder;   /*!< Motor encoder angle */
-  int16_t  Last_Encoder;   /*!< previous Motor encoder angle */
-  float    Angle;   /*!< Motor angle in degree */
-  uint8_t  Temperature;   /*!< Motor Temperature */
+	bool Initlized;   /*!< init flag */
+    int16_t  Current;   /*!< Motor electric current */
+    int16_t  Velocity;    /*!< Motor rotate velocity (RPM)*/
+    int16_t  Encoder;   /*!< Motor encoder angle */
+    int16_t  Last_Encoder;   /*!< previous Motor encoder angle */
+    float    Angle;   /*!< Motor angle in degree */
+    uint8_t  Temperature;   /*!< Motor Temperature */
 	
+    float  Target_Velocity;    /*!< Target motor rotate velocity (RPM)*/
+    int16_t  Final_Output;     /*Final voltage value output to the motor*/
 }DJI_Motor_Data_Typedef;
 
 /**
@@ -113,7 +115,7 @@ typedef struct
 typedef struct
 {
 	DJI_Motor_Type_e Type;   /*!< Type of Motor */
-  Motor_CANFrameInfo_typedef FDCANFrame;    /*!< information for the CAN Transfer */
+    Motor_CANFrameInfo_typedef FDCANFrame;    /*!< information for the CAN Transfer */
 	DJI_Motor_Data_Typedef Data;   /*!< information for the Motor Device */
 }DJI_Motor_Info_Typedef;
 

@@ -22,14 +22,15 @@
 #include "INS_Task.h"
 #include "usbd_cdc_if.h"
 #include "Chassis_Config.h"
-/**
-  * @note turn on:  800
-	*       turn off: 4150
-	*/
+#include "bsp_uart.h"
+#include "Motor.h"
 
 /* USER CODE BEGIN Header_Detect_Task */
 static void Chassis_Set_Mode(Chassis_Info_Typedef* chassis);
-Chassis_Info_Typedef Chassis_Info;
+static void chassis_ctrl_info_get(void);
+static void chassis_wheel_cal(void);
+
+extern Chassis_Info_Typedef chassis_info;
 float joint_data[6] = {1.1f,1.2f,1.3f,1.4f,3.2f,1.6f};
 uint8_t receive_data[51];
 extern float joint_data_receive[12]; //to be used
@@ -48,17 +49,23 @@ void Detect_Task(void)
     /* Infinite loop */
     for(;;)
     {
+        //original code
+        Remote_Message_Moniter(&remote_ctrl);
+		MiniPC_Receive_Info(receive_data, 12);
+		MiniPC_Transmit_Info(joint_data, 6);
+
+        Chassis_Set_Mode(&chassis_info);
+        chassis_ctrl_info_get();
+        chassis_wheel_cal();
+
 		Detect_Task_SysTick = osKernelSysTick();
         if (Detect_Task_SysTick % 1000 == 0)
         {
             HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_14);
-            USART_Vofa_Justfloat_Transmit((float)Chassis_Info.mode,0,0);
         }
 
-        Remote_Message_Moniter(&remote_ctrl);
-		MiniPC_Receive_Info(receive_data, 12);
-		MiniPC_Transmit_Info(joint_data, 6);
-        Chassis_Set_Mode(&Chassis_Info);
+        USART_Vofa_Justfloat_Transmit(chassis_info.vx,chassis_info.vy,chassis_info.vw);
+
         osDelay(1);
     }
     /* USER CODE END Detect_Task */
@@ -92,7 +99,7 @@ static void Chassis_Set_Mode(Chassis_Info_Typedef* chassis)
     {
         chassis->last_mode = chassis->mode;
         chassis->mode = CHASSIS_LIFT;
-        
+
         if(switch_is_down(remote_ctrl.rc.s[0]))
             chassis->lift_mode = AUTO_LIFT_STAGE_1;
 
@@ -102,4 +109,27 @@ static void Chassis_Set_Mode(Chassis_Info_Typedef* chassis)
         else if(switch_is_up(remote_ctrl.rc.s[0]))
             chassis->lift_mode = AUTO_LIFT_STAGE_3;
     }
+    else if (switch_is_down(remote_ctrl.rc.s[1]))
+    {
+        chassis->mode = chassis->last_mode;
+    }
+}
+
+static void chassis_ctrl_info_get(void)
+{
+    chassis_info.vx = (float)remote_ctrl.rc.ch[3] * RC_TO_VX;
+    chassis_info.vy = (float)remote_ctrl.rc.ch[2] * RC_TO_VY;
+    chassis_info.vw = (float)remote_ctrl.rc.ch[0] * RC_TO_VW;
+}
+
+static void chassis_wheel_cal(void)
+{
+    const float vx = chassis_info.vx;
+    const float vy = chassis_info.vy;
+    const float vw = chassis_info.vw;
+
+    Chassis_Motor[0].Data.Target_Velocity =  (vx - vy - vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
+    Chassis_Motor[1].Data.Target_Velocity =  (vx + vy - vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
+    Chassis_Motor[2].Data.Target_Velocity = -(vx - vy + vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
+    Chassis_Motor[3].Data.Target_Velocity = -(vx + vy + vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
 }

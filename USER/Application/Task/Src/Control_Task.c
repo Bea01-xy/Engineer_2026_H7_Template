@@ -28,6 +28,7 @@ static void Control_Target_Update(Control_Info_Typedef *Control_Info);
 static void Control_Info_Update(Control_Info_Typedef *Control_Info);
 
 Control_Info_Typedef Control_Info;
+Chassis_Info_Typedef chassis_info;
 //                                       KP       KI       KD      Alpha     Deadband      I_MAX        Output_MAX
 static float Chassis_PID_Param[7] = {13.f,0.1f,0.f,0.f,  0.f,      5000.f,  12000.f};
 
@@ -51,6 +52,9 @@ void Control_Task(void)
 	for(;;)
     {
 		Control_Task_SysTick = osKernelSysTick();
+        if (Control_Task_SysTick % 2 == 0) {
+        
+        }
 
 		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
 
@@ -82,7 +86,6 @@ static void Control_Measure_Update(Control_Info_Typedef *Control_Info)
 static void Control_Target_Update(Control_Info_Typedef *Control_Info)
 {
     Control_Info->Target.Chassis_Velocity = remote_ctrl.rc.ch[3];
-    //USART_Vofa_Justfloat_Transmit(Control_Info->Target.Chassis_Velocity,0.f,0.f);
 }
 
 float cascade_pid_output;
@@ -96,11 +99,10 @@ static void Control_Info_Update(Control_Info_Typedef *Control_Info)
                                                     DJI_Yaw_Motor.Data.Velocity);
 }
 
-static float SmootherStep(float NowTime,float UseTime){
-
+static float SmootherStep(float NowTime,float UseTime)
+{
 	float Time = (NowTime/UseTime);
 
     return 10*powf(Time,3) - 15*powf(Time,4) + 6*powf(Time,5);
-
 }
 
