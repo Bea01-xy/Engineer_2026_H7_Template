@@ -23,31 +23,42 @@
 #include "Chassis_Config.h"
 
 static void Control_Init(void);
-static void Control_Info_Update(void);
+
+static void chassis_lifting_handler(void);
+static void chassis_disabled_handler(void);
+static void chassis_only_handler(void);
+
+static void chassis_set(bool activated_flag);
 
 Chassis_Info_Typedef chassis_info;
 
 static float M3508_PID_Param[PID_PARAMETER_NUM] = {M3508_KP, M3508_KI, M3508_KD, 0.5f, 2.f, 2000.f, 15000.f};
 PID_Info_TypeDef M3508_PID[4];
 
+TickType_t Control_Task_SysTick = 0;
 void Control_Task(void)
 {
     /* USER CODE BEGIN Control_Task */
-    TickType_t Control_Task_SysTick = 0;
- 
 	Control_Init();
     /* Infinite loop */
 	for(;;)
     {
 		Control_Task_SysTick = osKernelSysTick();
-        if (Control_Task_SysTick % 500 == 0) {
-        	HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+
+        switch (chassis_info.mode)
+        {
+            case CHASSIS_DISABLE:
+                chassis_disabled_handler();
+                break;
+            case CHASSIS_ONLY:
+                chassis_only_handler();
+                break;
+            case CHASSIS_LIFT:
+                chassis_lifting_handler();
+                break;
+            default: break;
         }
-
-		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-
-        Control_Info_Update();
-		
+	    chassis_set(chassis_info.activated_flag);
 		osDelay(1);
     }
 }
@@ -55,18 +66,14 @@ void Control_Task(void)
 
 static void Control_Init(void)
 {
-    PID_Init(&M3508_PID[0],PID_POSITION,M3508_PID_Param);
-    PID_Init(&M3508_PID[1],PID_POSITION,M3508_PID_Param);
-    PID_Init(&M3508_PID[2],PID_POSITION,M3508_PID_Param);
-    PID_Init(&M3508_PID[3],PID_POSITION,M3508_PID_Param);
-}
-
-static void Control_Info_Update(void)
-{
-    PID_Calculate(&M3508_PID[0], Chassis_Motor[0].Data.Target_Velocity, Chassis_Motor[0].Data.Velocity);
-    PID_Calculate(&M3508_PID[1], Chassis_Motor[1].Data.Target_Velocity, Chassis_Motor[1].Data.Velocity);
-    PID_Calculate(&M3508_PID[2], Chassis_Motor[2].Data.Target_Velocity, Chassis_Motor[2].Data.Velocity);
-    PID_Calculate(&M3508_PID[3], Chassis_Motor[3].Data.Target_Velocity, Chassis_Motor[3].Data.Velocity);
+    PID_Init(&M3508_PID[LF],PID_POSITION,M3508_PID_Param);
+    PID_Init(&M3508_PID[LB],PID_POSITION,M3508_PID_Param);
+    PID_Init(&M3508_PID[RB],PID_POSITION,M3508_PID_Param);
+    PID_Init(&M3508_PID[RF],PID_POSITION,M3508_PID_Param);
+    chassis_info.activated_flag = false;
+    chassis_info.mode = CHASSIS_DISABLE;
+    chassis_info.last_mode = CHASSIS_DISABLE;
+    chassis_info.lift_mode = AUTO_LIFT_STAGE_1;
 }
 
 static float SmootherStep(float NowTime,float UseTime)
@@ -76,3 +83,48 @@ static float SmootherStep(float NowTime,float UseTime)
     return 10*powf(Time,3) - 15*powf(Time,4) + 6*powf(Time,5);
 }
 
+static void chassis_lifting_handler(void)
+{
+    if (Control_Task_SysTick % 500 == 0)
+    {
+        HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+        HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_14);
+    }
+}
+
+static void chassis_disabled_handler(void)
+{
+    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_14,GPIO_PIN_SET);
+    chassis_info.activated_flag = false;
+    chassis_info.vx = 0.0f;
+    chassis_info.vy = 0.0f;
+    chassis_info.vw = 0.0f;
+    M3508_Motor[LF].Data.Final_Output = 0u;
+    M3508_Motor[LB].Data.Final_Output = 0u;
+    M3508_Motor[RB].Data.Final_Output = 0u;
+    M3508_Motor[RF].Data.Final_Output = 0u;
+}
+
+static void chassis_only_handler(void)
+{
+    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_14,GPIO_PIN_RESET);
+    chassis_info.activated_flag = true;
+}
+
+static void chassis_set(const bool activated_flag)
+{
+    if (activated_flag) {
+        PID_Calculate(&M3508_PID[LF], M3508_Motor[LF].Data.Target_Velocity, M3508_Motor[LF].Data.Velocity);
+        PID_Calculate(&M3508_PID[LB], M3508_Motor[LB].Data.Target_Velocity, M3508_Motor[LB].Data.Velocity);
+        PID_Calculate(&M3508_PID[RB], M3508_Motor[RB].Data.Target_Velocity, M3508_Motor[RB].Data.Velocity);
+        PID_Calculate(&M3508_PID[RF], M3508_Motor[RF].Data.Target_Velocity, M3508_Motor[RF].Data.Velocity);
+
+        //just for now
+        M3508_Motor[LF].Data.Final_Output = M3508_PID[LF].Output;
+        M3508_Motor[LB].Data.Final_Output = M3508_PID[LB].Output;
+        M3508_Motor[RB].Data.Final_Output = M3508_PID[RB].Output;
+        M3508_Motor[RF].Data.Final_Output = M3508_PID[RF].Output;
+    }
+}

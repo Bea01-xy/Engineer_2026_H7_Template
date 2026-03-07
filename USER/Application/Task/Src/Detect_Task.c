@@ -26,7 +26,7 @@
 #include "Motor.h"
 
 /* USER CODE BEGIN Header_Detect_Task */
-static void Chassis_Set_Mode(Chassis_Info_Typedef* chassis);
+static void chassis_set_mode(Chassis_Info_Typedef* chassis);
 static void chassis_ctrl_info_get(void);
 static void chassis_wheel_cal(void);
 
@@ -54,15 +54,11 @@ void Detect_Task(void)
 		MiniPC_Receive_Info(receive_data, 12);
 		MiniPC_Transmit_Info(joint_data, 6);
 
-        Chassis_Set_Mode(&chassis_info);
+        chassis_set_mode(&chassis_info);
         chassis_ctrl_info_get();
         chassis_wheel_cal();
 
 		Detect_Task_SysTick = osKernelSysTick();
-        if (Detect_Task_SysTick % 1000 == 0)
-        {
-            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_14);
-        }
 
         USART_Vofa_Justfloat_Transmit(chassis_info.vx,chassis_info.vy,chassis_info.vw);
 
@@ -71,7 +67,7 @@ void Detect_Task(void)
     /* USER CODE END Detect_Task */
 }
 
-static void Chassis_Set_Mode(Chassis_Info_Typedef* chassis)
+static void chassis_set_mode(Chassis_Info_Typedef* chassis)
 {
     if(chassis == NULL)
         return;
@@ -128,8 +124,8 @@ static void chassis_wheel_cal(void)
     const float vy = chassis_info.vy;
     const float vw = chassis_info.vw;
 
-    Chassis_Motor[0].Data.Target_Velocity =  (vx - vy - vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
-    Chassis_Motor[1].Data.Target_Velocity =  (vx + vy - vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
-    Chassis_Motor[2].Data.Target_Velocity = -(vx - vy + vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
-    Chassis_Motor[3].Data.Target_Velocity = -(vx + vy + vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
+    M3508_Motor[0].Data.Target_Velocity =  (vx - vy - vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
+    M3508_Motor[1].Data.Target_Velocity =  (vx + vy - vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
+    M3508_Motor[2].Data.Target_Velocity = -(vx - vy + vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
+    M3508_Motor[3].Data.Target_Velocity = -(vx + vy + vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
 }

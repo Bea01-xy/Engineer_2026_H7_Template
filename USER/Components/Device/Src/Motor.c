@@ -33,7 +33,7 @@ DJI_Motor_Info_Typedef DJI_Yaw_Motor =
 /**
  * @brief The structure that contains the Information of chassis motor.Use DJI M3508 motor.
  */ 
-DJI_Motor_Info_Typedef Chassis_Motor[4] = {
+DJI_Motor_Info_Typedef M3508_Motor[4] = {
 
     [LF] = {	
         .Type = DJI_M3508,

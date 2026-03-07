@@ -52,30 +52,16 @@ void CAN_Task(void)
     {
 		CAN_Task_SysTick = osKernelSysTick();
 
-	    // CAN-FD
 		DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame,&DM_8009_Motor[0],2,0,0,0.3,0.1);
-		//DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&DM_8009_Motor[1],0,0,0,0,0);
-	    //DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&DM_8009_Motor[2],0,0,0,0,0);
-	    //DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&DM_8009_Motor[3],0,0,0,0,0);
 
-        M3508_motor_crt_ctrl(&hfdcan2, 0x200, M3508_PID[LF].Output, M3508_PID[LB].Output,
-                  														  M3508_PID[RB].Output, M3508_PID[RF].Output);
+        //M3508_motor_crt_ctrl(&hfdcan2, 0x200, M3508_PID[LF].Output, M3508_PID[LB].Output,
+                  														  //M3508_PID[RB].Output, M3508_PID[RF].Output);
+        M3508_motor_crt_ctrl(&hfdcan2, 0x200, M3508_Motor[LF].Data.Final_Output,
+        M3508_Motor[LB].Data.Final_Output,M3508_Motor[RB].Data.Final_Output,M3508_Motor[RF].Data.Final_Output);
 	    if(CAN_Task_SysTick % 2 == 0){
 
 
 	    }
-
-        //another CAN-FD transmit
-		//FDCAN1_TxFrame.Data[0] = (uint8_t)(Control_Info.SendValue[0]>>8);
-		//FDCAN1_TxFrame.Data[1] = (uint8_t)(Control_Info.SendValue[0]);
-		//FDCAN1_TxFrame.Data[2] = (uint8_t)(Control_Info.SendValue[1]>>8);
-		//FDCAN1_TxFrame.Data[3] = (uint8_t)(Control_Info.SendValue[1]);
-		//USER_FDCAN_AddMessageToTxFifoQ(&FDCAN1_TxFrame);
-
-        //vofa transmit test
-        //USART_Vofa_Justfloat_Transmit(INS_Info.Roll_Angle,INS_Info.Pitch_Angle,INS_Info.Yaw_Angle);
-        //USART_Vofa_Justfloat_Transmit(DM_8009_Motor->Data.Position,DM_8009_Motor[0].Data.Velocity,DM_8009_Motor[0].Data.Torque);
-        //USART_Vofa_Justfloat_Transmit(DJI_Yaw_Motor.Data.Angle,DJI_Yaw_Motor.Data.Velocity,cascade_pid_output);
 		osDelay(1);
     }
 }

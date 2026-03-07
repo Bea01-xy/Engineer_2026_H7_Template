@@ -146,7 +146,7 @@ typedef struct
 }DM_Motor_Contorl_Info_Typedef;
 
 /* Externs ------------------------------------------------------------------*/
-extern DJI_Motor_Info_Typedef DJI_Yaw_Motor,Chassis_Motor[4];
+extern DJI_Motor_Info_Typedef DJI_Yaw_Motor,M3508_Motor[4];
 
 extern DM_Motor_Info_Typedef DM_8009_Motor[4];
 

@@ -314,30 +314,33 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,uint16_t Size)
    __HAL_DMA_ENABLE(huart->hdmarx);
 }
 
-void USART_Vofa_Justfloat_Transmit(float SendValue1, float SendValue2, float SendValue3) {
-    // 1. 使用静态缓冲区是正确的（防止函数结束局部变量销毁），但必须确保发送完成
-    __attribute__((section(".AXI_SRAM"))) static uint8_t tx_buf[16];
+void USART_Vofa_Justfloat_Transmit(float SendValue1,float SendValue2,float SendValue3){
+ 
+    __attribute__((section (".AXI_SRAM")))  static uint8_t Rx_Buf[16];
 
-    // 2. 检查 DMA 是否还在忙。如果忙，则放弃本次发送或等待（防止冲掉正在发送的数据）
-    if (huart7.gState != HAL_UART_STATE_READY) {
-        return; 
-    }
+		uint8_t *SendValue1_Pointer,*SendValue2_Pointer,*SendValue3_Pointer;
 
-    // 3. 使用更简洁的方式填充数据 (memcpy 或 指针偏移)
-    // 顺便把你的 Rx_Buf 改名 tx_buf，Rx 通常指接收
-    float values[3] = {SendValue1, SendValue2, SendValue3};
-    memcpy(tx_buf, values, sizeof(values));
+		SendValue1_Pointer = (uint8_t *)&SendValue1;
+		SendValue2_Pointer = (uint8_t *)&SendValue2;
+		SendValue3_Pointer = (uint8_t *)&SendValue3;
 
-    // 4. 填充 VOFA+ JustFloat 帧尾: 0x00 0x00 0x80 0x7F
-    tx_buf[12] = 0x00;
-    tx_buf[13] = 0x00;
-    tx_buf[14] = 0x80;
-    tx_buf[15] = 0x7F;
 
-    /* 5. 关键步骤 (针对 H7): 清除 D-Cache */
-    /* 确保 CPU 写入 tx_buf 的数据真正刷回到 AXI SRAM 物理内存中 */
-    SCB_CleanDCache_by_Addr((uint32_t *)tx_buf, sizeof(tx_buf));
-
-    // 6. 启动发送
-    HAL_UART_Transmit_DMA(&huart7, tx_buf, sizeof(tx_buf));
+		Rx_Buf[0] =  *SendValue1_Pointer;
+		Rx_Buf[1] =  *(SendValue1_Pointer + 1);
+		Rx_Buf[2] =  *(SendValue1_Pointer + 2);
+		Rx_Buf[3] =  *(SendValue1_Pointer + 3);
+		Rx_Buf[4] =  *SendValue2_Pointer;
+		Rx_Buf[5] =  *(SendValue2_Pointer + 1);
+		Rx_Buf[6] =  *(SendValue2_Pointer + 2);
+		Rx_Buf[7] =  *(SendValue2_Pointer + 3);
+		Rx_Buf[8] =  *SendValue3_Pointer;
+		Rx_Buf[9] =  *(SendValue3_Pointer + 1);
+		Rx_Buf[10] = *(SendValue3_Pointer + 2);
+		Rx_Buf[11] = *(SendValue3_Pointer + 3);
+		Rx_Buf[12] =  0x00;
+		Rx_Buf[13] =  0x00;
+		Rx_Buf[14] =  0x80;
+		Rx_Buf[15] =  0x7F;
+		HAL_UART_Transmit_DMA(&huart7,Rx_Buf,sizeof(Rx_Buf));
 }
+
