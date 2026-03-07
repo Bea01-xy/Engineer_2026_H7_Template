@@ -57,8 +57,8 @@ void CAN_Task(void)
 	    //DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&DM_8009_Motor[2],0,0,0,0,0);
 	    //DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&DM_8009_Motor[3],0,0,0,0,0);
 
-		GM6020_motor_vol_ctrl(&hfdcan2, 0x1FF, 12222, 12222,(int16_t)cascade_pid_output, 12222);
-
+		GM6020_motor_vol_ctrl(&hfdcan3, 0x1FF, 12222, 12222,(int16_t)cascade_pid_output, 12222);
+        M3508_motor_crt_ctrl(&hfdcan3, 0x200, 12222, 12222,12000, 12222);
 	    if(CAN_Task_SysTick % 2 == 0){
 
 
@@ -75,7 +75,6 @@ void CAN_Task(void)
         //USART_Vofa_Justfloat_Transmit(INS_Info.Roll_Angle,INS_Info.Pitch_Angle,INS_Info.Yaw_Angle);
         //USART_Vofa_Justfloat_Transmit(DM_8009_Motor->Data.Position,DM_8009_Motor[0].Data.Velocity,DM_8009_Motor[0].Data.Torque);
         //USART_Vofa_Justfloat_Transmit(DJI_Yaw_Motor.Data.Angle,DJI_Yaw_Motor.Data.Velocity,cascade_pid_output);
-        USART_Vofa_Justfloat_Transmit(0,0,1);
 		osDelay(1);
     }
 }

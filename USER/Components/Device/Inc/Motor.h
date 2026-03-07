@@ -104,7 +104,6 @@ typedef struct
   float  Torque;     /*!< Motor Torque   */
   float  Temperature_MOS;   /*!< Motor Temperature_MOS   */
   float  Temperature_Rotor; /*!< Motor Temperature_Rotor */
-  float  Angle;	
 	
 }DM_Motor_Data_Typedef;
 

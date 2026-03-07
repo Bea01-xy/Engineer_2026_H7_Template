@@ -20,7 +20,7 @@
  */
 DJI_Motor_Info_Typedef DJI_Yaw_Motor =
 {
-	  .Type = DJI_GM6020,
+	    .Type = DJI_GM6020,
 		.FDCANFrame = {
 					  .TxIdentifier = 0x1ff,
 					  .RxIdentifier = 0x207,
@@ -332,33 +332,32 @@ float DJI_Motor_Encoder_To_Angle(DJI_Motor_Data_Typedef *Data,float torque_ratio
   * @param  CMD£ºTransmit Command  (DJI_Motor_Type_e)
   * @retval None
   */
-void DM_Motor_Command(FDCAN_TxFrame_TypeDef *FDCAN_TxFrame,DM_Motor_Info_Typedef *DM_Motor,uint8_t CMD){
-
-	 FDCAN_TxFrame->Header.Identifier = DM_Motor->FDCANFrame.TxIdentifier;
-  	
-	 FDCAN_TxFrame->Data[0] = 0xFF;
-	 FDCAN_TxFrame->Data[1] = 0xFF;
- 	 FDCAN_TxFrame->Data[2] = 0xFF;
-	 FDCAN_TxFrame->Data[3] = 0xFF;
-	 FDCAN_TxFrame->Data[4] = 0xFF;
-	 FDCAN_TxFrame->Data[5] = 0xFF;
-	 FDCAN_TxFrame->Data[6] = 0xFF;
+void DM_Motor_Command(FDCAN_TxFrame_TypeDef *FDCAN_TxFrame,DM_Motor_Info_Typedef *DM_Motor,uint8_t CMD)
+{
+	FDCAN_TxFrame->Header.Identifier = DM_Motor->FDCANFrame.TxIdentifier;
+ 
+	FDCAN_TxFrame->Data[0] = 0xFF;
+	FDCAN_TxFrame->Data[1] = 0xFF;
+    FDCAN_TxFrame->Data[2] = 0xFF;
+	FDCAN_TxFrame->Data[3] = 0xFF;
+	FDCAN_TxFrame->Data[4] = 0xFF;
+	FDCAN_TxFrame->Data[5] = 0xFF;
+	FDCAN_TxFrame->Data[6] = 0xFF;
 	
-	 switch(CMD){
-		 
-		  case Motor_Enable :
+	switch(CMD){
+		case Motor_Enable :
 	        FDCAN_TxFrame->Data[7] = 0xFC; 
 	    break;
-      
-			case Motor_Disable :
+
+		case Motor_Disable :
 	        FDCAN_TxFrame->Data[7] = 0xFD; 
-      break;
-      
-			case Motor_Save_Zero_Position :
+        break;
+
+		case Motor_Save_Zero_Position :
 	        FDCAN_TxFrame->Data[7] = 0xFE; 
-			break;
-			
-			default:
+		break;
+	
+		default:
 	    break;   
 	}
 	
@@ -446,18 +445,17 @@ void DM_Motor_CAN_TxMessage(FDCAN_TxFrame_TypeDef *FDCAN_TxFrame,DM_Motor_Info_T
   */
 void DM_Motor_Info_Update(uint32_t *Identifier,uint8_t *Rx_Buf,DM_Motor_Info_Typedef *DM_Motor)
 {
-	 
 	if(*Identifier != DM_Motor->FDCANFrame.RxIdentifier) return;
-	
-	  DM_Motor->Data.State = Rx_Buf[0]>>4;
+
+	    DM_Motor->Data.State = Rx_Buf[0]>>4;
 		DM_Motor->Data.P_int = ((uint16_t)(Rx_Buf[1]) <<8) | ((uint16_t)(Rx_Buf[2]));
 		DM_Motor->Data.V_int = ((uint16_t)(Rx_Buf[3]) <<4) | ((uint16_t)(Rx_Buf[4])>>4);
 		DM_Motor->Data.T_int = ((uint16_t)(Rx_Buf[4]&0xF) <<8) | ((uint16_t)(Rx_Buf[5]));
 		DM_Motor->Data.Torque=  uint_to_float(DM_Motor->Data.T_int,-DM_Motor->Param_Range.T_MAX,DM_Motor->Param_Range.T_MAX,12);
 		DM_Motor->Data.Position=uint_to_float(DM_Motor->Data.P_int,-DM_Motor->Param_Range.P_MAX,DM_Motor->Param_Range.P_MAX,16);
-    DM_Motor->Data.Velocity=uint_to_float(DM_Motor->Data.V_int,-DM_Motor->Param_Range.V_MAX,DM_Motor->Param_Range.V_MAX,12);
+        DM_Motor->Data.Velocity=uint_to_float(DM_Motor->Data.V_int,-DM_Motor->Param_Range.V_MAX,DM_Motor->Param_Range.V_MAX,12);
 
-    DM_Motor->Data.Temperature_MOS   = (float)(Rx_Buf[6]);
+        DM_Motor->Data.Temperature_MOS   = (float)(Rx_Buf[6]);
 		DM_Motor->Data.Temperature_Rotor = (float)(Rx_Buf[7]);
 
 }

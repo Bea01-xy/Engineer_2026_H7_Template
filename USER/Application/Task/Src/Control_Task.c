@@ -20,6 +20,7 @@
 #include "PID.h"
 #include "Motor.h"
 #include "arm_math.h"
+#include "Chassis_Config.h"
 
 static void Control_Init(Control_Info_Typedef *Control_Info);
 static void Control_Measure_Update(Control_Info_Typedef *Control_Info);
@@ -27,7 +28,7 @@ static void Control_Target_Update(Control_Info_Typedef *Control_Info);
 static void Control_Info_Update(Control_Info_Typedef *Control_Info);
 
 Control_Info_Typedef Control_Info;
-//                                   KP   KI   KD  Alpha Deadband  I_MAX   Output_MAX
+//                                       KP       KI       KD      Alpha     Deadband      I_MAX        Output_MAX
 static float Chassis_PID_Param[7] = {13.f,0.1f,0.f,0.f,  0.f,      5000.f,  12000.f};
 
 /* PID instances */
@@ -51,7 +52,6 @@ void Control_Task(void)
     {
 		Control_Task_SysTick = osKernelSysTick();
 
-		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_14,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
 
 	    Control_Measure_Update(&Control_Info);
