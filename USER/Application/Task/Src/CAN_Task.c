@@ -25,7 +25,8 @@
 #include "fdcan.h"
 #include "Minipc.h"
 #include "Bmi088.h"
-
+#include "Chassis_Config.h"
+#include "PID.h"
 /* USER CODE BEGIN Header_CAN_Task */
 /**
 * @brief Function implementing the StartCANTask thread.
@@ -35,7 +36,7 @@
 /* USER CODE END Header_CAN_Task */
 
 extern float cascade_pid_output;
-
+extern PID_Info_TypeDef M3508_PID[4];
 void CAN_Task(void)
 {
     TickType_t CAN_Task_SysTick = 0;
@@ -57,8 +58,8 @@ void CAN_Task(void)
 	    //DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&DM_8009_Motor[2],0,0,0,0,0);
 	    //DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&DM_8009_Motor[3],0,0,0,0,0);
 
-		GM6020_motor_vol_ctrl(&hfdcan3, 0x1FF, 12222, 12222,(int16_t)cascade_pid_output, 12222);
-        M3508_motor_crt_ctrl(&hfdcan2, 0x200, 200, 200, 200, 200);
+        M3508_motor_crt_ctrl(&hfdcan2, 0x200, M3508_PID[LF].Output, M3508_PID[LB].Output,
+                  														  M3508_PID[RB].Output, M3508_PID[RF].Output);
 	    if(CAN_Task_SysTick % 2 == 0){
 
 

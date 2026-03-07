@@ -45,6 +45,11 @@
 #define M3508_FF_SPEED_COEF 0.005f
 #define M3508_FF_ACCEL_COEF 120.0f
 
+#define M3508_OUTPUT_LIMIT 15000.0f
+#define M3508_I_OUT_LIMIT 300.0f
+#define M3508_KP 15.0f
+#define M3508_KI 0.1f
+#define M3508_KD 0.04f
 /* ----------------------- RC Switch Definition----------------------------- */
 #define RC_SW_UP                ((uint16_t)1)
 #define RC_SW_MID               ((uint16_t)3)
