@@ -34,35 +34,45 @@
 * @retval None
 */
 /* USER CODE END Header_CAN_Task */
+void DM6006_Handler(bool activated);
+void M3508_Handler(void);
 
-extern float cascade_pid_output;
-extern PID_Info_TypeDef M3508_PID[4];
+extern Chassis_Info_Typedef chassis_info;
+
 void CAN_Task(void)
 {
     TickType_t CAN_Task_SysTick = 0;
-	DM_Motor_Command(&FDCAN2_TxFrame,&DM_8009_Motor[0],Motor_Enable);
+	DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LF],Motor_Enable);
     osDelay(30);
-	DM_Motor_Command(&FDCAN2_TxFrame,&DM_8009_Motor[1],Motor_Enable);
+	DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LB],Motor_Enable);
     osDelay(30);
-    DM_Motor_Command(&FDCAN3_TxFrame,&DM_8009_Motor[2],Motor_Enable);
+    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RB],Motor_Enable);
     osDelay(30);
-	DM_Motor_Command(&FDCAN3_TxFrame,&DM_8009_Motor[3],Motor_Enable);
+	DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RF],Motor_Enable);
     osDelay(30);
 	for(;;)
     {
 		CAN_Task_SysTick = osKernelSysTick();
-
-		DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame,&DM_8009_Motor[0],2,0,0,0.3,0.1);
-
-        //M3508_motor_crt_ctrl(&hfdcan2, 0x200, M3508_PID[LF].Output, M3508_PID[LB].Output,
-                  														  //M3508_PID[RB].Output, M3508_PID[RF].Output);
-        M3508_motor_crt_ctrl(&hfdcan2, 0x200, M3508_Motor[LF].Data.Final_Output,
-        M3508_Motor[LB].Data.Final_Output,M3508_Motor[RB].Data.Final_Output,M3508_Motor[RF].Data.Final_Output);
 	    if(CAN_Task_SysTick % 2 == 0){
-
-
 	    }
-		osDelay(1);
+        DM6006_Handler(chassis_info.activated_flag);
+        M3508_Handler();
+        osDelay(1);
     }
 }
 
+void DM6006_Handler(const bool activated)
+{
+    if (activated) {
+		DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM_6006_Motor[LF],2,0,0,0.3,0.1);
+    }
+    else {
+	    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LF],Motor_Disable);
+    }
+}
+
+void M3508_Handler(void)
+{
+    M3508_motor_crt_ctrl(&hfdcan2, 0x200, M3508_Motor[LF].Data.Final_Output,
+        M3508_Motor[LB].Data.Final_Output,M3508_Motor[RB].Data.Final_Output,M3508_Motor[RF].Data.Final_Output);
+}

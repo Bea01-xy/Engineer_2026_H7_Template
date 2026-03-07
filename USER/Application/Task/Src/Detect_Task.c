@@ -44,8 +44,6 @@ void Detect_Task(void)
 {
     /* USER CODE BEGIN Detect_Task */
     TickType_t Detect_Task_SysTick = 0;
-	
-
     /* Infinite loop */
     for(;;)
     {
@@ -58,9 +56,10 @@ void Detect_Task(void)
         chassis_ctrl_info_get();
         chassis_wheel_cal();
 
-		Detect_Task_SysTick = osKernelSysTick();
+		Detect_Task_SysTick = osKernelSysTick();//no use for now
 
-        USART_Vofa_Justfloat_Transmit(chassis_info.vx,chassis_info.vy,chassis_info.vw);
+        //USART_Vofa_Justfloat_Transmit(chassis_info.target_vx,chassis_info.target_vy,chassis_info.target_vw);
+        USART_Vofa_Justfloat_Transmit(0, chassis_info.target_direction, INS_Info.Yaw_Angle);
 
         osDelay(1);
     }
@@ -113,16 +112,18 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
 
 static void chassis_ctrl_info_get(void)
 {
-    chassis_info.vx = (float)remote_ctrl.rc.ch[3] * RC_TO_VX;
-    chassis_info.vy = (float)remote_ctrl.rc.ch[2] * RC_TO_VY;
-    chassis_info.vw = (float)remote_ctrl.rc.ch[0] * RC_TO_VW;
+    chassis_info.target_vx = (float)remote_ctrl.rc.ch[3] * RC_TO_VX;
+    chassis_info.target_vy = (float)remote_ctrl.rc.ch[2] * RC_TO_VY;
+    //chassis_info.target_vw = (float)remote_ctrl.rc.ch[0] * RC_TO_VW;
+    chassis_info.target_direction += remote_ctrl.rc.ch[0] * RC_TO_VW * 0.01f; //integrate to get direction
+    chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
 }
 
 static void chassis_wheel_cal(void)
 {
-    const float vx = chassis_info.vx;
-    const float vy = chassis_info.vy;
-    const float vw = chassis_info.vw;
+    const float vx = chassis_info.target_vx;
+    const float vy = chassis_info.target_vy;
+    const float vw = chassis_info.target_vw;
 
     M3508_Motor[0].Data.Target_Velocity =  (vx - vy - vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
     M3508_Motor[1].Data.Target_Velocity =  (vx + vy - vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;

@@ -68,9 +68,9 @@ DJI_Motor_Info_Typedef M3508_Motor[4] = {
 //------------------------------------------------------------------------------
 
 /**
- * @brief The structure that contains the Information of joint motor.Use DM 8009 motor.
+ * @brief The structure that contains the Information of joint motor.Use DM 6006 motor.
  */
-DM_Motor_Info_Typedef DM_8009_Motor[4]= {
+DM_Motor_Info_Typedef DM_6006_Motor[4]= {
 
 	[0] = {
 			.Control_Mode = MIT,
@@ -134,8 +134,6 @@ DM_Motor_Info_Typedef DM_8009_Motor[4]= {
 static float DJI_Motor_Encoder_To_Anglesum(DJI_Motor_Data_Typedef *,float ,uint16_t );
 
 static float DJI_Motor_Encoder_To_Angle(DJI_Motor_Data_Typedef *,float ,uint16_t );
-
-float F_Loop_Constrain(float Input, float Min_Value, float Max_Value);
 
 static float uint_to_float(int X_int, float X_min, float X_max, int Bits);
 
@@ -354,7 +352,7 @@ void DM_Motor_Command(FDCAN_TxFrame_TypeDef *FDCAN_TxFrame,DM_Motor_Info_Typedef
 		break;
 	
 		default:
-	    break;   
+	    break;
 	}
 	
    USER_FDCAN_AddMessageToTxFifoQ(FDCAN_TxFrame);
@@ -414,7 +412,7 @@ void DM_Motor_CAN_TxMessage(FDCAN_TxFrame_TypeDef *FDCAN_TxFrame,DM_Motor_Info_T
 	  uint8_t *Velocity_Tmp;
 		Velocity_Tmp = (uint8_t*) & Velocity;
 		
-    FDCAN_TxFrame->Header.Identifier = DM_Motor->FDCANFrame.TxIdentifier + 0x200;
+        FDCAN_TxFrame->Header.Identifier = DM_Motor->FDCANFrame.TxIdentifier + 0x200;
 		
 		FDCAN_TxFrame->Data[0] = *(Velocity_Tmp);
 		FDCAN_TxFrame->Data[1] = *(Velocity_Tmp + 1);

@@ -223,3 +223,23 @@ float Cascade_PID_Control(PID_Info_TypeDef *pos_pid, PID_Info_TypeDef *vel_pid,
 
     return final_output;
 }
+
+/**
+ * @brief Single loop PID control for angle with shortest path logic.
+ * @param pid: Pointer to the PID structure (PID_POSITION type recommended).
+ * @param target_angle: Desired angle.
+ * @param measure_angle: Current angle.
+ * @retval Final control output.
+ */
+float Single_Angle_PID_Calculate(PID_Info_TypeDef *pid, float target_angle, float measure_angle)
+{
+    /* 1. Calculate the shortest path error */
+    float angle_error = target_angle - measure_angle;
+    angle_error = Angle_Error_Normalize(angle_error);
+    
+    /* 2. Execute PID calculation */
+    /* Note: To force the PID to use our normalized error, 
+       we bypass the internal (Target - Measure) calculation 
+       by setting Measure to 0 and Target to the error. */
+    return PID_Calculate(pid, angle_error, 0.0f);
+}

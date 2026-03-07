@@ -87,9 +87,11 @@ typedef struct
     Chassis_Mode_e last_mode;
     Chassis_Mode_e lift_mode;
 
-    float vx;
-    float vy;
-    float vw;
+    float target_vx;
+    float target_vy;
+    float target_vw;
+
+    float target_direction;
 
     bool activated_flag;
 } Chassis_Info_Typedef;

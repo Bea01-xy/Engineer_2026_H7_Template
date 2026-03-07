@@ -142,6 +142,8 @@ extern float PID_Calculate(PID_Info_TypeDef *PID, float Target,float Measure);
 float Cascade_PID_Control(PID_Info_TypeDef *pos_pid, PID_Info_TypeDef *vel_pid,
                           float target_angle, float measure_angle, float measure_vel);
 
+float Single_Angle_PID_Calculate(PID_Info_TypeDef *PID, float Target, float Measure);
+
 /**
  * @brief Normalize the angle error to [-180, 180] for the shortest path.
  */

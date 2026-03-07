@@ -17,7 +17,7 @@
 #include "bsp_can.h"
 #include "Motor.h"
 #include "Remote_Control.h"
-
+#include "Chassis_Config.h"
 /**
  * @brief The structure that contains the Information of FDCAN1 and FDCAN2 Receive.
  */
@@ -165,10 +165,10 @@ void USER_FDCAN_AddMessageToTxFifoQ(FDCAN_TxFrame_TypeDef *FDCAN_TxFrame){
   */
 static void FDCAN1_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
 {
-	DM_Motor_Info_Update(Identifier,Data,&DM_8009_Motor[0]);
-	DM_Motor_Info_Update(Identifier,Data,&DM_8009_Motor[1]);
-	DM_Motor_Info_Update(Identifier,Data,&DM_8009_Motor[2]);
-	DM_Motor_Info_Update(Identifier,Data,&DM_8009_Motor[3]);
+	DM_Motor_Info_Update(Identifier,Data,&DM_6006_Motor[LF]);
+	DM_Motor_Info_Update(Identifier,Data,&DM_6006_Motor[LB]);
+	DM_Motor_Info_Update(Identifier,Data,&DM_6006_Motor[RB]);
+	DM_Motor_Info_Update(Identifier,Data,&DM_6006_Motor[RF]);
 }
 
 /**
@@ -191,10 +191,10 @@ static void FDCAN3_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
   */
 static void FDCAN2_RxFifo1RxHandler(uint32_t *Identifier,uint8_t Data[8])
 {
-	DJI_Motor_Info_Update(Identifier,Data,&M3508_Motor[0]);
-	DJI_Motor_Info_Update(Identifier,Data,&M3508_Motor[1]);
-	DJI_Motor_Info_Update(Identifier,Data,&M3508_Motor[2]);
-	DJI_Motor_Info_Update(Identifier,Data,&M3508_Motor[3]);
+	DJI_Motor_Info_Update(Identifier,Data,&M3508_Motor[LF]);
+	DJI_Motor_Info_Update(Identifier,Data,&M3508_Motor[LB]);
+	DJI_Motor_Info_Update(Identifier,Data,&M3508_Motor[RB]);
+	DJI_Motor_Info_Update(Identifier,Data,&M3508_Motor[RF]);
 }
 
 /**
