@@ -41,6 +41,11 @@ extern Chassis_Info_Typedef chassis_info;
 
 void CAN_Task(void)
 {
+	DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[LF],Motor_Save_Zero_Position);
+	DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[LB],Motor_Save_Zero_Position);
+    osDelay(1);
+	DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[RB],Motor_Save_Zero_Position);
+	DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[RF],Motor_Save_Zero_Position);
     TickType_t CAN_Task_SysTick = 0;
 	for(;;)
     {
