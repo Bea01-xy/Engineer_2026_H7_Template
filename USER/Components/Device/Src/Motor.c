@@ -75,9 +75,9 @@ DM_Motor_Info_Typedef DM_6006_Motor[4]= {
 	[0] = {
 			.Control_Mode = MIT,
 			.Param_Range ={
-			   .P_MAX = 3.141593f,
+			   .P_MAX = 12.5f,
 			   .V_MAX = 45.f,
-			   .T_MAX = 54.f		
+			   .T_MAX = 4.f		
 			},
 		  .FDCANFrame = {
 				 .TxIdentifier = 0x01,
@@ -88,9 +88,9 @@ DM_Motor_Info_Typedef DM_6006_Motor[4]= {
     [1] = {
 			.Control_Mode = MIT,	
 			.Param_Range ={
-			   .P_MAX = 3.141593f,
+			   .P_MAX = 12.5f,
 			   .V_MAX = 45.f,
-			   .T_MAX = 54.f		
+			   .T_MAX = 4.f		
 				
 			},	
 		  .FDCANFrame = {
@@ -102,9 +102,9 @@ DM_Motor_Info_Typedef DM_6006_Motor[4]= {
     [2] = {
 			.Control_Mode = MIT,
       .Param_Range ={
-			   .P_MAX = 3.141593f,
+			   .P_MAX = 12.5f,
 			   .V_MAX = 45.f,
-			   .T_MAX = 54.f		
+			   .T_MAX = 4.f		
 				
 			},	
 		  .FDCANFrame = {
@@ -116,9 +116,9 @@ DM_Motor_Info_Typedef DM_6006_Motor[4]= {
 	  [3] = {
 			 .Control_Mode = MIT,	
 			 .Param_Range ={
-			   .P_MAX = 3.141593f,
+			   .P_MAX = 12.5f,
 			   .V_MAX = 45.f,
-			   .T_MAX = 54.f		
+			   .T_MAX = 4.f		
 				
 			},	
 		  .FDCANFrame = {

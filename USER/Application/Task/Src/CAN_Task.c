@@ -42,14 +42,10 @@ extern Chassis_Info_Typedef chassis_info;
 void CAN_Task(void)
 {
     TickType_t CAN_Task_SysTick = 0;
-	DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LF],Motor_Enable);
-    osDelay(30);
-	DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LB],Motor_Enable);
-    osDelay(30);
-    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RB],Motor_Enable);
-    osDelay(30);
-	DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RF],Motor_Enable);
-    osDelay(30);
+    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LF],Motor_Save_Zero_Position);
+	DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LB],Motor_Save_Zero_Position);
+    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RB],Motor_Save_Zero_Position);
+	DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RF],Motor_Save_Zero_Position);
 	for(;;)
     {
 		CAN_Task_SysTick = osKernelSysTick();
@@ -64,10 +60,17 @@ void CAN_Task(void)
 void DM6006_Handler(const bool activated)
 {
     if (activated) {
-		DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM_6006_Motor[LF],2,0,0,0.3,0.1);
+		//DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM_6006_Motor[LF],2,0,0,0.3,0.1);
+        DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LF],Motor_Enable);
+	    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LB],Motor_Enable);
+        DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RB],Motor_Enable);
+	    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RF],Motor_Enable);
     }
     else {
 	    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LF],Motor_Disable);
+	    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LB],Motor_Disable);
+        DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RB],Motor_Disable);
+	    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RF],Motor_Disable);
     }
 }
 
@@ -76,3 +79,4 @@ void M3508_Handler(void)
     M3508_motor_crt_ctrl(&hfdcan2, 0x200, M3508_Motor[LF].Data.Final_Output,
         M3508_Motor[LB].Data.Final_Output,M3508_Motor[RB].Data.Final_Output,M3508_Motor[RF].Data.Final_Output);
 }
+

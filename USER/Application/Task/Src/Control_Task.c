@@ -34,10 +34,8 @@ static void chassis_set(bool acticated);
 Chassis_Info_Typedef chassis_info;
 
 static float M3508_PID_Param[PID_PARAMETER_NUM] = {M3508_KP, M3508_KI, M3508_KD, 0.5f, 2.f, 2000.f, 15000.f};
-static float Chassis_Direction_PID_Param[PID_PARAMETER_NUM] = {2, 0.05f, 0.3f, 0.2f, 2.f, 1.f, 3.f};
 
 PID_Info_TypeDef M3508_PID[4];
-PID_Info_TypeDef Chassis_Direction_PID;
 
 TickType_t Control_Task_SysTick = 0;
 void Control_Task(void)
@@ -74,8 +72,6 @@ static void Control_Init(void)
     PID_Init(&M3508_PID[LB],PID_POSITION,M3508_PID_Param);
     PID_Init(&M3508_PID[RB],PID_POSITION,M3508_PID_Param);
     PID_Init(&M3508_PID[RF],PID_POSITION,M3508_PID_Param);
-
-    PID_Init(&Chassis_Direction_PID,PID_POSITION,Chassis_Direction_PID_Param);
 
     chassis_info.activated_flag = false;
     chassis_info.mode = CHASSIS_DISABLE;
@@ -129,9 +125,6 @@ static void chassis_set(const bool acticated)
         PID_Calculate(&M3508_PID[LB], M3508_Motor[LB].Data.Target_Velocity, M3508_Motor[LB].Data.Velocity);
         PID_Calculate(&M3508_PID[RB], M3508_Motor[RB].Data.Target_Velocity, M3508_Motor[RB].Data.Velocity);
         PID_Calculate(&M3508_PID[RF], M3508_Motor[RF].Data.Target_Velocity, M3508_Motor[RF].Data.Velocity);
-
-        Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
-        chassis_info.target_vw = Chassis_Direction_PID.Output;
 
         //just for now
         M3508_Motor[LF].Data.Final_Output = M3508_PID[LF].Output;
