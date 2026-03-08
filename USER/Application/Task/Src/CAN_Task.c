@@ -34,47 +34,51 @@
 * @retval None
 */
 /* USER CODE END Header_CAN_Task */
-void DM6006_Handler(bool activated);
-void M3508_Handler(void);
+void DM6006_set(bool activated);
+void M3508_set(void);
 
 extern Chassis_Info_Typedef chassis_info;
 
 void CAN_Task(void)
 {
     TickType_t CAN_Task_SysTick = 0;
-    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LF],Motor_Save_Zero_Position);
-	DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LB],Motor_Save_Zero_Position);
-    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RB],Motor_Save_Zero_Position);
-	DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RF],Motor_Save_Zero_Position);
 	for(;;)
     {
 		CAN_Task_SysTick = osKernelSysTick();
 	    if(CAN_Task_SysTick % 2 == 0){
 	    }
-        DM6006_Handler(chassis_info.activated_flag);
-        M3508_Handler();
+        DM6006_set(chassis_info.activated_flag);
+        M3508_set();
         osDelay(1);
     }
 }
 
-void DM6006_Handler(const bool activated)
+void DM6006_set(const bool activated)
 {
     if (activated) {
-		//DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM_6006_Motor[LF],2,0,0,0.3,0.1);
-        DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LF],Motor_Enable);
-	    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LB],Motor_Enable);
-        DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RB],Motor_Enable);
-	    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RF],Motor_Enable);
+        DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[LF],Motor_Enable);
+	    DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[LB],Motor_Enable);
+        DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[RB],Motor_Enable);
+	    DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[RF],Motor_Enable);
+
+        DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM6006_Motor[LF],DM6006_Motor[LF].Data.Target_Position,
+            MIT_NO_USE,DM6006_KP,MIT_NO_USE,DM6006_Motor[LF].Data.Feedforward);
+        DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM6006_Motor[LB],DM6006_Motor[LB].Data.Target_Position,
+            MIT_NO_USE,DM6006_KP,MIT_NO_USE,DM6006_Motor[LB].Data.Feedforward);
+        DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM6006_Motor[RB],DM6006_Motor[RB].Data.Target_Position,
+            MIT_NO_USE,DM6006_KP,MIT_NO_USE,DM6006_Motor[RB].Data.Feedforward);
+        DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM6006_Motor[RF],DM6006_Motor[RF].Data.Target_Position,
+            MIT_NO_USE,DM6006_KP,MIT_NO_USE,DM6006_Motor[RF].Data.Feedforward);
     }
     else {
-	    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LF],Motor_Disable);
-	    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[LB],Motor_Disable);
-        DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RB],Motor_Disable);
-	    DM_Motor_Command(&FDCAN1_TxFrame,&DM_6006_Motor[RF],Motor_Disable);
+	    DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[LF],Motor_Disable);
+	    DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[LB],Motor_Disable);
+        DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[RB],Motor_Disable);
+	    DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[RF],Motor_Disable);
     }
 }
 
-void M3508_Handler(void)
+void M3508_set(void)
 {
     M3508_motor_crt_ctrl(&hfdcan2, 0x200, M3508_Motor[LF].Data.Final_Output,
         M3508_Motor[LB].Data.Final_Output,M3508_Motor[RB].Data.Final_Output,M3508_Motor[RF].Data.Final_Output);

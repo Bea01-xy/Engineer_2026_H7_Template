@@ -75,17 +75,21 @@ typedef enum
     CHASSIS_ONLY,
     CHASSIS_DISABLE,
     CHASSIS_LIFT,
-
-    AUTO_LIFT_STAGE_1,
-    AUTO_LIFT_STAGE_2,
-    AUTO_LIFT_STAGE_3,
 } Chassis_Mode_e;
+
+typedef enum
+{
+    LIFT_STAGE_1,
+    LIFT_STAGE_2,
+    LIFT_STAGE_3,
+} Chassis_LIFT_Mode_e;
 
 typedef struct
 {
     Chassis_Mode_e mode;
     Chassis_Mode_e last_mode;
-    Chassis_Mode_e lift_mode;
+    Chassis_LIFT_Mode_e lift_mode;
+    Chassis_LIFT_Mode_e last_lift_mode;
 
     float target_vx;
     float target_vy;
@@ -96,6 +100,18 @@ typedef struct
     bool activated_flag;
 } Chassis_Info_Typedef;
 
-/* Exported functions prototypes ---------------------------------------------*/
+/* @brief DM6006 parameters*/
+#define MIT_NO_USE 0u
+#define DM6006_KP 1.2f
+
+#define DM6006_LF_USUAL_POS 9.42f
+#define DM6006_LB_USUAL_POS -9.41f
+#define DM6006_RB_USUAL_POS 9.417f
+#define DM6006_RF_USUAL_POS -9.45f
+
+#define DM6006_LF_ACTIVATED_POS 0.f
+#define DM6006_LB_ACTIVATED_POS 0.f
+#define DM6006_RB_ACTIVATED_POS 0.f
+#define DM6006_RF_ACTIVATED_POS 0.f
 
 #endif /* CHASSIS_CONFIG_H */

@@ -165,10 +165,10 @@ void USER_FDCAN_AddMessageToTxFifoQ(FDCAN_TxFrame_TypeDef *FDCAN_TxFrame){
   */
 static void FDCAN1_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
 {
-	DM_Motor_Info_Update(Identifier,Data,&DM_6006_Motor[LF]);
-	DM_Motor_Info_Update(Identifier,Data,&DM_6006_Motor[LB]);
-	DM_Motor_Info_Update(Identifier,Data,&DM_6006_Motor[RB]);
-	DM_Motor_Info_Update(Identifier,Data,&DM_6006_Motor[RF]);
+	DM_Motor_Info_Update(Identifier,Data,&DM6006_Motor[LF]);
+	DM_Motor_Info_Update(Identifier,Data,&DM6006_Motor[LB]);
+	DM_Motor_Info_Update(Identifier,Data,&DM6006_Motor[RB]);
+	DM_Motor_Info_Update(Identifier,Data,&DM6006_Motor[RF]);
 }
 
 /**

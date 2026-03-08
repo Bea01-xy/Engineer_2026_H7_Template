@@ -25,6 +25,7 @@
 #include "bsp_uart.h"
 #include "Motor.h"
 #include "PID.h"
+
 /* USER CODE BEGIN Header_Detect_Task */
 static void chassis_set_mode(Chassis_Info_Typedef* chassis);
 static void chassis_ctrl_info_get(void);
@@ -65,9 +66,6 @@ void Detect_Task(void)
 
 		Detect_Task_SysTick = osKernelSysTick();//no use for now
 
-        //USART_Vofa_Justfloat_Transmit(chassis_info.target_vx,chassis_info.target_vy,chassis_info.target_vw);
-        USART_Vofa_Justfloat_Transmit(0, chassis_info.target_direction, INS_Info.Yaw_Angle);
-
         osDelay(1);
     }
     /* USER CODE END Detect_Task */
@@ -100,16 +98,17 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
     else if (switch_is_mid(remote_ctrl.rc.s[1]))
     {
         chassis->last_mode = chassis->mode;
+        chassis->last_lift_mode = chassis->lift_mode;
         chassis->mode = CHASSIS_LIFT;
 
         if(switch_is_down(remote_ctrl.rc.s[0]))
-            chassis->lift_mode = AUTO_LIFT_STAGE_1;
+            chassis->lift_mode = LIFT_STAGE_1;
 
         else if(switch_is_mid(remote_ctrl.rc.s[0]))
-            chassis->lift_mode = AUTO_LIFT_STAGE_2;
+            chassis->lift_mode = LIFT_STAGE_2;
 
         else if(switch_is_up(remote_ctrl.rc.s[0]))
-            chassis->lift_mode = AUTO_LIFT_STAGE_3;
+            chassis->lift_mode = LIFT_STAGE_3;
     }
     else if (switch_is_down(remote_ctrl.rc.s[1]))
     {
@@ -126,7 +125,7 @@ static void chassis_ctrl_info_get(void)
     Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
     chassis_info.target_vw += Chassis_Direction_PID.Output;
 
-   chassis_info.target_direction += remote_ctrl.rc.ch[0] * RC_TO_VW * 0.025f; //integrate to get direction
+    chassis_info.target_direction += remote_ctrl.rc.ch[0] * RC_TO_VW * 0.025f; //integrate to get direction
     chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
 }
 

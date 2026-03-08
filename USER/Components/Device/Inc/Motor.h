@@ -107,6 +107,8 @@ typedef struct
   float  Temperature_MOS;   /*!< Motor Temperature_MOS   */
   float  Temperature_Rotor; /*!< Motor Temperature_Rotor */
 	
+  float  Target_Position;   /*!< Target Motor Positon  */
+  float  Feedforward;       /*!< Feedforward Torque */
 }DM_Motor_Data_Typedef;
 
 /**
@@ -148,7 +150,7 @@ typedef struct
 /* Externs ------------------------------------------------------------------*/
 extern DJI_Motor_Info_Typedef DJI_Yaw_Motor,M3508_Motor[4];
 
-extern DM_Motor_Info_Typedef DM_6006_Motor[4];
+extern DM_Motor_Info_Typedef DM6006_Motor[4];
 
 extern DM_Motor_Contorl_Info_Typedef DM_Motor_Contorl_Info[4];
 

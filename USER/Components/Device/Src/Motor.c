@@ -70,7 +70,7 @@ DJI_Motor_Info_Typedef M3508_Motor[4] = {
 /**
  * @brief The structure that contains the Information of joint motor.Use DM 6006 motor.
  */
-DM_Motor_Info_Typedef DM_6006_Motor[4]= {
+DM_Motor_Info_Typedef DM6006_Motor[4]= {
 
 	[0] = {
 			.Control_Mode = MIT,
