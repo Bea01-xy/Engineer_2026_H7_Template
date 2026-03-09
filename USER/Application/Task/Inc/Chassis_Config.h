@@ -50,6 +50,10 @@
 #define M3508_KP 15.0f
 #define M3508_KI 0.1f
 #define M3508_KD 0.04f
+#define M3508_Alpha 0.5f
+#define M3508_Deadband 2.0f
+#define M3508_LimitIntegral 2000.0f
+#define M3508_LimitOutput 15000.0f
 /* ----------------------- RC Switch Definition----------------------------- */
 #define RC_SW_UP                ((uint16_t)1)
 #define RC_SW_MID               ((uint16_t)3)
@@ -107,14 +111,15 @@ typedef struct
 #define DM6006_FEEDFORWARD_FOR_LB_RF 0.97f
 #define DM6006_FEEDFORWARD_FOR_LF_RB -0.97f
 
-#define DM6006_LF_USUAL_POS 0.f
-#define DM6006_LB_USUAL_POS 0.f
-#define DM6006_RB_USUAL_POS 0.f
-#define DM6006_RF_USUAL_POS 0.f
+#define DM6006_USUAL_POS 0.f
 
-#define DM6006_LF_ACTIVATED_POS -9.44
-#define DM6006_LB_ACTIVATED_POS 9.37f
-#define DM6006_RB_ACTIVATED_POS -9.40
-#define DM6006_RF_ACTIVATED_POS 9.40
+#define DM6006_LF_1st_ACTIVATED_POS -9.44
+#define DM6006_LB_1st_ACTIVATED_POS 9.37f
+#define DM6006_RB_1st_ACTIVATED_POS -9.40
+#define DM6006_RF_1st_ACTIVATED_POS 9.40
 
+#define DM6006_LF_2nd_ACTIVATED_POS (DM6006_LF_1st_ACTIVATED_POS*0.8f)
+#define DM6006_LB_2nd_ACTIVATED_POS (DM6006_LB_1st_ACTIVATED_POS*0.8f)
+#define DM6006_RB_2nd_ACTIVATED_POS (DM6006_RB_1st_ACTIVATED_POS*0.8f)
+#define DM6006_RF_2nd_ACTIVATED_POS (DM6006_RF_1st_ACTIVATED_POS*0.8f)
 #endif /* CHASSIS_CONFIG_H */

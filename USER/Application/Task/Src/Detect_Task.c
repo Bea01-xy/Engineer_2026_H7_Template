@@ -61,9 +61,6 @@ void Detect_Task(void)
         chassis_ctrl_info_get();
         chassis_wheel_cal();
 
-        Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
-        chassis_info.target_vw += Chassis_Direction_PID.Output;
-
 		Detect_Task_SysTick = osKernelSysTick();//no use for now
 
         osDelay(1);

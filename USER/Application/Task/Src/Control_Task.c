@@ -32,12 +32,13 @@ static void chassis_only_handler(void);
 
 static void M3508_cal(bool acticated);
 static void DM6006_cal(void);
+
 bool lifting_mode_changed(void);
-static void DM6006_set_feedforward(void);
+static void DM6006_set_feedforward_and_pos(void);
 
 Chassis_Info_Typedef chassis_info;
 
-static float M3508_PID_Param[PID_PARAMETER_NUM] = {M3508_KP, M3508_KI, M3508_KD, 0.5f, 2.f, 2000.f, 15000.f};
+static float M3508_PID_Param[PID_PARAMETER_NUM] = {M3508_KP, M3508_KI, M3508_KD, M3508_Alpha, M3508_Deadband, M3508_LimitIntegral, M3508_LimitOutput};
 
 PID_Info_TypeDef M3508_PID[4];
 
@@ -68,8 +69,7 @@ void Control_Task(void)
         }
 
 	    Timer_When_Lift_Stage_Changed++;
-        // USART_Vofa_Justfloat_Transmit(DM6006_Motor[LF].Data.Position,DM6006_Motor[LB].Data.Position, DM6006_Motor[RB].Data.Position);
-	    USART_Vofa_Justfloat_Transmit(DM6006_Motor[LF].Data.Target_Position, DM6006_Motor[LF].Data.Temp_Target_Position, DM6006_Motor[LF].Data.Position);
+	    //USART_Vofa_Justfloat_Transmit(DM6006_Motor[LF].Data.Target_Position, DM6006_Motor[LF].Data.Temp_Target_Position, DM6006_Motor[LF].Data.Position);
 		osDelay(1);
     }
 }
@@ -94,10 +94,10 @@ static void Control_Init(void)
     DM6006_Motor[RB].Data.Feedforward = 0;
     DM6006_Motor[RF].Data.Feedforward = 0;
 
-    DM6006_Motor[LF].Data.Target_Position = DM6006_LF_USUAL_POS;
-    DM6006_Motor[LB].Data.Target_Position = DM6006_LB_USUAL_POS;
-    DM6006_Motor[RB].Data.Target_Position = DM6006_RB_USUAL_POS;
-    DM6006_Motor[RF].Data.Target_Position = DM6006_RF_USUAL_POS;
+    DM6006_Motor[LF].Data.Target_Position = DM6006_USUAL_POS;
+    DM6006_Motor[LB].Data.Target_Position = DM6006_USUAL_POS;
+    DM6006_Motor[RB].Data.Target_Position = DM6006_USUAL_POS;
+    DM6006_Motor[RF].Data.Target_Position = DM6006_USUAL_POS;
 }
 
 static float SmootherStep(float NowTime,float UseTime)
@@ -121,7 +121,7 @@ static void chassis_lifting_handler(void)
     chassis_info.activated_flag = true;
     if (lifting_mode_changed()) {
         Timer_When_Lift_Stage_Changed = 0;
-        DM6006_set_feedforward();
+        DM6006_set_feedforward_and_pos();
         DM6006_Motor[LF].Data.Start_Position = DM6006_Motor[LF].Data.Position;
         DM6006_Motor[LB].Data.Start_Position = DM6006_Motor[LB].Data.Position;
         DM6006_Motor[RB].Data.Start_Position = DM6006_Motor[RB].Data.Position;
@@ -155,10 +155,10 @@ static void chassis_only_handler(void)
     HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOC,GPIO_PIN_14,GPIO_PIN_RESET);
     chassis_info.activated_flag = true;
-    DM6006_Motor[LF].Data.Temp_Target_Position = DM6006_LF_USUAL_POS;
-    DM6006_Motor[LB].Data.Temp_Target_Position = DM6006_LB_USUAL_POS;
-    DM6006_Motor[RB].Data.Temp_Target_Position = DM6006_RB_USUAL_POS;
-    DM6006_Motor[RF].Data.Temp_Target_Position = DM6006_RF_USUAL_POS;
+    DM6006_Motor[LF].Data.Temp_Target_Position = DM6006_USUAL_POS;
+    DM6006_Motor[LB].Data.Temp_Target_Position = DM6006_USUAL_POS;
+    DM6006_Motor[RB].Data.Temp_Target_Position = DM6006_USUAL_POS;
+    DM6006_Motor[RF].Data.Temp_Target_Position = DM6006_USUAL_POS;
     M3508_cal(chassis_info.activated_flag);
 }
 
@@ -180,41 +180,24 @@ static void M3508_cal(const bool acticated)
 
 static void DM6006_cal(void)
 {
-    switch (chassis_info.lift_mode) {
-        case LIFT_STAGE_1:
-            DM6006_Motor[LF].Data.Temp_Target_Position = DM6006_Motor[LF].Data.Start_Position + DM6006_Motor[LF].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
-            DM6006_Motor[LB].Data.Temp_Target_Position = DM6006_Motor[LB].Data.Start_Position + DM6006_Motor[LB].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
-            DM6006_Motor[RB].Data.Temp_Target_Position = DM6006_Motor[RB].Data.Start_Position + DM6006_Motor[RB].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
-            DM6006_Motor[RF].Data.Temp_Target_Position = DM6006_Motor[RF].Data.Start_Position + DM6006_Motor[RF].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
-            break;
-        case LIFT_STAGE_2:
-            DM6006_Motor[LF].Data.Temp_Target_Position = DM6006_Motor[LF].Data.Start_Position + DM6006_Motor[LF].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
-            DM6006_Motor[LB].Data.Temp_Target_Position = DM6006_Motor[LB].Data.Start_Position + DM6006_Motor[LB].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
-            DM6006_Motor[RB].Data.Temp_Target_Position = DM6006_Motor[RB].Data.Start_Position + DM6006_Motor[RB].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
-            DM6006_Motor[RF].Data.Temp_Target_Position = DM6006_Motor[RF].Data.Start_Position + DM6006_Motor[RF].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
-            break;
-        case LIFT_STAGE_3:
-            DM6006_Motor[LF].Data.Temp_Target_Position = DM6006_Motor[LF].Data.Start_Position + DM6006_Motor[LF].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
-            DM6006_Motor[LB].Data.Temp_Target_Position = DM6006_Motor[LB].Data.Start_Position + DM6006_Motor[LB].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
-            DM6006_Motor[RB].Data.Temp_Target_Position = DM6006_Motor[RB].Data.Start_Position + DM6006_Motor[RB].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
-            DM6006_Motor[RF].Data.Temp_Target_Position = DM6006_Motor[RF].Data.Start_Position + DM6006_Motor[RF].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
-            break;
-        default: break;
-    }
+    DM6006_Motor[LF].Data.Temp_Target_Position = DM6006_Motor[LF].Data.Start_Position + DM6006_Motor[LF].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
+    DM6006_Motor[LB].Data.Temp_Target_Position = DM6006_Motor[LB].Data.Start_Position + DM6006_Motor[LB].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
+    DM6006_Motor[RB].Data.Temp_Target_Position = DM6006_Motor[RB].Data.Start_Position + DM6006_Motor[RB].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
+    DM6006_Motor[RF].Data.Temp_Target_Position = DM6006_Motor[RF].Data.Start_Position + DM6006_Motor[RF].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
 }
 
 bool lifting_mode_changed(void){
     return chassis_info.last_lift_mode != chassis_info.lift_mode || chassis_info.last_mode != chassis_info.mode;
 }
 
-static void DM6006_set_feedforward(void)
+static void DM6006_set_feedforward_and_pos(void)
 {
     switch (chassis_info.lift_mode) {
         case LIFT_STAGE_1:
-            DM6006_Motor[LF].Data.Target_Position = DM6006_LF_ACTIVATED_POS;
-            DM6006_Motor[LB].Data.Target_Position = DM6006_LB_ACTIVATED_POS;
-            DM6006_Motor[RB].Data.Target_Position = DM6006_RB_ACTIVATED_POS;
-            DM6006_Motor[RF].Data.Target_Position = DM6006_RF_ACTIVATED_POS;
+            DM6006_Motor[LF].Data.Target_Position = DM6006_LF_1st_ACTIVATED_POS;
+            DM6006_Motor[LB].Data.Target_Position = DM6006_LB_1st_ACTIVATED_POS;
+            DM6006_Motor[RB].Data.Target_Position = DM6006_RB_1st_ACTIVATED_POS;
+            DM6006_Motor[RF].Data.Target_Position = DM6006_RF_1st_ACTIVATED_POS;
 
             DM6006_Motor[LF].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LF_RB;
             DM6006_Motor[LB].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LB_RF;
@@ -222,10 +205,10 @@ static void DM6006_set_feedforward(void)
             DM6006_Motor[RF].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LB_RF;
             break;
         case LIFT_STAGE_2:
-            DM6006_Motor[LF].Data.Target_Position = DM6006_LF_USUAL_POS;
-            DM6006_Motor[LB].Data.Target_Position = DM6006_LB_ACTIVATED_POS;
-            DM6006_Motor[RB].Data.Target_Position = DM6006_RB_ACTIVATED_POS;
-            DM6006_Motor[RF].Data.Target_Position = DM6006_RF_USUAL_POS;
+            DM6006_Motor[LF].Data.Target_Position = DM6006_USUAL_POS;
+            DM6006_Motor[LB].Data.Target_Position = DM6006_LB_1st_ACTIVATED_POS;
+            DM6006_Motor[RB].Data.Target_Position = DM6006_RB_1st_ACTIVATED_POS;
+            DM6006_Motor[RF].Data.Target_Position = DM6006_USUAL_POS;
 
             DM6006_Motor[LF].Data.Feedforward = 0.f;
             DM6006_Motor[LB].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LB_RF;
@@ -233,10 +216,10 @@ static void DM6006_set_feedforward(void)
             DM6006_Motor[RF].Data.Feedforward = 0.f;
             break;
         case LIFT_STAGE_3:
-            DM6006_Motor[LF].Data.Target_Position = DM6006_LF_USUAL_POS;
-            DM6006_Motor[LB].Data.Target_Position = DM6006_LB_USUAL_POS;
-            DM6006_Motor[RB].Data.Target_Position = DM6006_RB_USUAL_POS;
-            DM6006_Motor[RF].Data.Target_Position = DM6006_RF_USUAL_POS;
+            DM6006_Motor[LF].Data.Target_Position = DM6006_USUAL_POS;
+            DM6006_Motor[LB].Data.Target_Position = DM6006_USUAL_POS;
+            DM6006_Motor[RB].Data.Target_Position = DM6006_USUAL_POS;
+            DM6006_Motor[RF].Data.Target_Position = DM6006_USUAL_POS;
 
             DM6006_Motor[LF].Data.Feedforward = 0.f;
             DM6006_Motor[LB].Data.Feedforward = 0.f;
