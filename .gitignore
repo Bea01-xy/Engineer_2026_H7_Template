@@ -7,3 +7,4 @@ build.ninja
 .DS_Store
 build
 .cache
+*.deb

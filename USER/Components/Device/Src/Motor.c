@@ -19,12 +19,12 @@
 /**
  * @brief The structure that contains the Information of yaw motor.Use DJI GM6020 motor.
  */
-DJI_Motor_Info_Typedef DJI_Yaw_Motor =
+DJI_Motor_Info_Typedef M2006_Gripper_Motor =
 {
-	  .Type = DJI_GM6020,
+	  .Type = DJI_M2006,
 		.FDCANFrame = {
-					  .TxIdentifier = 0x1ff,
-					  .RxIdentifier = 0x207,
+					  .TxIdentifier = 0x200,
+					  .RxIdentifier = 0x201,
 		}
 
 };

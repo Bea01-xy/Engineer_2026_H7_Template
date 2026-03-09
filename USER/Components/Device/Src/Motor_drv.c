@@ -58,3 +58,8 @@ void M3508_motor_crt_ctrl(FDCAN_HandleTypeDef* hcan, uint16_t dji_motor_identifi
 {
     GM6020_motor_vol_ctrl(hcan,dji_motor_identifier,id_1_crt,id_2_crt,id_3_crt,id_4_crt);
 }
+
+void M2006_motor_crt_ctrl(FDCAN_HandleTypeDef* hcan, uint16_t dji_motor_identifier, int16_t id_1_crt, int16_t id_2_crt,int16_t id_3_crt, int16_t id_4_crt)
+{
+    GM6020_motor_vol_ctrl(hcan,dji_motor_identifier,id_1_crt,id_2_crt,id_3_crt,id_4_crt);
+}

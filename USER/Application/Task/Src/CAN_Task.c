@@ -90,5 +90,7 @@ void M3508_set(void)
 {
     M3508_motor_crt_ctrl(&hfdcan2, 0x200, M3508_Motor[LF].Data.Final_Output,
         M3508_Motor[LB].Data.Final_Output,M3508_Motor[RB].Data.Final_Output,M3508_Motor[RF].Data.Final_Output);
-}
 
+    M2006_motor_crt_ctrl(&hfdcan3, 0x200, 3000,
+        0,0,0);
+}

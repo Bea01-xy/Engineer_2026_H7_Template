@@ -54,7 +54,7 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 extern FDCAN_TxFrame_TypeDef FDCAN1_TxFrame;
-extern DJI_Motor_Info_Typedef DJI_Yaw_Motor;
+extern DJI_Motor_Info_Typedef M2006_Gripper_Motor;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

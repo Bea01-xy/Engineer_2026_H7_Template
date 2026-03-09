@@ -179,7 +179,7 @@ static void FDCAN1_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
   */
 static void FDCAN3_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
 {
-	DJI_Motor_Info_Update(Identifier,Data,&DJI_Yaw_Motor);
+	DJI_Motor_Info_Update(Identifier,Data,&M2006_Gripper_Motor);
 }
 
 
