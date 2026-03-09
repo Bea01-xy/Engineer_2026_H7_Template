@@ -108,6 +108,8 @@ typedef struct
   	float  Temperature_Rotor; /*!< Motor Temperature_Rotor */
 	
 	float  Target_Position;   /*!< Target Motor Positon  */
+	float  Start_Position;
+	float  Temp_Target_Position;
 	float  Error_Position;    /*!< Target Motor Positon minus Motor Positon  */
 	float  Feedforward;       /*!< Feedforward Torque */
 }DM_Motor_Data_Typedef;
