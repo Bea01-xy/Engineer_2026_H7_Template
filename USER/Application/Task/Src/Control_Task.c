@@ -33,6 +33,7 @@ static void chassis_only_handler(void);
 static void M3508_cal(bool acticated);
 static void DM6006_cal(void);
 bool lifting_mode_changed(void);
+static void DM6006_set_feedforward(void);
 
 Chassis_Info_Typedef chassis_info;
 
@@ -42,7 +43,6 @@ PID_Info_TypeDef M3508_PID[4];
 
 TickType_t Control_Task_SysTick = 0; //to lower the frequence
 TickType_t Timer_When_Lift_Stage_Changed = 0;
-bool Timer_Activated = false;
 void Control_Task(void)
 {
     /* USER CODE BEGIN Control_Task */
@@ -67,9 +67,7 @@ void Control_Task(void)
             default: break;
         }
 
-        if (Timer_Activated) {
-            Timer_When_Lift_Stage_Changed++;
-        }
+	    Timer_When_Lift_Stage_Changed++;
 
         USART_Vofa_Justfloat_Transmit(DM6006_Motor[LF].Data.Position,DM6006_Motor[LB].Data.Position, DM6006_Motor[RB].Data.Position);
 		osDelay(1);
@@ -104,11 +102,9 @@ static void Control_Init(void)
 
 static float SmootherStep(float NowTime,float UseTime)
 {
-    if (NowTime > UseTime)
-    {
+    if (NowTime > UseTime){
         return 1.f;
     }
-
 	float Time = (NowTime/UseTime);
     float Time2 = Time * Time;
     float Time3 = Time2 * Time;
@@ -125,28 +121,7 @@ static void chassis_lifting_handler(void)
     chassis_info.activated_flag = true;
     if (lifting_mode_changed()) {
         Timer_When_Lift_Stage_Changed = 0;
-        Timer_Activated = true;
-        switch (chassis_info.lift_mode) {
-            case LIFT_STAGE_1:
-                DM6006_Motor[LF].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LF_RB;
-                DM6006_Motor[LB].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LB_RF;
-                DM6006_Motor[RB].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LF_RB;
-                DM6006_Motor[RF].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LB_RF;
-                break;
-            case LIFT_STAGE_2:
-                DM6006_Motor[LF].Data.Feedforward = 0.f;
-                DM6006_Motor[LB].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LB_RF;
-                DM6006_Motor[RB].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LF_RB;
-                DM6006_Motor[RF].Data.Feedforward = 0.f;
-                break;
-            case LIFT_STAGE_3:
-                DM6006_Motor[LF].Data.Feedforward = 0.f;
-                DM6006_Motor[LB].Data.Feedforward = 0.f;
-                DM6006_Motor[RB].Data.Feedforward = 0.f;
-                DM6006_Motor[RF].Data.Feedforward = 0.f;
-                break;
-            default: break;
-        }
+        DM6006_set_feedforward();
     }
     M3508_cal(chassis_info.activated_flag);
     DM6006_cal();
@@ -156,7 +131,6 @@ static void chassis_disabled_handler(void)
 {
     HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
     HAL_GPIO_WritePin(GPIOC,GPIO_PIN_14,GPIO_PIN_SET);
-    Timer_Activated = false;
     chassis_info.activated_flag = false;
     chassis_info.target_vx = 0.0f;
     chassis_info.target_vy = 0.0f;
@@ -222,4 +196,29 @@ static void DM6006_cal(void)
 
 bool lifting_mode_changed(void){
     return chassis_info.last_lift_mode != chassis_info.lift_mode || chassis_info.last_mode != chassis_info.mode;
+}
+
+static void DM6006_set_feedforward(void)
+{
+    switch (chassis_info.lift_mode) {
+        case LIFT_STAGE_1:
+            DM6006_Motor[LF].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LF_RB;
+            DM6006_Motor[LB].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LB_RF;
+            DM6006_Motor[RB].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LF_RB;
+            DM6006_Motor[RF].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LB_RF;
+            break;
+        case LIFT_STAGE_2:
+            DM6006_Motor[LF].Data.Feedforward = 0.f;
+            DM6006_Motor[LB].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LB_RF;
+            DM6006_Motor[RB].Data.Feedforward = DM6006_FEEDFORWARD_FOR_LF_RB;
+            DM6006_Motor[RF].Data.Feedforward = 0.f;
+            break;
+        case LIFT_STAGE_3:
+            DM6006_Motor[LF].Data.Feedforward = 0.f;
+            DM6006_Motor[LB].Data.Feedforward = 0.f;
+            DM6006_Motor[RB].Data.Feedforward = 0.f;
+            DM6006_Motor[RF].Data.Feedforward = 0.f;
+            break;
+        default: break;
+    }
 }
