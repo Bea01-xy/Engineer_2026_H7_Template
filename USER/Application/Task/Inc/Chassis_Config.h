@@ -102,7 +102,7 @@ typedef struct
 
 /* @brief DM6006 parameters*/
 #define MIT_NO_USE 0u
-#define LIFTING_TIME 1000u
+#define LIFTING_TIME 800u //ms
 #define DM6006_KP 2.f
 #define DM6006_FEEDFORWARD_FOR_LB_RF 0.97f
 #define DM6006_FEEDFORWARD_FOR_LF_RB -0.97f

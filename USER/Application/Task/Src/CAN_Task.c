@@ -67,14 +67,14 @@ void DM6006_set(const bool activated)
         DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[RB],Motor_Enable);
 	    DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[RF],Motor_Enable);
 
-        DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM6006_Motor[LF],DM6006_Motor[LF].Data.Target_Position,
+        DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM6006_Motor[LF],DM6006_Motor[LF].Data.Temp_Target_Position,
             MIT_NO_USE,DM6006_KP,MIT_NO_USE,DM6006_Motor[LF].Data.Feedforward);
-        DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM6006_Motor[LB],DM6006_Motor[LB].Data.Target_Position,
+        DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM6006_Motor[LB],DM6006_Motor[LB].Data.Temp_Target_Position,
             MIT_NO_USE,DM6006_KP,MIT_NO_USE,DM6006_Motor[LB].Data.Feedforward);
         osDelay(1);
-        DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM6006_Motor[RB],DM6006_Motor[RB].Data.Target_Position,
+        DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM6006_Motor[RB],DM6006_Motor[RB].Data.Temp_Target_Position,
             MIT_NO_USE,DM6006_KP,MIT_NO_USE,DM6006_Motor[RB].Data.Feedforward);
-        DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM6006_Motor[RF],DM6006_Motor[RF].Data.Target_Position,
+        DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM6006_Motor[RF],DM6006_Motor[RF].Data.Temp_Target_Position,
             MIT_NO_USE,DM6006_KP,MIT_NO_USE,DM6006_Motor[RF].Data.Feedforward);
     }
     else {
