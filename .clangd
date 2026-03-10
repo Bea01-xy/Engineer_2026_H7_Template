@@ -1,15 +1,25 @@
 CompileFlags:
-  Add: [
-    "-Wno-unknown-argument",
-    "-Wno-implicit-function-declaration"
-  ]
-  Remove: [
-    "-mthumb-interwork", 
-    "-mabi=*", 
-    "-fno-allow-store-data-races",
-    "-mfpu=*"
-  ]
+  # 使用 CMake 生成的 compile_commands.json
   CompilationDatabase: .
+
+  # 让 clangd 能找到 ARM 交叉编译器的标准库头文件
+  Add:
+    - -isystem
+    - /usr/lib/gcc/arm-none-eabi/10.3.1/include
+    - -isystem
+    - /usr/lib/gcc/arm-none-eabi/10.3.1/include-fixed
+    - -isystem
+    - /usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/include
+    # 屏蔽某些告警，避免工具链差异干扰
+    - -Wno-unknown-argument
+    - -Wno-implicit-function-declaration
+
+  # 从 compile_commands.json 传给 clangd 时，移除它不支持的选项
+  Remove:
+    - -mthumb-interwork
+    - -mabi=*
+    - -fno-allow-store-data-races
+    - -mfpu=*
 Index:
   Background: Build
 Diagnostics:

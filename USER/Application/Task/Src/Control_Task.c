@@ -14,7 +14,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "Control_Task.h"
 #include "cmsis_os.h"
-#include "Control_Task.h"
 #include "bsp_uart.h"
 #include "Remote_Control.h"
 #include "PID.h"
@@ -33,8 +32,9 @@ static void chassis_only_handler(void);
 static void M3508_cal(bool acticated);
 static void DM6006_cal(void);
 
-bool lifting_mode_changed(void);
+static bool lifting_mode_changed(void);
 static void DM6006_set_feedforward_and_pos(void);
+static void chassis_set_leds(GPIO_PinState state);
 
 Chassis_Info_Typedef chassis_info;
 
@@ -138,8 +138,7 @@ static void chassis_lifting_handler(void)
 
 static void chassis_disabled_handler(void)
 {
-    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_14,GPIO_PIN_SET);
+    chassis_set_leds(GPIO_PIN_SET);
     chassis_info.activated_flag = false;
     chassis_info.target_vx = 0.0f;
     chassis_info.target_vy = 0.0f;
@@ -152,8 +151,7 @@ static void chassis_disabled_handler(void)
 
 static void chassis_only_handler(void)
 {
-    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_14,GPIO_PIN_RESET);
+    chassis_set_leds(GPIO_PIN_RESET);
     chassis_info.activated_flag = true;
     DM6006_Motor[LF].Data.Temp_Target_Position = DM6006_USUAL_POS;
     DM6006_Motor[LB].Data.Temp_Target_Position = DM6006_USUAL_POS;
@@ -186,7 +184,7 @@ static void DM6006_cal(void)
     DM6006_Motor[RF].Data.Temp_Target_Position = DM6006_Motor[RF].Data.Start_Position + DM6006_Motor[RF].Data.Error_Position * SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
 }
 
-bool lifting_mode_changed(void){
+static bool lifting_mode_changed(void){
     return chassis_info.last_lift_mode != chassis_info.lift_mode || chassis_info.last_mode != chassis_info.mode;
 }
 
@@ -228,4 +226,10 @@ static void DM6006_set_feedforward_and_pos(void)
             break;
         default: break;
     }
+}
+
+static void chassis_set_leds(GPIO_PinState state)
+{
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, state);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, state);
 }

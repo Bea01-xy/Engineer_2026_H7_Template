@@ -20,7 +20,6 @@
 #include "bsp_can.h"
 #include "bsp_uart.h"
 #include "Remote_Control.h"
-#include "Control_Task.h"
 #include "Motor_drv.h"
 #include "fdcan.h"
 #include "Minipc.h"
@@ -92,5 +91,5 @@ void M3508_set(void)
         M3508_Motor[LB].Data.Final_Output,M3508_Motor[RB].Data.Final_Output,M3508_Motor[RF].Data.Final_Output);
 
     M2006_motor_crt_ctrl(&hfdcan3, 0x200, 3000,
-        0,0,0);
+        0, 0,0);
 }
