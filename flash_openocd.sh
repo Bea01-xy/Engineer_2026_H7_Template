@@ -22,6 +22,8 @@ fi
 echo "使用 ELF: $ELF_PATH"
 echo "使用 OpenOCD 配置: $CFG_PATH"
 
+/usr/bin/cmake --build "$PROJECT_ROOT/build/Debug"
+
 /usr/bin/openocd \
   -s /usr/share/openocd/scripts \
   -f "$CFG_PATH" \

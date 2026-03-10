@@ -109,7 +109,18 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
     }
     else if (switch_is_down(remote_ctrl.rc.s[1]))
     {
-        chassis->mode = chassis->last_mode;
+        chassis->last_mode = chassis->mode;
+        chassis->last_lift_mode = chassis->lift_mode;
+        chassis->mode = CHASSIS_LIFT;
+
+        if(switch_is_down(remote_ctrl.rc.s[0]))
+            chassis->lift_mode = LIFT_STAGE_4;
+
+        else if(switch_is_mid(remote_ctrl.rc.s[0]))
+            chassis->lift_mode = LIFT_STAGE_5;
+
+        else if(switch_is_up(remote_ctrl.rc.s[0]))
+            chassis->lift_mode = LIFT_STAGE_6;
     }
 }
 
