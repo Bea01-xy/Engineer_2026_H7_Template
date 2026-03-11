@@ -31,7 +31,7 @@ DJI_Motor_Info_Typedef M2006_Gripper_Motor = {
 /**
  * @brief The structure that contains the Information of chassis motor.Use DJI M3508 motor.
  */
-DJI_Motor_Info_Typedef M3508_Motor[4] = {
+DJI_Motor_Info_Typedef Chassis_Motor[4] = {
     [LF] = {
         .Type = DJI_M3508,
         .FDCANFrame = {
@@ -66,7 +66,7 @@ DJI_Motor_Info_Typedef M3508_Motor[4] = {
 /**
  * @brief The structure that contains the Information of joint motor.Use DM 6006 motor.
  */
-DM_Motor_Info_Typedef DM6006_Motor[4] = {
+DM_Motor_Info_Typedef Elevator_Motor[4] = {
     [0] = {
         .Control_Mode = MIT,
         .Param_Range = {

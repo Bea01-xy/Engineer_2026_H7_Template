@@ -165,10 +165,10 @@ void USER_FDCAN_AddMessageToTxFifoQ(FDCAN_TxFrame_TypeDef *FDCAN_TxFrame){
   */
 static void FDCAN1_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
 {
-	DM_Motor_Info_Update(Identifier,Data,&DM6006_Motor[LF]);
-	DM_Motor_Info_Update(Identifier,Data,&DM6006_Motor[LB]);
-	DM_Motor_Info_Update(Identifier,Data,&DM6006_Motor[RB]);
-	DM_Motor_Info_Update(Identifier,Data,&DM6006_Motor[RF]);
+	DM_Motor_Info_Update(Identifier,Data,&Elevator_Motor[LF]);
+	DM_Motor_Info_Update(Identifier,Data,&Elevator_Motor[LB]);
+	DM_Motor_Info_Update(Identifier,Data,&Elevator_Motor[RB]);
+	DM_Motor_Info_Update(Identifier,Data,&Elevator_Motor[RF]);
 }
 
 /**
@@ -191,10 +191,10 @@ static void FDCAN3_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
   */
 static void FDCAN2_RxFifo1RxHandler(uint32_t *Identifier,uint8_t Data[8])
 {
-	DJI_Motor_Info_Update(Identifier,Data,&M3508_Motor[LF]);
-	DJI_Motor_Info_Update(Identifier,Data,&M3508_Motor[LB]);
-	DJI_Motor_Info_Update(Identifier,Data,&M3508_Motor[RB]);
-	DJI_Motor_Info_Update(Identifier,Data,&M3508_Motor[RF]);
+	DJI_Motor_Info_Update(Identifier,Data,&Chassis_Motor[LF]);
+	DJI_Motor_Info_Update(Identifier,Data,&Chassis_Motor[LB]);
+	DJI_Motor_Info_Update(Identifier,Data,&Chassis_Motor[RB]);
+	DJI_Motor_Info_Update(Identifier,Data,&Chassis_Motor[RF]);
 }
 
 /**

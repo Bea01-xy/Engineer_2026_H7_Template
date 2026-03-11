@@ -42,18 +42,18 @@
 
 #define ROTATE_RATIO 0.6f
 #define WHEEL_RPM_RATIO 2000.0f
-#define M3508_FF_SPEED_COEF 0.005f
-#define M3508_FF_ACCEL_COEF 120.0f
+#define CHASSIS_FF_SPEED_COEF 0.005f
+#define CHASSIS_FF_ACCEL_COEF 120.0f
 
-#define M3508_OUTPUT_LIMIT 15000.0f
-#define M3508_I_OUT_LIMIT 300.0f
-#define M3508_KP 15.0f
-#define M3508_KI 0.1f
-#define M3508_KD 0.04f
-#define M3508_Alpha 0.5f
-#define M3508_Deadband 2.0f
-#define M3508_LimitIntegral 2000.0f
-#define M3508_LimitOutput 15000.0f
+#define CHASSIS_OUTPUT_LIMIT 15000.0f
+#define CHASSIS_I_OUT_LIMIT 300.0f
+#define CHASSIS_KP 15.0f
+#define CHASSIS_KI 0.1f
+#define CHASSIS_KD 0.04f
+#define CHASSIS_Alpha 0.5f
+#define CHASSIS_Deadband 2.0f
+#define CHASSIS_LimitIntegral 2000.0f
+#define CHASSIS_LimitOutput 15000.0f
 /* ----------------------- RC Switch Definition----------------------------- */
 #define RC_SW_UP                ((uint16_t)1)
 #define RC_SW_MID               ((uint16_t)3)
@@ -107,22 +107,22 @@ typedef struct
     bool activated_flag;
 } Chassis_Info_Typedef;
 
-/* @brief DM6006 parameters*/
+/* @brief Elevator (DM6006) parameters*/
 #define MIT_NO_USE 0u
 #define LIFTING_TIME 800u //ms
-#define DM6006_KP 2.f
-#define DM6006_FEEDFORWARD_FOR_LB_RF 0.97f
-#define DM6006_FEEDFORWARD_FOR_LF_RB -0.97f
+#define ELEVATOR_KP 2.f
+#define ELEVATOR_FEEDFORWARD_FOR_LB_RF 0.97f
+#define ELEVATOR_FEEDFORWARD_FOR_LF_RB -0.97f
 
-#define DM6006_USUAL_POS 0.f
+#define ELEVATOR_USUAL_POS 0.f
 
-#define DM6006_LF_1st_ACTIVATED_POS -9.44f
-#define DM6006_LB_1st_ACTIVATED_POS 9.37f
-#define DM6006_RB_1st_ACTIVATED_POS -9.40f
-#define DM6006_RF_1st_ACTIVATED_POS 9.40f
+#define ELEVATOR_LF_1st_ACTIVATED_POS -9.44f
+#define ELEVATOR_LB_1st_ACTIVATED_POS 9.37f
+#define ELEVATOR_RB_1st_ACTIVATED_POS -9.40f
+#define ELEVATOR_RF_1st_ACTIVATED_POS 9.40f
 
-#define DM6006_LF_2nd_ACTIVATED_POS (DM6006_LF_1st_ACTIVATED_POS*0.75f)
-#define DM6006_LB_2nd_ACTIVATED_POS (DM6006_LB_1st_ACTIVATED_POS*0.75f)
-#define DM6006_RB_2nd_ACTIVATED_POS (DM6006_RB_1st_ACTIVATED_POS*0.75f)
-#define DM6006_RF_2nd_ACTIVATED_POS (DM6006_RF_1st_ACTIVATED_POS*0.75f)
+#define ELEVATOR_LF_2nd_ACTIVATED_POS (ELEVATOR_LF_1st_ACTIVATED_POS*0.75f)
+#define ELEVATOR_LB_2nd_ACTIVATED_POS (ELEVATOR_LB_1st_ACTIVATED_POS*0.75f)
+#define ELEVATOR_RB_2nd_ACTIVATED_POS (ELEVATOR_RB_1st_ACTIVATED_POS*0.75f)
+#define ELEVATOR_RF_2nd_ACTIVATED_POS (ELEVATOR_RF_1st_ACTIVATED_POS*0.75f)
 #endif /* CHASSIS_CONFIG_H */
