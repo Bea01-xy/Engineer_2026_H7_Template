@@ -73,46 +73,42 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
     if(chassis == NULL)
         return;
 
-    uint16_t sw1 = remote_ctrl.rc.s[1];
-    uint16_t sw0 = remote_ctrl.rc.s[0];
+    uint16_t s1 = remote_ctrl.rc.s[1];
+    uint16_t s0 = remote_ctrl.rc.s[0];
+    uint16_t sw0 = remote_ctrl.rc.sw[0];
+    uint16_t sw1 = remote_ctrl.rc.sw[1];
 
-    if (switch_is_up(sw1)) {
+    if (switch_is_up(sw0)) {
         chassis->last_mode = chassis->mode;
-        if (switch_is_mid(sw0)) {
-            chassis->mode = CHASSIS_ONLY;
-        } else {
-            chassis->mode = CHASSIS_DISABLE;
-        }
-    } else if (switch_is_mid(sw1) || switch_is_down(sw1)) {
+        chassis->mode = CHASSIS_DISABLE;
+    } else if (switch_is_up(s1)) {
         chassis->last_mode = chassis->mode;
         chassis->last_lift_mode = chassis->lift_mode;
         chassis->mode = CHASSIS_LIFT;
-
-        // 根据 sw1 的不同对应不同的stage基准
-        if (switch_is_mid(sw1)) {
-            // LIFT_STAGE_1, 2, 3
-            switch (sw0) {
-                case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_1; break;
-                case RC_SW_MID:  chassis->lift_mode = LIFT_STAGE_2; break;
-                case RC_SW_UP:   chassis->lift_mode = LIFT_STAGE_3; break;
-                default: break;
-            }
-        } else { // switch_is_down(sw1)
-            switch (sw0) {
-                case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_4; break;
-                case RC_SW_MID:  chassis->lift_mode = LIFT_STAGE_5; break;
-                case RC_SW_UP:   chassis->lift_mode = LIFT_STAGE_6; break;
-                default: break;
-            }
+        switch (s0) {
+            case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_1; break;
+            case RC_SW_MID:  chassis->lift_mode = LIFT_STAGE_2; break;
+            case RC_SW_UP:   chassis->lift_mode = LIFT_STAGE_3; break;
+            default: break;
+        }
+    } else if (switch_is_down(s1)) {
+        chassis->last_mode = chassis->mode;
+        chassis->last_lift_mode = chassis->lift_mode;
+        chassis->mode = CHASSIS_LIFT;
+        switch (s0) {
+            case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_4; break;
+            case RC_SW_MID:  chassis->lift_mode = LIFT_STAGE_5; break;
+            case RC_SW_UP:   chassis->lift_mode = LIFT_STAGE_6; break;
+            default: break;
         }
     }
 }
 
 static void chassis_ctrl_info_get(void)
 {
-    chassis_info.target_vx = (float)remote_ctrl.rc.ch[3] * RC_TO_VX;
-    chassis_info.target_vy = (float)remote_ctrl.rc.ch[2] * RC_TO_VY;
-    chassis_info.target_vw = (float)remote_ctrl.rc.ch[0] * RC_TO_VW * 0.8f;
+    chassis_info.target_vx = (float)remote_ctrl.rc.ch[1] * RC_TO_VX;
+    chassis_info.target_vy = (float)remote_ctrl.rc.ch[0] * RC_TO_VY;
+    chassis_info.target_vw = (float)remote_ctrl.rc.ch[2] * RC_TO_VW * 0.8f;
 
     Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
     chassis_info.target_vw += Chassis_Direction_PID.Output;

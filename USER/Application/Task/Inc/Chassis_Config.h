@@ -76,7 +76,6 @@
 /* Exported types ------------------------------------------------------------*/
 typedef enum
 {
-    CHASSIS_ONLY,
     CHASSIS_DISABLE,
     CHASSIS_LIFT,
 } Chassis_Mode_e;

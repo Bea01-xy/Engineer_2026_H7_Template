@@ -27,7 +27,6 @@ static float SmootherStep(float NowTime,float UseTime);
 
 static void chassis_lifting_handler(void);
 static void chassis_disabled_handler(void);
-static void chassis_only_handler(void);
 
 static void Chassis_Motor_cal(bool acticated);
 static void Elevator_Motor_cal(void);
@@ -54,13 +53,9 @@ void Control_Task(void)
     {
 		Control_Task_SysTick = osKernelSysTick();
 
-        switch (chassis_info.mode)
-        {
+        switch (chassis_info.mode) {
             case CHASSIS_DISABLE:
                 chassis_disabled_handler();
-                break;
-            case CHASSIS_ONLY:
-                chassis_only_handler();
                 break;
             case CHASSIS_LIFT:
                 chassis_lifting_handler();
@@ -147,17 +142,6 @@ static void chassis_disabled_handler(void)
     Chassis_Motor[LB].Data.Final_Output = 0u;
     Chassis_Motor[RB].Data.Final_Output = 0u;
     Chassis_Motor[RF].Data.Final_Output = 0u;
-}
-
-static void chassis_only_handler(void)
-{
-    chassis_set_leds(GPIO_PIN_RESET);
-    chassis_info.activated_flag = true;
-    Elevator_Motor[LF].Data.Temp_Target_Position = ELEVATOR_USUAL_POS;
-    Elevator_Motor[LB].Data.Temp_Target_Position = ELEVATOR_USUAL_POS;
-    Elevator_Motor[RB].Data.Temp_Target_Position = ELEVATOR_USUAL_POS;
-    Elevator_Motor[RF].Data.Temp_Target_Position = ELEVATOR_USUAL_POS;
-    Chassis_Motor_cal(chassis_info.activated_flag);
 }
 
 static void Chassis_Motor_cal(const bool acticated)

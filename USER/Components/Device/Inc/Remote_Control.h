@@ -24,11 +24,21 @@
 #include "math.h"
 #include <stdio.h>
 #include <string.h>
+
+//遥控器选择
+// #define DBUS
+#define SBUS
+
 /* Exported defines -----------------------------------------------------------*/
 /**
  * @brief Length of SBUS received data
  */
+#if defined(DBUS)
 #define SBUS_RX_BUF_NUM		18u
+#elif defined(SBUS)
+#define SBUS_RX_BUF_NUM		25u
+#endif
+
 /**
  * @brief offset of remote control channel data
  */
@@ -111,11 +121,20 @@ typedef  struct
 	/**
 	 * @brief structure that contains the information for the lever/Switch.
 	 */
+#if defined(DBUS)
 	struct
 	{
 		int16_t ch[5];
 		uint8_t s[2];
 	} rc;
+#elif defined(SBUS)
+	struct
+	{
+		int16_t ch[6];
+		uint8_t s[2];
+		uint8_t sw[2];
+	} rc;
+#endif
 	
 	/**
 	 * @brief structure that contains the information for the mouse.
@@ -224,5 +243,4 @@ extern bool Mouse_Pressed_Right(void);
 extern bool Mouse_Pressed_Left(void);
 
 #endif //REMOTE_CONTROL_H
-
 
