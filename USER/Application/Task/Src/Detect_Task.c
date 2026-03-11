@@ -73,54 +73,38 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
     if(chassis == NULL)
         return;
 
-    /* Handle main chassis mode based on switch 1 */
-    if (switch_is_up(remote_ctrl.rc.s[1]))
-    {
-        if(switch_is_mid(remote_ctrl.rc.s[0]))
-        {
-            chassis->last_mode = chassis->mode;
+    uint16_t sw1 = remote_ctrl.rc.s[1];
+    uint16_t sw0 = remote_ctrl.rc.s[0];
+
+    if (switch_is_up(sw1)) {
+        chassis->last_mode = chassis->mode;
+        if (switch_is_mid(sw0)) {
             chassis->mode = CHASSIS_ONLY;
-        }
-        else if(switch_is_down(remote_ctrl.rc.s[0]) || switch_is_up(remote_ctrl.rc.s[0]))
-        {
-            chassis->last_mode = chassis->mode;
+        } else {
             chassis->mode = CHASSIS_DISABLE;
         }
-        else
-        {
-            chassis->mode = chassis->last_mode;
+    } else if (switch_is_mid(sw1) || switch_is_down(sw1)) {
+        chassis->last_mode = chassis->mode;
+        chassis->last_lift_mode = chassis->lift_mode;
+        chassis->mode = CHASSIS_LIFT;
+
+        // 根据 sw1 的不同对应不同的stage基准
+        if (switch_is_mid(sw1)) {
+            // LIFT_STAGE_1, 2, 3
+            switch (sw0) {
+                case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_1; break;
+                case RC_SW_MID:  chassis->lift_mode = LIFT_STAGE_2; break;
+                case RC_SW_UP:   chassis->lift_mode = LIFT_STAGE_3; break;
+                default: break;
+            }
+        } else { // switch_is_down(sw1)
+            switch (sw0) {
+                case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_4; break;
+                case RC_SW_MID:  chassis->lift_mode = LIFT_STAGE_5; break;
+                case RC_SW_UP:   chassis->lift_mode = LIFT_STAGE_6; break;
+                default: break;
+            }
         }
-    }
-    /* Handle auto lift mode based on switch 1 mid */
-    else if (switch_is_mid(remote_ctrl.rc.s[1]))
-    {
-        chassis->last_mode = chassis->mode;
-        chassis->last_lift_mode = chassis->lift_mode;
-        chassis->mode = CHASSIS_LIFT;
-
-        if(switch_is_down(remote_ctrl.rc.s[0]))
-            chassis->lift_mode = LIFT_STAGE_1;
-
-        else if(switch_is_mid(remote_ctrl.rc.s[0]))
-            chassis->lift_mode = LIFT_STAGE_2;
-
-        else if(switch_is_up(remote_ctrl.rc.s[0]))
-            chassis->lift_mode = LIFT_STAGE_3;
-    }
-    else if (switch_is_down(remote_ctrl.rc.s[1]))
-    {
-        chassis->last_mode = chassis->mode;
-        chassis->last_lift_mode = chassis->lift_mode;
-        chassis->mode = CHASSIS_LIFT;
-
-        if(switch_is_down(remote_ctrl.rc.s[0]))
-            chassis->lift_mode = LIFT_STAGE_4;
-
-        else if(switch_is_mid(remote_ctrl.rc.s[0]))
-            chassis->lift_mode = LIFT_STAGE_5;
-
-        else if(switch_is_up(remote_ctrl.rc.s[0]))
-            chassis->lift_mode = LIFT_STAGE_6;
     }
 }
 

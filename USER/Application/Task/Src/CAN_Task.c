@@ -75,6 +75,11 @@ void DM6006_set(const bool activated)
             MIT_NO_USE,DM6006_KP,MIT_NO_USE,DM6006_Motor[RB].Data.Feedforward);
         DM_Motor_CAN_TxMessage(&FDCAN1_TxFrame,&DM6006_Motor[RF],DM6006_Motor[RF].Data.Temp_Target_Position,
             MIT_NO_USE,DM6006_KP,MIT_NO_USE,DM6006_Motor[RF].Data.Feedforward);
+
+        //new motor to control
+        DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[0],Motor_Enable);
+        DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&Robotic_Arm_Motor[0],MIT_NO_USE,
+            0.4,MIT_NO_USE,1,0);
     }
     else {
 	    DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[LF],Motor_Disable);
@@ -82,6 +87,8 @@ void DM6006_set(const bool activated)
         osDelay(1);
         DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[RB],Motor_Disable);
 	    DM_Motor_Command(&FDCAN1_TxFrame,&DM6006_Motor[RF],Motor_Disable);
+
+        DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[0],Motor_Disable);
     }
 }
 

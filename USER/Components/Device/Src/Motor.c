@@ -19,115 +19,117 @@
 /**
  * @brief The structure that contains the Information of yaw motor.Use DJI GM6020 motor.
  */
-DJI_Motor_Info_Typedef M2006_Gripper_Motor =
-{
-	  .Type = DJI_M2006,
-		.FDCANFrame = {
-					  .TxIdentifier = 0x200,
-					  .RxIdentifier = 0x201,
-		}
-
+DJI_Motor_Info_Typedef M2006_Gripper_Motor = {
+    .Type = DJI_M2006,
+    .FDCANFrame = {
+        .TxIdentifier = 0x200,
+        .RxIdentifier = 0x201,
+    }
 };
 //------------------------------------------------------------------------------
 
 /**
  * @brief The structure that contains the Information of chassis motor.Use DJI M3508 motor.
- */ 
+ */
 DJI_Motor_Info_Typedef M3508_Motor[4] = {
-
-    [LF] = {	
+    [LF] = {
         .Type = DJI_M3508,
-		    .FDCANFrame = {
-					  .TxIdentifier = 0x200,
-					  .RxIdentifier = 0x201,
-				}
+        .FDCANFrame = {
+            .TxIdentifier = 0x200,
+            .RxIdentifier = 0x201,
+        }
     },
-    [LB] = {	
+    [LB] = {
         .Type = DJI_M3508,
-		    .FDCANFrame = {
-					  .TxIdentifier = 0x200,
-					  .RxIdentifier = 0x202,
-				}
+        .FDCANFrame = {
+            .TxIdentifier = 0x200,
+            .RxIdentifier = 0x202,
+        }
     },
-	[RB] = {	
+    [RB] = {
         .Type = DJI_M3508,
-		    .FDCANFrame = {
-					  .TxIdentifier = 0x200,
-					  .RxIdentifier = 0x203,
-				}
-		},
-	[RF] = {	
-        .Type = DJI_M3508,
-		    .FDCANFrame = {
-					  .TxIdentifier = 0x200,
-					  .RxIdentifier = 0x204,
-				}
+        .FDCANFrame = {
+            .TxIdentifier = 0x200,
+            .RxIdentifier = 0x203,
+        }
     },
-
+    [RF] = {
+        .Type = DJI_M3508,
+        .FDCANFrame = {
+            .TxIdentifier = 0x200,
+            .RxIdentifier = 0x204,
+        }
+    },
 };
 //------------------------------------------------------------------------------
 
 /**
  * @brief The structure that contains the Information of joint motor.Use DM 6006 motor.
  */
-DM_Motor_Info_Typedef DM6006_Motor[4]= {
-
-	[0] = {
-			.Control_Mode = MIT,
-			.Param_Range ={
-			   .P_MAX = 12.5f,
-			   .V_MAX = 45.f,
-			   .T_MAX = 4.f		
-			},
-		  .FDCANFrame = {
-				 .TxIdentifier = 0x01,
-				 .RxIdentifier = 0x11,
-			},
-		},
-		
+DM_Motor_Info_Typedef DM6006_Motor[4] = {
+    [0] = {
+        .Control_Mode = MIT,
+        .Param_Range = {
+            .P_MAX = 12.5f,
+            .V_MAX = 45.f,
+            .T_MAX = 4.f
+        },
+        .FDCANFrame = {
+            .TxIdentifier = 0x01,
+            .RxIdentifier = 0x11,
+        },
+    },
     [1] = {
-			.Control_Mode = MIT,	
-			.Param_Range ={
-			   .P_MAX = 12.5f,
-			   .V_MAX = 45.f,
-			   .T_MAX = 4.f		
-				
-			},	
-		  .FDCANFrame = {
-				 .TxIdentifier = 0x02,
-				 .RxIdentifier = 0x12,
-			},
-		},
-		
+        .Control_Mode = MIT,
+        .Param_Range = {
+            .P_MAX = 12.5f,
+            .V_MAX = 45.f,
+            .T_MAX = 4.f
+        },
+        .FDCANFrame = {
+            .TxIdentifier = 0x02,
+            .RxIdentifier = 0x12,
+        },
+    },
     [2] = {
-			.Control_Mode = MIT,
-      .Param_Range ={
-			   .P_MAX = 12.5f,
-			   .V_MAX = 45.f,
-			   .T_MAX = 4.f		
-				
-			},	
-		  .FDCANFrame = {
-				 .TxIdentifier = 0x03,
-				 .RxIdentifier = 0x13,
-			},
-		},
-		
-	  [3] = {
-			 .Control_Mode = MIT,	
-			 .Param_Range ={
-			   .P_MAX = 12.5f,
-			   .V_MAX = 45.f,
-			   .T_MAX = 4.f		
-				
-			},	
-		  .FDCANFrame = {
-				 .TxIdentifier = 0x04,
-				 .RxIdentifier = 0x14,
-			},
-		},
-  
+        .Control_Mode = MIT,
+        .Param_Range = {
+            .P_MAX = 12.5f,
+            .V_MAX = 45.f,
+            .T_MAX = 4.f
+        },
+        .FDCANFrame = {
+            .TxIdentifier = 0x03,
+            .RxIdentifier = 0x13,
+        },
+    },
+    [3] = {
+        .Control_Mode = MIT,
+        .Param_Range = {
+            .P_MAX = 12.5f,
+            .V_MAX = 45.f,
+            .T_MAX = 4.f
+        },
+        .FDCANFrame = {
+            .TxIdentifier = 0x04,
+            .RxIdentifier = 0x14,
+        },
+    },
+};
 
+DM_Motor_Info_Typedef Robotic_Arm_Motor[1] = {
+	[0] = {
+		.Control_Mode = MIT,
+		.Param_Range = {
+			.P_MAX = 12.5f,
+			.V_MAX = 45.f,
+			.T_MAX = 8.f
+		},
+		.FDCANFrame = {
+			.TxIdentifier = 0x05,
+			.RxIdentifier = 0x15,
+		},
+	},
 };
 //------------------------------------------------------------------------------
 
