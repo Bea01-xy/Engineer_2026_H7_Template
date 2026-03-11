@@ -62,7 +62,7 @@ void Detect_Task(void)
         chassis_wheel_cal();
 
 		Detect_Task_SysTick = osKernelSysTick();//no use for now
-
+        USART_Vofa_Justfloat_Transmit(remote_ctrl.rc.ch[2], remote_ctrl.rc.ch[0], 0);
         osDelay(1);
     }
     /* USER CODE END Detect_Task */
@@ -108,12 +108,15 @@ static void chassis_ctrl_info_get(void)
 {
     chassis_info.target_vx = (float)remote_ctrl.rc.ch[1] * RC_TO_VX;
     chassis_info.target_vy = (float)remote_ctrl.rc.ch[0] * RC_TO_VY;
+    if (remote_ctrl.rc.ch[2] <= 3 && remote_ctrl.rc.ch[2] >= -3) {
+        remote_ctrl.rc.ch[2] = 0;
+    }
     chassis_info.target_vw = (float)remote_ctrl.rc.ch[2] * RC_TO_VW * 0.8f;
 
     Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
     chassis_info.target_vw += Chassis_Direction_PID.Output;
 
-    chassis_info.target_direction += remote_ctrl.rc.ch[0] * RC_TO_VW * 0.058f; //integrate to get direction
+    chassis_info.target_direction += remote_ctrl.rc.ch[2] * RC_TO_VW * 0.058f; //integrate to get direction
     chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
 }
 
