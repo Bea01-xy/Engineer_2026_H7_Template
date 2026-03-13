@@ -62,7 +62,7 @@ void Detect_Task(void)
         chassis_wheel_cal();
 
 		Detect_Task_SysTick = osKernelSysTick();//no use for now
-        USART_Vofa_Justfloat_Transmit(remote_ctrl.rc.ch[2], remote_ctrl.rc.ch[0], 0);
+        //USART_Vofa_Justfloat_Transmit(remote_ctrl.rc.ch[3], remote_ctrl.rc.ch[4], remote_ctrl.rc.ch[5]);
         osDelay(1);
     }
     /* USER CODE END Detect_Task */

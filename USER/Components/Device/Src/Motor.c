@@ -26,6 +26,14 @@ DJI_Motor_Info_Typedef M2006_Gripper_Motor = {
         .RxIdentifier = 0x201,
     }
 };
+DJI_Motor_Info_Typedef Robotic_Arm_Motor_Dji = {
+    .Type = DJI_GM6020,
+    .FDCANFrame = {
+        .TxIdentifier = 0x1FF,
+        .RxIdentifier = 0x205,
+    }
+};
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
 /**
@@ -117,7 +125,7 @@ DM_Motor_Info_Typedef Elevator_Motor[4] = {
     },
 };
 
-DM_Motor_Info_Typedef Robotic_Arm_Motor[1] = {
+DM_Motor_Info_Typedef Robotic_Arm_Motor[5] = {
 	[0] = {
 		.Control_Mode = MIT,
 		.Param_Range = {
@@ -126,10 +134,58 @@ DM_Motor_Info_Typedef Robotic_Arm_Motor[1] = {
 			.T_MAX = 8.f
 		},
 		.FDCANFrame = {
-			.TxIdentifier = 0x05,
-			.RxIdentifier = 0x15,
+			.TxIdentifier = 0x06,
+			.RxIdentifier = 0x16,
 		},
 	},
+  [1] = {
+    .Control_Mode = MIT,
+    .Param_Range = {
+      .P_MAX = 12.5f,
+      .V_MAX = 45.f,
+      .T_MAX = 8.f
+    },
+    .FDCANFrame = {
+      .TxIdentifier = 0x05,
+      .RxIdentifier = 0x15,
+    },
+  },
+  [2] = {
+    .Control_Mode = MIT,
+    .Param_Range = {
+      .P_MAX = 12.5f,
+      .V_MAX = 45.f,
+      .T_MAX = 10.f
+    },
+    .FDCANFrame = {
+      .TxIdentifier = 0x07,
+      .RxIdentifier = 0x17,
+    },
+  },
+  [3] = {
+    .Control_Mode = MIT,
+    .Param_Range = {
+      .P_MAX = 12.5f,
+      .V_MAX = 45.f,
+      .T_MAX = 3.f
+    },
+    .FDCANFrame = {
+      .TxIdentifier = 0x08,
+      .RxIdentifier = 0x18,
+    },
+  },
+  [4] = {
+    .Control_Mode = MIT,
+    .Param_Range = {
+      .P_MAX = 12.5f,
+      .V_MAX = 45.f,
+      .T_MAX = 8.f
+    },
+    .FDCANFrame = {
+      .TxIdentifier = 0x09,
+      .RxIdentifier = 0x19,
+      },
+  },
 };
 //------------------------------------------------------------------------------
 

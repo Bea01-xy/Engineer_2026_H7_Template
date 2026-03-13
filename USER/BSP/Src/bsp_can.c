@@ -18,6 +18,7 @@
 #include "Motor.h"
 #include "Remote_Control.h"
 #include "Chassis_Config.h"
+#include "Robotic_Arm_Config.h"
 /**
  * @brief The structure that contains the Information of FDCAN1 and FDCAN2 Receive.
  */
@@ -180,6 +181,12 @@ static void FDCAN1_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
 static void FDCAN3_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
 {
 	DJI_Motor_Info_Update(Identifier,Data,&M2006_Gripper_Motor);
+
+  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J1]);
+  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J2]);
+  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J3]);
+  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J4]);
+  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J5]);
 }
 
 

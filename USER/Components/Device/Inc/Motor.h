@@ -154,7 +154,7 @@ typedef struct
 extern DJI_Motor_Info_Typedef M2006_Gripper_Motor, Chassis_Motor[4];
 
 extern DM_Motor_Info_Typedef Elevator_Motor[4];
-extern DM_Motor_Info_Typedef Robotic_Arm_Motor[1];
+extern DM_Motor_Info_Typedef Robotic_Arm_Motor[5];
 
 extern DM_Motor_Contorl_Info_Typedef DM_Motor_Contorl_Info[4];
 
