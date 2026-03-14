@@ -178,15 +178,20 @@ static void FDCAN1_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
 	* @param  Data: Array that contains the received massage.
   * @retval None
   */
-static void FDCAN3_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
-{
-	DJI_Motor_Info_Update(Identifier,Data,&M2006_Gripper_Motor);
+float motor1_target_position = 0.0f;
+float motor2_target_position = 0.0f;
 
-  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J1]);
-  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J2]);
-  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J3]);
-  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J4]);
-  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J5]);
+static void FDCAN3_RxFifo0RxHandler(uint32_t *Identifier, uint8_t Data[8])
+{
+    if (*Identifier == 0x300)
+    {
+        // Data的前4字节表示电机1目标位置，后4字节表示电机2目标位置
+        float pos1, pos2;
+        memcpy(&pos1, &Data[0], 4);
+        memcpy(&pos2, &Data[4], 4);
+        motor1_target_position = pos1;
+        motor2_target_position = pos2;
+    }
 }
 
 
