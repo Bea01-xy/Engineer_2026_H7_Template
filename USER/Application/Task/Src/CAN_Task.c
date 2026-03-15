@@ -69,7 +69,7 @@ void CAN_Task(void)
         
         osDelay(1);
 
-        USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J1].Data.Position, Robotic_Arm_Motor[J2].Data.Position, Robotic_Arm_Motor[J4].Data.Position);
+        //USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J1].Data.Position, Robotic_Arm_Motor[J2].Data.Position, Robotic_Arm_Motor[J4].Data.Position);
     }
 }
 
@@ -143,5 +143,6 @@ void Chassis_set(void)
 {
     M3508_motor_crt_ctrl(&hfdcan2, 0x200, Chassis_Motor[LF].Data.Final_Output,
         Chassis_Motor[LB].Data.Final_Output,Chassis_Motor[RB].Data.Final_Output,Chassis_Motor[RF].Data.Final_Output);
-
+	M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 3000,
+        0,0,0);
 }

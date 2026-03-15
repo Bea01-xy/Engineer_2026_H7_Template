@@ -25,6 +25,7 @@
 #include "bsp_uart.h"
 #include "Motor.h"
 #include "PID.h"
+#include "Robotic_Arm_Config.h"
 
 /* USER CODE BEGIN Header_Detect_Task */
 static void chassis_set_mode(Chassis_Info_Typedef* chassis);
@@ -49,12 +50,19 @@ void Detect_Task(void)
     /* USER CODE BEGIN Detect_Task */
     TickType_t Detect_Task_SysTick = 0;
     PID_Init(&Chassis_Direction_PID,PID_POSITION,Chassis_Direction_PID_Param);
+
+    joint_data_receive[0] = 0.00f;
+    joint_data_receive[1] = 2.00f;
+    joint_data_receive[2] = -1.00f;
+    joint_data_receive[3] = 0.00f;
+    joint_data_receive[4] = -0.40f;
+    joint_data_receive[5] = 1.57f;
     /* Infinite loop */
     for(;;)
     {
         //original code
         Remote_Message_Moniter(&remote_ctrl);
-		MiniPC_Receive_Info(receive_data, 12);
+		MiniPC_Receive_Info(receive_data, 6);
 		MiniPC_Transmit_Info(joint_data, 6);
 
         chassis_set_mode(&chassis_info);
@@ -62,7 +70,14 @@ void Detect_Task(void)
         chassis_wheel_cal();
 
 		Detect_Task_SysTick = osKernelSysTick();//no use for now
-        //USART_Vofa_Justfloat_Transmit(remote_ctrl.rc.ch[3], remote_ctrl.rc.ch[4], remote_ctrl.rc.ch[5]);
+        USART_Vofa_Justfloat_Transmit(joint_data_receive[0], joint_data_receive[1], joint_data_receive[2]);
+
+        Robotic_Arm_Motor[J1].Data.Temp_Target_Position = joint_data_receive[0];
+        Robotic_Arm_Motor[J2].Data.Temp_Target_Position = joint_data_receive[1];
+        Robotic_Arm_Motor[J3].Data.Temp_Target_Position = joint_data_receive[2];
+        Robotic_Arm_Motor[J4].Data.Temp_Target_Position = joint_data_receive[3];
+        Robotic_Arm_Motor[J5].Data.Temp_Target_Position = joint_data_receive[4];
+        Robotic_Arm_Motor[J6].Data.Temp_Target_Position = joint_data_receive[5];
         osDelay(1);
     }
     /* USER CODE END Detect_Task */
