@@ -272,12 +272,12 @@ static void Robotic_Arm_target_cal(void)
         return;
     }
     /* J1~J5 目标位置与前馈（可改为遥控/轨迹给定） */
-    Robotic_Arm_Motor[J1].Data.Temp_Target_Position = 0.00f;
-    Robotic_Arm_Motor[J2].Data.Temp_Target_Position = 1.00f;
+    Robotic_Arm_Motor[J1].Data.Temp_Target_Position = 0.30f;
+    Robotic_Arm_Motor[J2].Data.Temp_Target_Position = 2.00f;
     Robotic_Arm_Motor[J3].Data.Temp_Target_Position = -1.00f;
-    Robotic_Arm_Motor[J4].Data.Temp_Target_Position = 0.00f;
-    Robotic_Arm_Motor[J5].Data.Temp_Target_Position = 0.60f;
-    Robotic_Arm_Motor[J6].Data.Temp_Target_Position = 0.00f;
+    Robotic_Arm_Motor[J4].Data.Temp_Target_Position = 0.60f;
+    Robotic_Arm_Motor[J5].Data.Temp_Target_Position = 0.00f;
+    Robotic_Arm_Motor[J6].Data.Temp_Target_Position = 1.57f;
     /* 前三轴 RRR 重力+速度项补偿前馈：
      *  - J1(Yaw)：忽略重力与科氏项
      *  - J2/J3(Pitch)：使用当前位置(q2,q3)与关节速度(q2dot,q3dot)，默认关节加速度为 0

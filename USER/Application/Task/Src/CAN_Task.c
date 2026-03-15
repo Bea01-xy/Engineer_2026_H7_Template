@@ -70,7 +70,7 @@ void CAN_Task(void)
         
         osDelay(1);
 
-        USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J1].Data.Position, Robotic_Arm_Motor[J2].Data.Position, Robotic_Arm_Motor[J5].Data.Position);
+        USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J1].Data.Position, Robotic_Arm_Motor[J2].Data.Position, Robotic_Arm_Motor[J4].Data.Position);
     }
 }
 
@@ -100,35 +100,40 @@ void Elevator_set(const bool activated)
 
 void Robotic_Arm_set(const bool activated, const int part)
 {
-	/* part 0: J1,J2,J3   part 1: J4,J5,J6，分两次发送不同时发 6 路 */
+	/* part 0: J4,J5,J6   part 1: J1,J2,J3，分两次发送不同时发 6 路 */
 	if (part == 0) {
 		if (activated) {
-			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], Motor_Enable);
-			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], Motor_Enable);
-			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], Motor_Enable);
+			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J1], Motor_Enable);
+			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J2], Motor_Enable);
+			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J3], Motor_Enable);
 		} else {
-			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], Motor_Disable);
-			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], Motor_Disable);
-			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], Motor_Disable);
+			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J1], Motor_Disable);
+			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J2], Motor_Disable);
+			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J3], Motor_Disable);
 		}
 	} else {
 		if (activated) {
-			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], Motor_Enable);
-			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], Motor_Enable);
-			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], Motor_Enable);
+			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J4], Motor_Enable);
+			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J5], Motor_Enable);
+			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J6], Motor_Enable);
 			osDelay(1);
-			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], Robotic_Arm_Motor[J5].Data.Temp_Target_Position, MIT_NO_USE, 5.0f, 0.1f, Robotic_Arm_Motor[J5].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J1], Robotic_Arm_Motor[J1].Data.Temp_Target_Position, MIT_NO_USE, 14.0f, 2.1f, Robotic_Arm_Motor[J1].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J2], Robotic_Arm_Motor[J2].Data.Temp_Target_Position, MIT_NO_USE, 14.0f, 2.1f, Robotic_Arm_Motor[J2].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J3], Robotic_Arm_Motor[J3].Data.Temp_Target_Position, MIT_NO_USE, 14.0f, 2.1f, Robotic_Arm_Motor[J3].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J4], Robotic_Arm_Motor[J4].Data.Temp_Target_Position, MIT_NO_USE, 5.0f, 0.1f, Robotic_Arm_Motor[J4].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J5], Robotic_Arm_Motor[J5].Data.Temp_Target_Position, MIT_NO_USE, 5.0f, 0.1f, Robotic_Arm_Motor[J5].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J6], Robotic_Arm_Motor[J6].Data.Temp_Target_Position, MIT_NO_USE, 5.0f, 0.1f, Robotic_Arm_Motor[J6].Data.Feedforward);
 		} else {
-			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], Motor_Disable);
-			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], Motor_Disable);
-			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], Motor_Disable);
+			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J4], Motor_Disable);
+			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J5], Motor_Disable);
+			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J6], Motor_Disable);
 		}
 	}
 }
 
 void Chassis_set(void)
 {
-    M3508_motor_crt_ctrl(&hfdcan2, 0x200, Chassis_Motor[LF].Data.Final_Output,
+    M3508_motor_crt_ctrl(&hfdcan3, 0x200, Chassis_Motor[LF].Data.Final_Output,
         Chassis_Motor[LB].Data.Final_Output,Chassis_Motor[RB].Data.Final_Output,Chassis_Motor[RF].Data.Final_Output);
 
 }
