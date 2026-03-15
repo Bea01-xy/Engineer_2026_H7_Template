@@ -125,7 +125,7 @@ DM_Motor_Info_Typedef Elevator_Motor[4] = {
     },
 };
 
-DM_Motor_Info_Typedef Robotic_Arm_Motor[5] = {
+DM_Motor_Info_Typedef Robotic_Arm_Motor[6] = {
 	[0] = {
 		.Control_Mode = MIT,
 		.Param_Range = {
@@ -185,6 +185,18 @@ DM_Motor_Info_Typedef Robotic_Arm_Motor[5] = {
       .TxIdentifier = 0x09,
       .RxIdentifier = 0x19,
       },
+  },
+  [5] = {
+    .Control_Mode = MIT,
+    .Param_Range = {
+      .P_MAX = 3.141593f,
+      .V_MAX = 45.f,
+      .T_MAX = 8.f
+    },
+    .FDCANFrame = {
+      .TxIdentifier = 0x0A,
+      .RxIdentifier = 0x1A,
+    },
   },
 };
 //------------------------------------------------------------------------------
@@ -460,7 +472,7 @@ void DM_Motor_CAN_TxMessage(FDCAN_TxFrame_TypeDef *FDCAN_TxFrame,DM_Motor_Info_T
 		 FDCAN_TxFrame->Data[1] = *(Postion_Tmp + 1);
 		 FDCAN_TxFrame->Data[2] = *(Postion_Tmp + 2);
 		 FDCAN_TxFrame->Data[3] = *(Postion_Tmp + 3);
-	     FDCAN_TxFrame->Data[4] = *(Velocity_Tmp);
+	   FDCAN_TxFrame->Data[4] = *(Velocity_Tmp);
 		 FDCAN_TxFrame->Data[5] = *(Velocity_Tmp + 1);
 		 FDCAN_TxFrame->Data[6] = *(Velocity_Tmp + 2);
 		 FDCAN_TxFrame->Data[7] = *(Velocity_Tmp + 3);

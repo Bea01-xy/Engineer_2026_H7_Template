@@ -36,7 +36,6 @@ static void Elevator_Motor_cal(void);
 static bool lifting_mode_changed(void);
 static void Elevator_set_feedforward_and_pos(void);
 static void chassis_set_leds(GPIO_PinState state);
-/** 仿照 Elevator：在 Control_Task 中设置机械臂目标位置及 J6/Gripper 输出，供 CAN_Task 发送 */
 static void Robotic_Arm_target_cal(void);
 
 Chassis_Info_Typedef chassis_info;
@@ -277,8 +276,8 @@ static void Robotic_Arm_target_cal(void)
     Robotic_Arm_Motor[J2].Data.Temp_Target_Position = 1.00f;
     Robotic_Arm_Motor[J3].Data.Temp_Target_Position = -1.00f;
     Robotic_Arm_Motor[J4].Data.Temp_Target_Position = 0.00f;
-    Robotic_Arm_Motor[J5].Data.Temp_Target_Position = 0.00f;
-
+    Robotic_Arm_Motor[J5].Data.Temp_Target_Position = 0.60f;
+    Robotic_Arm_Motor[J6].Data.Temp_Target_Position = 0.00f;
     /* 前三轴 RRR 重力+速度项补偿前馈：
      *  - J1(Yaw)：忽略重力与科氏项
      *  - J2/J3(Pitch)：使用当前位置(q2,q3)与关节速度(q2dot,q3dot)，默认关节加速度为 0
@@ -314,8 +313,4 @@ static void Robotic_Arm_target_cal(void)
     }
     Robotic_Arm_Motor[J4].Data.Feedforward = 0.0f;
     Robotic_Arm_Motor[J5].Data.Feedforward = 0.0f;
-
-    /* J6 与夹爪输出：发往从板，由 CAN_Task 发送 */
-    Slave_J6_Output = 0;  /* 可按遥控/轨迹赋值为电压或电流 */
-    M2006_Gripper_Motor.Data.Final_Output = 0;  /* 夹爪电流，可按需求赋值 */
 }

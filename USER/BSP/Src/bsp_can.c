@@ -187,6 +187,7 @@ static void FDCAN3_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
   DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J3]);
   DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J4]);
   DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J5]);
+  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J6]);
 }
 
 
