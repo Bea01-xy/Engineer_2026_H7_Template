@@ -21,6 +21,8 @@
 #include "arm_math.h"
 #include "Chassis_Config.h"
 #include "INS_Task.h"
+#include "CAN_Task.h"
+#include "Robotic_Arm_Config.h"
 
 static void Control_Init(void);
 static float SmootherStep(float NowTime,float UseTime);
@@ -34,6 +36,8 @@ static void Elevator_Motor_cal(void);
 static bool lifting_mode_changed(void);
 static void Elevator_set_feedforward_and_pos(void);
 static void chassis_set_leds(GPIO_PinState state);
+/** 仿照 Elevator：在 Control_Task 中设置机械臂目标位置及 J6/Gripper 输出，供 CAN_Task 发送 */
+static void Robotic_Arm_target_cal(void);
 
 Chassis_Info_Typedef chassis_info;
 
@@ -129,6 +133,7 @@ static void chassis_lifting_handler(void)
     }
     Chassis_Motor_cal(chassis_info.activated_flag);
     Elevator_Motor_cal();
+    Robotic_Arm_target_cal();
 }
 
 static void chassis_disabled_handler(void)
@@ -142,6 +147,8 @@ static void chassis_disabled_handler(void)
     Chassis_Motor[LB].Data.Final_Output = 0u;
     Chassis_Motor[RB].Data.Final_Output = 0u;
     Chassis_Motor[RF].Data.Final_Output = 0u;
+    Slave_J6_Output = 0;
+    M2006_Gripper_Motor.Data.Final_Output = 0;
 }
 
 static void Chassis_Motor_cal(const bool acticated)
@@ -254,4 +261,61 @@ static void chassis_set_leds(GPIO_PinState state)
 {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, state);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, state);
+}
+
+/**
+ * @brief 机械臂目标位置与 J6/Gripper 输出计算（仿照 Elevator_Motor_cal）
+ *        目标写入 Motor 与 Slave_J6_Output，由 CAN_Task 统一发 CAN。
+ */
+static void Robotic_Arm_target_cal(void)
+{
+    if (!chassis_info.activated_flag) {
+        return;
+    }
+    /* J1~J5 目标位置与前馈（可改为遥控/轨迹给定） */
+    Robotic_Arm_Motor[J1].Data.Temp_Target_Position = 0.00f;
+    Robotic_Arm_Motor[J2].Data.Temp_Target_Position = 1.00f;
+    Robotic_Arm_Motor[J3].Data.Temp_Target_Position = -1.00f;
+    Robotic_Arm_Motor[J4].Data.Temp_Target_Position = 0.00f;
+    Robotic_Arm_Motor[J5].Data.Temp_Target_Position = 0.00f;
+
+    /* 前三轴 RRR 重力+速度项补偿前馈：
+     *  - J1(Yaw)：忽略重力与科氏项
+     *  - J2/J3(Pitch)：使用当前位置(q2,q3)与关节速度(q2dot,q3dot)，默认关节加速度为 0
+     */
+    {
+        float q2    = Robotic_Arm_Motor[J2].Data.Position;   /* rad */
+        float q3    = Robotic_Arm_Motor[J3].Data.Position;   /* rad */
+        float q2dot = Robotic_Arm_Motor[J2].Data.Velocity;   /* rad/s */
+        float q3dot = Robotic_Arm_Motor[J3].Data.Velocity;   /* rad/s */
+
+        float c2  = cosf(q2);
+        float c23 = cosf(q2 + q3);
+        float s3  = sinf(q3);
+
+        /* 重力项：τ_g2, τ_g3 */
+        float tau_g2 = ARM_M1 * ARM_G * (ARM_L1 * 0.5f) * c2
+                     + ARM_M2 * ARM_G * (ARM_L1 * c2 + (ARM_L2 * 0.5f) * c23);
+        float tau_g3 = ARM_M2 * ARM_G * (ARM_L2 * 0.5f) * c23;
+
+        /* 速度项（科氏/离心）简化模型：两连杆平面臂
+         * h = m2 * L1 * (L2/2) * sin(q3)
+         * τ_v2 = -h * (2*q2dot*q3dot + q3dot^2)
+         * τ_v3 =  h * q2dot^2
+         */
+        float h      = ARM_M2 * ARM_L1 * (ARM_L2 * 0.5f) * s3;
+        float tau_v2 = -h * (2.0f * q2dot * q3dot + q3dot * q3dot);
+        float tau_v3 =  h * q2dot * q2dot;
+
+        /* 合成前馈 */
+        Robotic_Arm_Motor[J1].Data.Feedforward = 0.0f;
+        Robotic_Arm_Motor[J2].Data.Feedforward = tau_g2 + tau_v2;
+        Robotic_Arm_Motor[J3].Data.Feedforward = tau_g3 + tau_v3;
+    }
+    Robotic_Arm_Motor[J4].Data.Feedforward = 0.0f;
+    Robotic_Arm_Motor[J5].Data.Feedforward = 0.0f;
+
+    /* J6 与夹爪输出：发往从板，由 CAN_Task 发送 */
+    Slave_J6_Output = 0;  /* 可按遥控/轨迹赋值为电压或电流 */
+    M2006_Gripper_Motor.Data.Final_Output = 0;  /* 夹爪电流，可按需求赋值 */
 }

@@ -153,7 +153,7 @@ DM_Motor_Info_Typedef Robotic_Arm_Motor[5] = {
   [2] = {
     .Control_Mode = MIT,
     .Param_Range = {
-      .P_MAX = 12.5f,
+      .P_MAX = 3.141593f,
       .V_MAX = 45.f,
       .T_MAX = 10.f
     },

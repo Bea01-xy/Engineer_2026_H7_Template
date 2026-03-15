@@ -63,3 +63,12 @@ void M2006_motor_crt_ctrl(FDCAN_HandleTypeDef* hcan, uint16_t dji_motor_identifi
 {
     GM6020_motor_vol_ctrl(hcan,dji_motor_identifier,id_1_crt,id_2_crt,id_3_crt,id_4_crt);
 }
+
+void Slave_Board_J6_Gripper_Send(FDCAN_HandleTypeDef* hcan, uint16_t can_id, float j6_val, float gripper_val)
+{
+    uint8_t data[8];
+    const uint8_t *p1 = (const uint8_t *)&j6_val;
+    const uint8_t *p2 = (const uint8_t *)&gripper_val;
+    for (int i = 0; i < 4; i++) { data[i] = p1[i]; data[i + 4] = p2[i]; }
+    fdcanx_send_data(hcan, can_id, data, 8);
+}

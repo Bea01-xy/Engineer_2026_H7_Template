@@ -78,6 +78,13 @@
 #define J5_MAX_ANGLE_DEG 180.0f
 #define J6_MIN_ANGLE_DEG -180.0f
 #define J6_MAX_ANGLE_DEG 180.0f
+
+#define ARM_L1  0.20f   /* J2 臂长 (m) */
+#define ARM_L2  0.19f   /* J3 臂长 (m) */
+#define ARM_M1  2.0f   /* J2 连杆质量 (kg) */
+#define ARM_M2  2.0f   /* J3 连杆质量 (kg) */
+#define ARM_G   9.81f  /* 重力加速度 (m/s^2) */
+
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/

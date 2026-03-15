@@ -27,6 +27,16 @@
 #include "Chassis_Config.h"
 #include "Robotic_Arm_Config.h"
 #include "PID.h"
+#include <math.h>
+
+#define CAN_ID_SLAVE_J6_GRIPPER_CMD  0x2F0U
+
+/* 由 Control_Task 写入，本任务发送给从板 */
+int16_t Slave_J6_Output = 0;
+
+float J6_Output = 0;
+float Gripper_Output = 0;
+
 /* USER CODE BEGIN Header_CAN_Task */
 /**
 * @brief Function implementing the StartCANTask thread.
@@ -48,8 +58,9 @@ void CAN_Task(void)
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RB],Motor_Save_Zero_Position);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RF],Motor_Save_Zero_Position);
  
-	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J4],Motor_Save_Zero_Position);
-	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J5],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J1],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J2],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J3],Motor_Save_Zero_Position);
     TickType_t CAN_Task_SysTick = 0;
 	for(;;)
     {
@@ -62,7 +73,7 @@ void CAN_Task(void)
         
         osDelay(1);
 
-        USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J1].Data.Position, Robotic_Arm_Motor[J2].Data.Position, Robotic_Arm_Motor[J3].Data.Position);
+        USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J1].Data.Position, Robotic_Arm_Motor[J2].Data.Position, Robotic_Arm_Motor[J4].Data.Position);
     }
 }
 
@@ -93,7 +104,6 @@ void Elevator_set(const bool activated)
 void Robotic_Arm_set(const bool activated)
 {
     if (activated) {
-        // new motor to control
         DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J1],Motor_Enable);
         DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J2],Motor_Enable);
         DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J3],Motor_Enable);
@@ -101,20 +111,19 @@ void Robotic_Arm_set(const bool activated)
         DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J4],Motor_Enable);
         DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J5],Motor_Enable);
 
-        Robotic_Arm_Motor[J1].Data.Temp_Target_Position = 0.00f;
-        Robotic_Arm_Motor[J2].Data.Temp_Target_Position = 0.70f;
-        Robotic_Arm_Motor[J3].Data.Temp_Target_Position = 3.10f;
-        Robotic_Arm_Motor[J4].Data.Temp_Target_Position = 0.00f;
-        Robotic_Arm_Motor[J5].Data.Temp_Target_Position = 0.00f;
+        /* 仅发送 CAN：目标位置等由 Control_Task 写入 */
+        // DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J1],Robotic_Arm_Motor[J1].Data.Temp_Target_Position, MIT_NO_USE,10.0f,2.0f,Robotic_Arm_Motor[J1].Data.Feedforward);
+        // DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J2],Robotic_Arm_Motor[J2].Data.Temp_Target_Position, MIT_NO_USE,20.0f,2.0f,Robotic_Arm_Motor[J2].Data.Feedforward);
+        // DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J3],Robotic_Arm_Motor[J3].Data.Temp_Target_Position, MIT_NO_USE,20.0f,2.0f,Robotic_Arm_Motor[J3].Data.Feedforward);
+        // osDelay(1);
+        // DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J4],Robotic_Arm_Motor[J4].Data.Temp_Target_Position, MIT_NO_USE,3.0f,0.1f,Robotic_Arm_Motor[J4].Data.Feedforward);
+        // DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J5],Robotic_Arm_Motor[J5].Data.Temp_Target_Position, MIT_NO_USE,3.0f,0.1f,Robotic_Arm_Motor[J5].Data.Feedforward);
 
-        // DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J1],Robotic_Arm_Motor[J1].Data.Temp_Target_Position, MIT_NO_USE,15.0f,0.1f,3.5f);
-        // DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J2],Robotic_Arm_Motor[J2].Data.Temp_Target_Position, MIT_NO_USE,20.0f,0.1f,5.5f);
-        // DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J4],Robotic_Arm_Motor[J4].Data.Temp_Target_Position, MIT_NO_USE,3.0f,0.1f,0.5f);
-        // DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J5],Robotic_Arm_Motor[J5].Data.Temp_Target_Position, MIT_NO_USE,3.0f,0.1f,0.5f);
-
+        /* 发往从板：J6 用 Slave_J6_Output（Control_Task 写入），夹爪用 Gripper_Output */
+        J6_Output = (float)Slave_J6_Output;
         osDelay(1);
-        GM6020_motor_vol_ctrl(&hfdcan3, 0x1FF, 2000,
-        1000, 2000,1000);
+        Slave_Board_J6_Gripper_Send(&hfdcan3, CAN_ID_SLAVE_J6_GRIPPER_CMD,
+            J6_Output, Gripper_Output);
     }
     else {
         DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J1],Motor_Disable);
