@@ -45,7 +45,7 @@ float Gripper_Output = 0;
 */
 /* USER CODE END Header_CAN_Task */
 void Elevator_set(bool activated);
-/** part: 0=前三个电机 J1,J2,J3, 1=后三个电机 J4,J5,J6，分两次发送减轻 CAN3 负载 */
+/** part: 0/1/2，分三次发送不同关节，减轻 CAN3 负载 */
 void Robotic_Arm_set(bool activated, int part);
 void Chassis_set(void);
 
@@ -58,13 +58,12 @@ void CAN_Task(void)
     osDelay(1);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RB],Motor_Save_Zero_Position);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RF],Motor_Save_Zero_Position);
- 
-	static int robotic_arm_part = 0;  /* 每循环自增交替 0/1，保证连续两次不重复 */
+	static int robotic_arm_part = 0;  /* 每循环递增取 0/1/2，保证连续三次不重复 */
 	for(;;)
     {
-		/* 分两次发送：前三个电机 / 后三个电机，避免 CAN3 同时发 6 路 */
+		/* 分三次发送不同关节，避免 CAN3 同时发 6 路 */
 		Robotic_Arm_set(chassis_info.activated_flag, robotic_arm_part);
-		robotic_arm_part ^= 1;  /* 0->1, 1->0 */
+		robotic_arm_part = (robotic_arm_part + 1) % 3;  /* 0->1->2->0 */
         Chassis_set();
         Elevator_set(chassis_info.activated_flag);
         
@@ -100,40 +99,49 @@ void Elevator_set(const bool activated)
 
 void Robotic_Arm_set(const bool activated, const int part)
 {
-	/* part 0: J4,J5,J6   part 1: J1,J2,J3，分两次发送不同时发 6 路 */
+	/* 分三部分发送，避免一次性控制全部关节 */
 	if (part == 0) {
+		/* part 0: J1,J2 */
 		if (activated) {
-			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J1], Motor_Enable);
-			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J2], Motor_Enable);
-			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J3], Motor_Enable);
-		} else {
-			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J1], Motor_Disable);
-			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J2], Motor_Disable);
-			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J3], Motor_Disable);
-		}
-	} else {
-		if (activated) {
-			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J4], Motor_Enable);
-			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J5], Motor_Enable);
-			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J6], Motor_Enable);
+			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], Motor_Enable);
+			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], Motor_Enable);
 			osDelay(1);
-			DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J1], Robotic_Arm_Motor[J1].Data.Temp_Target_Position, MIT_NO_USE, 14.0f, 2.1f, Robotic_Arm_Motor[J1].Data.Feedforward);
-			DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J2], Robotic_Arm_Motor[J2].Data.Temp_Target_Position, MIT_NO_USE, 14.0f, 2.1f, Robotic_Arm_Motor[J2].Data.Feedforward);
-			DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J3], Robotic_Arm_Motor[J3].Data.Temp_Target_Position, MIT_NO_USE, 14.0f, 2.1f, Robotic_Arm_Motor[J3].Data.Feedforward);
-			DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J4], Robotic_Arm_Motor[J4].Data.Temp_Target_Position, MIT_NO_USE, 5.0f, 0.1f, Robotic_Arm_Motor[J4].Data.Feedforward);
-			DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J5], Robotic_Arm_Motor[J5].Data.Temp_Target_Position, MIT_NO_USE, 5.0f, 0.1f, Robotic_Arm_Motor[J5].Data.Feedforward);
-			DM_Motor_CAN_TxMessage(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J6], Robotic_Arm_Motor[J6].Data.Temp_Target_Position, MIT_NO_USE, 5.0f, 0.1f, Robotic_Arm_Motor[J6].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], Robotic_Arm_Motor[J1].Data.Temp_Target_Position, MIT_NO_USE, 14.0f, 2.1f, Robotic_Arm_Motor[J1].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], Robotic_Arm_Motor[J2].Data.Temp_Target_Position, MIT_NO_USE, 14.0f, 2.1f, Robotic_Arm_Motor[J2].Data.Feedforward);
 		} else {
-			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J4], Motor_Disable);
-			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J5], Motor_Disable);
-			DM_Motor_Command(&FDCAN2_TxFrame, &Robotic_Arm_Motor[J6], Motor_Disable);
+			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], Motor_Disable);
+			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], Motor_Disable);
+		}
+	} else if (part == 1) {
+		/* part 1: J3,J4 */
+		if (activated) {
+			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], Motor_Enable);
+			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], Motor_Enable);
+			osDelay(1);
+			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], Robotic_Arm_Motor[J3].Data.Temp_Target_Position, MIT_NO_USE, 14.0f, 2.1f, Robotic_Arm_Motor[J3].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], Robotic_Arm_Motor[J4].Data.Temp_Target_Position, MIT_NO_USE, 5.0f, 0.1f, Robotic_Arm_Motor[J4].Data.Feedforward);
+		} else {
+			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], Motor_Disable);
+			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], Motor_Disable);
+		}
+	} else if (part == 2) {
+		/* part 2: J5,J6 */
+		if (activated) {
+			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], Motor_Enable);
+			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], Motor_Enable);
+			osDelay(1);
+			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], Robotic_Arm_Motor[J5].Data.Temp_Target_Position, MIT_NO_USE, 5.0f, 0.1f, Robotic_Arm_Motor[J5].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], Robotic_Arm_Motor[J6].Data.Temp_Target_Position, MIT_NO_USE, 5.0f, 0.1f, Robotic_Arm_Motor[J6].Data.Feedforward);
+		} else {
+			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], Motor_Disable);
+			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], Motor_Disable);
 		}
 	}
 }
 
 void Chassis_set(void)
 {
-    M3508_motor_crt_ctrl(&hfdcan3, 0x200, Chassis_Motor[LF].Data.Final_Output,
+    M3508_motor_crt_ctrl(&hfdcan2, 0x200, Chassis_Motor[LF].Data.Final_Output,
         Chassis_Motor[LB].Data.Final_Output,Chassis_Motor[RB].Data.Final_Output,Chassis_Motor[RF].Data.Final_Output);
 
 }

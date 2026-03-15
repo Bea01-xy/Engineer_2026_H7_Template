@@ -180,12 +180,12 @@ static void FDCAN1_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
   */
 static void FDCAN3_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
 {
-	DJI_Motor_Info_Update(Identifier,Data,&M2006_Gripper_Motor);
-
-	DJI_Motor_Info_Update(Identifier,Data,&Chassis_Motor[LF]);
-	DJI_Motor_Info_Update(Identifier,Data,&Chassis_Motor[LB]);
-	DJI_Motor_Info_Update(Identifier,Data,&Chassis_Motor[RB]);
-	DJI_Motor_Info_Update(Identifier,Data,&Chassis_Motor[RF]);
+	DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J1]);
+	DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J2]);
+	DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J3]);
+	DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J4]);
+	DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J5]);
+	DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J6]);
 }
 
 
@@ -197,12 +197,12 @@ static void FDCAN3_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
   */
 static void FDCAN2_RxFifo1RxHandler(uint32_t *Identifier,uint8_t Data[8])
 {
-  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J1]);
-  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J2]);
-  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J3]);
-  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J4]);
-  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J5]);
-  DM_Motor_Info_Update(Identifier,Data,&Robotic_Arm_Motor[J6]);
+	DJI_Motor_Info_Update(Identifier,Data,&M2006_Gripper_Motor);
+
+	DJI_Motor_Info_Update(Identifier,Data,&Chassis_Motor[LF]);
+	DJI_Motor_Info_Update(Identifier,Data,&Chassis_Motor[LB]);
+	DJI_Motor_Info_Update(Identifier,Data,&Chassis_Motor[RB]);
+	DJI_Motor_Info_Update(Identifier,Data,&Chassis_Motor[RF]);
 }
 
 /**
