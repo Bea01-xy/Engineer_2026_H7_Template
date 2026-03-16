@@ -23,7 +23,7 @@ DJI_Motor_Info_Typedef M2006_Gripper_Motor = {
     .Type = DJI_M2006,
     .FDCANFrame = {
         .TxIdentifier = 0x200,
-        .RxIdentifier = 0x201,
+        .RxIdentifier = 0x205,
     }
 };
 DJI_Motor_Info_Typedef Robotic_Arm_Motor_Dji = {

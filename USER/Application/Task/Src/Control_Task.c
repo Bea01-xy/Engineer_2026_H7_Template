@@ -98,11 +98,11 @@ static void Control_Init(void)
     Elevator_Motor[RF].Data.Target_Position = ELEVATOR_USUAL_POS;
 
     Robotic_Arm_Motor[J1].Data.Temp_Target_Position = 0.00f;
-    Robotic_Arm_Motor[J2].Data.Temp_Target_Position = 2.00f;
-    Robotic_Arm_Motor[J3].Data.Temp_Target_Position = -1.00f;
+    Robotic_Arm_Motor[J2].Data.Temp_Target_Position = 2.30f;
+    Robotic_Arm_Motor[J3].Data.Temp_Target_Position = -1.60f;
     Robotic_Arm_Motor[J4].Data.Temp_Target_Position = 0.00f;
-    Robotic_Arm_Motor[J5].Data.Temp_Target_Position = -0.40f;
-    Robotic_Arm_Motor[J6].Data.Temp_Target_Position = 1.57f;
+    Robotic_Arm_Motor[J5].Data.Temp_Target_Position = -0.10f;
+    Robotic_Arm_Motor[J6].Data.Temp_Target_Position = 0.00f;
 }
 
 static float SmootherStep(float NowTime,float UseTime)

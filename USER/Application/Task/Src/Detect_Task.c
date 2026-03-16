@@ -26,6 +26,7 @@
 #include "Motor.h"
 #include "PID.h"
 #include "Robotic_Arm_Config.h"
+#include <stdint.h>
 
 /* USER CODE BEGIN Header_Detect_Task */
 static void chassis_set_mode(Chassis_Info_Typedef* chassis);
@@ -33,12 +34,14 @@ static void chassis_ctrl_info_get(void);
 static void chassis_wheel_cal(void);
 
 extern Chassis_Info_Typedef chassis_info;
-float joint_data[6] = {1.1f,1.2f,1.3f,1.4f,3.2f,1.6f};
+//float joint_data[6] = {1.1f,1.2f,1.3f,1.4f,3.2f,1.6f};
 uint8_t receive_data[51];
 extern float joint_data_receive[12]; //to be used
 
 static float Chassis_Direction_PID_Param[PID_PARAMETER_NUM] = {0.02f, 0.007f, 0.03f, 0.2f, 2.f, 1.f, 2.f};
 PID_Info_TypeDef Chassis_Direction_PID;
+
+Hand_State_e hand_state = HAND_OPEN;
 /**
 * @brief Function implementing the StartDetectTask thread.
 * @param argument: Not used
@@ -51,19 +54,21 @@ void Detect_Task(void)
     TickType_t Detect_Task_SysTick = 0;
     PID_Init(&Chassis_Direction_PID,PID_POSITION,Chassis_Direction_PID_Param);
 
-    joint_data_receive[0] = 0.00f;
-    joint_data_receive[1] = 2.00f;
-    joint_data_receive[2] = -1.00f;
-    joint_data_receive[3] = 0.00f;
-    joint_data_receive[4] = -0.40f;
-    joint_data_receive[5] = 1.57f;
+    joint_data_receive[J1] = 0.00f;
+    joint_data_receive[J2] = 2.30f;
+    joint_data_receive[J3] = -1.60f;
+    joint_data_receive[J4] = 0.00f;
+    joint_data_receive[J5] = -0.10f;
+    joint_data_receive[J6] = 0.00f;
     /* Infinite loop */
     for(;;)
     {
         //original code
         Remote_Message_Moniter(&remote_ctrl);
 		MiniPC_Receive_Info(receive_data, 6);
-		MiniPC_Transmit_Info(joint_data, 6);
+
+        float Robotic_Arm_Info[6] = {Robotic_Arm_Motor[J1].Data.Position, Robotic_Arm_Motor[J2].Data.Position, Robotic_Arm_Motor[J3].Data.Position, Robotic_Arm_Motor[J4].Data.Position, Robotic_Arm_Motor[J5].Data.Position, -Robotic_Arm_Motor[J6].Data.Position};
+		MiniPC_Transmit_Info(Robotic_Arm_Info, 6);
 
         chassis_set_mode(&chassis_info);
         chassis_ctrl_info_get();
@@ -72,12 +77,19 @@ void Detect_Task(void)
 		Detect_Task_SysTick = osKernelSysTick();//no use for now
         USART_Vofa_Justfloat_Transmit(joint_data_receive[0], joint_data_receive[1], joint_data_receive[2]);
 
-        Robotic_Arm_Motor[J1].Data.Temp_Target_Position = joint_data_receive[0];
-        Robotic_Arm_Motor[J2].Data.Temp_Target_Position = joint_data_receive[1];
-        Robotic_Arm_Motor[J3].Data.Temp_Target_Position = joint_data_receive[2];
-        Robotic_Arm_Motor[J4].Data.Temp_Target_Position = joint_data_receive[3];
-        Robotic_Arm_Motor[J5].Data.Temp_Target_Position = joint_data_receive[4];
-        Robotic_Arm_Motor[J6].Data.Temp_Target_Position = joint_data_receive[5];
+        Robotic_Arm_Motor[J1].Data.Temp_Target_Position = joint_data_receive[J1];
+        Robotic_Arm_Motor[J2].Data.Temp_Target_Position = joint_data_receive[J2];
+        Robotic_Arm_Motor[J3].Data.Temp_Target_Position = joint_data_receive[J3];
+        Robotic_Arm_Motor[J4].Data.Temp_Target_Position = joint_data_receive[J4];
+        Robotic_Arm_Motor[J5].Data.Temp_Target_Position = joint_data_receive[J5];
+        Robotic_Arm_Motor[J6].Data.Temp_Target_Position = -joint_data_receive[J6];
+
+        if (switch_is_up(remote_ctrl.rc.sw[1])) {
+            hand_state = HAND_OPEN;
+        } else {
+            hand_state = HAND_CLOSE;
+        }
+        
         osDelay(1);
     }
     /* USER CODE END Detect_Task */

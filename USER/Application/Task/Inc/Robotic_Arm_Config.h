@@ -101,6 +101,12 @@ typedef enum
     ROBOTIC_ARM_HOLD,              /* 保持当前位置 */
 } Robotic_Arm_Mode_e;
 
+typedef enum
+{
+  HAND_OPEN = 0U,
+  HAND_CLOSE = 1U,
+} Hand_State_e;
+
 /**
   * @brief Robotic arm state info
   *        机械臂状态信息
