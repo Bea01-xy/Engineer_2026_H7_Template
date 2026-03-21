@@ -60,11 +60,16 @@ void CAN_Task(void)
     osDelay(1);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RB],Motor_Save_Zero_Position);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RF],Motor_Save_Zero_Position);
-	static int robotic_arm_part = 0;  /* 每循环递增取 0/1/2，保证连续三次不重复 */
+
+	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J3],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J4],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J5],Motor_Save_Zero_Position);
+	
+	static int robotic_arm_part = 0;
 	for(;;)
     {
 		Robotic_Arm_set(chassis_info.activated_flag, robotic_arm_part);
-		robotic_arm_part = (robotic_arm_part + 1) % 3;  /* 0->1->2->0 */
+		robotic_arm_part = (robotic_arm_part + 1) % 3;
         Chassis_set(chassis_info.activated_flag);
         Elevator_set(chassis_info.activated_flag);
         
@@ -106,9 +111,8 @@ void Robotic_Arm_set(const bool activated, const int part)
 			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], Motor_Enable);
 			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], Motor_Enable);
 			osDelay(1);
-			// KP=14.0f*2=28.0f, KD=2.1f*2=4.2f
 			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], Robotic_Arm_Motor[J1].Data.Temp_Target_Position, MIT_NO_USE, 28.0f, 4.2f, Robotic_Arm_Motor[J1].Data.Feedforward);
-			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], Robotic_Arm_Motor[J2].Data.Temp_Target_Position, MIT_NO_USE, 28.0f, 4.2f, Robotic_Arm_Motor[J2].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], Robotic_Arm_Motor[J2].Data.Temp_Target_Position, MIT_NO_USE, 45.0f, 12.2f, Robotic_Arm_Motor[J2].Data.Feedforward);
 		} else {
 			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], Motor_Disable);
 			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], Motor_Disable);
@@ -119,9 +123,8 @@ void Robotic_Arm_set(const bool activated, const int part)
 			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], Motor_Enable);
 			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], Motor_Enable);
 			osDelay(1);
-			// KP=14.0f*2=28.0f, KD=2.1f*2=4.2f for J3; KP=5.0f*2=10.0f, KD=0.1f*2=0.2f for J4
-			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], Robotic_Arm_Motor[J3].Data.Temp_Target_Position, MIT_NO_USE, 28.0f, 4.2f, Robotic_Arm_Motor[J3].Data.Feedforward);
-			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], Robotic_Arm_Motor[J4].Data.Temp_Target_Position, MIT_NO_USE, 10.0f, 0.2f, Robotic_Arm_Motor[J4].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], Robotic_Arm_Motor[J3].Data.Temp_Target_Position, MIT_NO_USE, 45.0f, 12.2f, Robotic_Arm_Motor[J3].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], Robotic_Arm_Motor[J4].Data.Temp_Target_Position, MIT_NO_USE, 18.0f, 1.2f, Robotic_Arm_Motor[J4].Data.Feedforward);
 		} else {
 			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], Motor_Disable);
 			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], Motor_Disable);
@@ -132,9 +135,8 @@ void Robotic_Arm_set(const bool activated, const int part)
 			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], Motor_Enable);
 			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], Motor_Enable);
 			osDelay(1);
-			// KP=5.0f*2=10.0f, KD=0.1f*2=0.2f
-			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], Robotic_Arm_Motor[J5].Data.Temp_Target_Position, MIT_NO_USE, 10.0f, 0.2f, Robotic_Arm_Motor[J5].Data.Feedforward);
-			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], Robotic_Arm_Motor[J6].Data.Temp_Target_Position, MIT_NO_USE, 10.0f, 0.2f, Robotic_Arm_Motor[J6].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], Robotic_Arm_Motor[J5].Data.Temp_Target_Position, MIT_NO_USE, 20.0f, 1.2f, Robotic_Arm_Motor[J5].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], Robotic_Arm_Motor[J6].Data.Temp_Target_Position, MIT_NO_USE, 12.0f, 1.2f, Robotic_Arm_Motor[J6].Data.Feedforward);
 		} else {
 			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], Motor_Disable);
 			DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], Motor_Disable);
@@ -154,12 +156,11 @@ void Chassis_set(const bool activated)
 			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -1000,
 							 0, 0, 0);
 		} else {
-			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 3000,
+			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 3500,
 							 0, 0, 0);
 		}
 	} else {
 		M3508_motor_crt_ctrl(&hfdcan2, 0x200, 0, 0, 0, 0);
-		M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0,
-							 0, 0, 0);
+		M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
 	}
 }

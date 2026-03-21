@@ -51,31 +51,43 @@ Hand_State_e hand_state = HAND_OPEN;
 void Detect_Task(void)
 {
     /* USER CODE BEGIN Detect_Task */
-    TickType_t Detect_Task_SysTick = 0;
     PID_Init(&Chassis_Direction_PID,PID_POSITION,Chassis_Direction_PID_Param);
 
-    joint_data_receive[J1] = 0.00f;
-    joint_data_receive[J2] = 2.30f;
-    joint_data_receive[J3] = -1.60f;
-    joint_data_receive[J4] = 0.00f;
-    joint_data_receive[J5] = -0.10f;
-    joint_data_receive[J6] = 0.00f;
+    joint_data_receive[J1] = J1_INITIAL_POS;
+    joint_data_receive[J2] = J2_INITIAL_POS;
+    joint_data_receive[J3] = J3_INITIAL_POS;
+    joint_data_receive[J4] = J4_INITIAL_POS;
+    joint_data_receive[J5] = J5_INITIAL_POS;
+    joint_data_receive[J6] = J6_INITIAL_POS;
     /* Infinite loop */
     for(;;)
     {
         //original code
         Remote_Message_Moniter(&remote_ctrl);
-		MiniPC_Receive_Info(receive_data, 6);
+		MiniPC_Receive_Info(receive_data, 12);
 
-        float Robotic_Arm_Info[6] = {Robotic_Arm_Motor[J1].Data.Position, Robotic_Arm_Motor[J2].Data.Position, Robotic_Arm_Motor[J3].Data.Position, Robotic_Arm_Motor[J4].Data.Position, Robotic_Arm_Motor[J5].Data.Position, -Robotic_Arm_Motor[J6].Data.Position};
-		MiniPC_Transmit_Info(Robotic_Arm_Info, 6);
+        float J1_Pos = Robotic_Arm_Motor[J1].Data.Position;
+        float J2_Pos = Robotic_Arm_Motor[J2].Data.Position;
+        float J3_Pos = Robotic_Arm_Motor[J3].Data.Position;
+        float J4_Pos = Robotic_Arm_Motor[J4].Data.Position;
+        float J5_Pos = Robotic_Arm_Motor[J5].Data.Position;
+        float J6_Pos = -Robotic_Arm_Motor[J6].Data.Position;
+
+        float J1_Vel = Robotic_Arm_Motor[J1].Data.Velocity;
+        float J2_Vel = Robotic_Arm_Motor[J2].Data.Velocity;
+        float J3_Vel = Robotic_Arm_Motor[J3].Data.Velocity;
+        float J4_Vel = Robotic_Arm_Motor[J4].Data.Velocity;
+        float J5_Vel = Robotic_Arm_Motor[J5].Data.Velocity;
+        float J6_Vel = -Robotic_Arm_Motor[J6].Data.Velocity;
+
+        float Robotic_Arm_Info[12] = {J1_Pos, J2_Pos, J3_Pos, J4_Pos, J5_Pos, J6_Pos, J1_Vel, J2_Vel, J3_Vel, J4_Vel, J5_Vel, J6_Vel};
+		MiniPC_Transmit_Info(Robotic_Arm_Info, 12);
 
         chassis_set_mode(&chassis_info);
         chassis_ctrl_info_get();
         chassis_wheel_cal();
 
-		Detect_Task_SysTick = osKernelSysTick();//no use for now
-        USART_Vofa_Justfloat_Transmit(joint_data_receive[0], joint_data_receive[1], joint_data_receive[2]);
+        USART_Vofa_Justfloat_Transmit(Elevator_Motor[LF].Data.Position, Elevator_Motor[LB].Data.Position, Elevator_Motor[RB].Data.Position);
 
         Robotic_Arm_Motor[J1].Data.Temp_Target_Position = joint_data_receive[J1];
         Robotic_Arm_Motor[J2].Data.Temp_Target_Position = joint_data_receive[J2];

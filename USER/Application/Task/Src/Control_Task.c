@@ -97,12 +97,12 @@ static void Control_Init(void)
     Elevator_Motor[RB].Data.Target_Position = ELEVATOR_USUAL_POS;
     Elevator_Motor[RF].Data.Target_Position = ELEVATOR_USUAL_POS;
 
-    Robotic_Arm_Motor[J1].Data.Temp_Target_Position = 0.00f;
-    Robotic_Arm_Motor[J2].Data.Temp_Target_Position = 2.30f;
-    Robotic_Arm_Motor[J3].Data.Temp_Target_Position = -1.60f;
-    Robotic_Arm_Motor[J4].Data.Temp_Target_Position = 0.00f;
-    Robotic_Arm_Motor[J5].Data.Temp_Target_Position = -0.10f;
-    Robotic_Arm_Motor[J6].Data.Temp_Target_Position = 0.00f;
+    Robotic_Arm_Motor[J1].Data.Temp_Target_Position = J1_INITIAL_POS;
+    Robotic_Arm_Motor[J2].Data.Temp_Target_Position = J2_INITIAL_POS;
+    Robotic_Arm_Motor[J3].Data.Temp_Target_Position = J3_INITIAL_POS;
+    Robotic_Arm_Motor[J4].Data.Temp_Target_Position = J4_INITIAL_POS;
+    Robotic_Arm_Motor[J5].Data.Temp_Target_Position = J5_INITIAL_POS;
+    Robotic_Arm_Motor[J6].Data.Temp_Target_Position = J6_INITIAL_POS;
 }
 
 static float SmootherStep(float NowTime,float UseTime)
@@ -315,4 +315,5 @@ static void Robotic_Arm_target_cal(void)
     }
     Robotic_Arm_Motor[J4].Data.Feedforward = 0.0f;
     Robotic_Arm_Motor[J5].Data.Feedforward = 0.0f;
+    Robotic_Arm_Motor[J6].Data.Feedforward = 0.0f;
 }
