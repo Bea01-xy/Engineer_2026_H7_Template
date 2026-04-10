@@ -64,7 +64,7 @@ void Detect_Task(void)
     {
         //original code
         Remote_Message_Moniter(&remote_ctrl);
-		MiniPC_Receive_Info(receive_data, 12);
+		MiniPC_Receive_Info(receive_data, 6);
 
         float J1_Pos = Robotic_Arm_Motor[J1].Data.Position;
         float J2_Pos = Robotic_Arm_Motor[J2].Data.Position;
@@ -87,14 +87,13 @@ void Detect_Task(void)
         chassis_ctrl_info_get();
         chassis_wheel_cal();
 
-        USART_Vofa_Justfloat_Transmit(Elevator_Motor[LF].Data.Position, Elevator_Motor[LB].Data.Position, Elevator_Motor[RB].Data.Position);
-
         Robotic_Arm_Motor[J1].Data.Temp_Target_Position = joint_data_receive[J1];
         Robotic_Arm_Motor[J2].Data.Temp_Target_Position = joint_data_receive[J2];
         Robotic_Arm_Motor[J3].Data.Temp_Target_Position = joint_data_receive[J3];
         Robotic_Arm_Motor[J4].Data.Temp_Target_Position = joint_data_receive[J4];
         Robotic_Arm_Motor[J5].Data.Temp_Target_Position = joint_data_receive[J5];
         Robotic_Arm_Motor[J6].Data.Temp_Target_Position = -joint_data_receive[J6];
+        //USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J1].Data.Temp_Target_Position, Robotic_Arm_Motor[J2].Data.Temp_Target_Position, Elevator_Motor[RB].Data.Position);
 
         if (switch_is_up(remote_ctrl.rc.sw[1])) {
             hand_state = HAND_OPEN;

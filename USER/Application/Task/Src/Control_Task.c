@@ -153,7 +153,6 @@ static void chassis_disabled_handler(void)
     Chassis_Motor[LB].Data.Final_Output = 0u;
     Chassis_Motor[RB].Data.Final_Output = 0u;
     Chassis_Motor[RF].Data.Final_Output = 0u;
-    Slave_J6_Output = 0;
     M2006_Gripper_Motor.Data.Final_Output = 0;
 }
 
@@ -310,8 +309,8 @@ static void Robotic_Arm_target_cal(void)
 
         /* 合成前馈 */
         Robotic_Arm_Motor[J1].Data.Feedforward = 0.0f;
-        Robotic_Arm_Motor[J2].Data.Feedforward = tau_g2 + tau_v2;
-        Robotic_Arm_Motor[J3].Data.Feedforward = tau_g3 + tau_v3;
+        Robotic_Arm_Motor[J2].Data.Feedforward = 0.0f;
+        Robotic_Arm_Motor[J3].Data.Feedforward = 0.0f;
     }
     Robotic_Arm_Motor[J4].Data.Feedforward = 0.0f;
     Robotic_Arm_Motor[J5].Data.Feedforward = 0.0f;

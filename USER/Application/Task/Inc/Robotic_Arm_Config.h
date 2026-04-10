@@ -85,22 +85,6 @@
 #define ARM_M2  3.0f   /* J3 连杆质量 (kg) */
 #define ARM_G   9.81f  /* 重力加速度 (m/s^2) */
 
-/* Exported macros -----------------------------------------------------------*/
-
-/* Exported types ------------------------------------------------------------*/
-
-/**
-  * @brief Robotic arm work mode
-  *        机械臂工作模式
-  */
-typedef enum
-{
-    ROBOTIC_ARM_DISABLE = 0U,      /* 关闭 / 失能 */
-    ROBOTIC_ARM_MANUAL,            /* 手动控制（遥控器/上位机直接发关节指令） */
-    ROBOTIC_ARM_AUTO_TRAJ,         /* 按既定轨迹自动运行 */
-    ROBOTIC_ARM_HOLD,              /* 保持当前位置 */
-} Robotic_Arm_Mode_e;
-
 typedef enum
 {
   HAND_OPEN = 0U,
@@ -108,35 +92,11 @@ typedef enum
 } Hand_State_e;
 
 #define J1_INITIAL_POS 0.00f
-#define J2_INITIAL_POS 1.57f
-#define J3_INITIAL_POS -1.57f
+#define J2_INITIAL_POS 1.00f
+#define J3_INITIAL_POS -1.2535f
 #define J4_INITIAL_POS 0.00f
 #define J5_INITIAL_POS 0.00f
 #define J6_INITIAL_POS 0.00f 
-
-/**
-  * @brief Robotic arm state info
-  *        机械臂状态信息
-  */
-typedef struct
-{
-    Robotic_Arm_Mode_e mode;
-    Robotic_Arm_Mode_e last_mode;
-
-    /* 关节当前角度、目标角度（单位：deg） */
-    float joint_angle_deg[ROBOTIC_ARM_DOF];
-    float joint_target_angle_deg[ROBOTIC_ARM_DOF];
-
-    /* 关节当前/目标速度（单位：deg/s） */
-    float joint_vel_deg_s[ROBOTIC_ARM_DOF];
-    float joint_target_vel_deg_s[ROBOTIC_ARM_DOF];
-
-    /* 是否已经初始化到零位/标定位置 */
-    bool  homed_flag;
-
-    /* 整体激活标志：允许输出力矩/电流 */
-    bool  activated_flag;
-} Robotic_Arm_Info_Typedef;
 
 #endif /* ROBOTIC_ARM_CONFIG_H */
 
