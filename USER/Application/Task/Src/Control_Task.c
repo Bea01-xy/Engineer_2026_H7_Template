@@ -268,10 +268,6 @@ static void chassis_set_leds(GPIO_PinState state)
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, state);
 }
 
-/**
- * @brief 机械臂目标位置与 J6/Gripper 输出计算（仿照 Elevator_Motor_cal）
- *        目标写入 Motor 与 Slave_J6_Output，由 CAN_Task 统一发 CAN。
- */
 static void Robotic_Arm_target_cal(void)
 {
     if (!chassis_info.activated_flag) {

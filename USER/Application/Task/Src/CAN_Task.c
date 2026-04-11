@@ -42,7 +42,6 @@
 void Elevator_set(bool activated);
 void Robotic_Arm_set(int part);
 void Chassis_set(bool activated);
-static bool mode_changed(void);
 static void Robotic_Arm_Motor_Mode_Set(const bool activated);
 
 extern Chassis_Info_Typedef chassis_info;
@@ -56,9 +55,9 @@ void CAN_Task(void)
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RB],Motor_Save_Zero_Position);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RF],Motor_Save_Zero_Position);
 
-	DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J4],Motor_Save_Zero_Position);
-	DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J5],Motor_Save_Zero_Position);
-	DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J6],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J4],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J5],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J6],Motor_Save_Zero_Position);
 	static int robotic_arm_part = 0;
 	for(;;)
     {
@@ -137,7 +136,7 @@ void Chassis_set(const bool activated)
 	}
 }
 
-static bool mode_changed(void){
+bool mode_changed(void){
     return chassis_info.last_mode != chassis_info.mode;
 }
 

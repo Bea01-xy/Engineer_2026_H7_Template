@@ -41,27 +41,27 @@ LowPassFilter2p_Info_TypeDef INS_AccelPF2p[3];
 /**
   * @brief the Initialize data of state transition matrix.
   */
-static float QuaternionEKF_A_Data[36]={1, 0, 0, 0, 0, 0,
-                                       0, 1, 0, 0, 0, 0,
-                                       0, 0, 1, 0, 0, 0,
-                                       0, 0, 0, 1, 0, 0,
-                                       0, 0, 0, 0, 1, 0,
-                                       0, 0, 0, 0, 0, 1};
+static float QuaternionEKF_A_Data[36] = {1, 0, 0, 0, 0, 0,
+                                         0, 1, 0, 0, 0, 0,
+                                         0, 0, 1, 0, 0, 0,
+                                         0, 0, 0, 1, 0, 0,
+                                         0, 0, 0, 0, 1, 0,
+                                         0, 0, 0, 0, 0, 1};
 
 /**
   * @brief the Initialize data of posteriori covariance matrix.
   */																
-static float QuaternionEKF_P_Data[36]= {100000, 0.1, 0.1, 0.1, 0.1, 0.1,
-                                        0.1, 100000, 0.1, 0.1, 0.1, 0.1,
-                                        0.1, 0.1, 100000, 0.1, 0.1, 0.1,
-                                        0.1, 0.1, 0.1, 100000, 0.1, 0.1,
-                                        0.1, 0.1, 0.1,   0.1,  100, 0.1,
-                                        0.1, 0.1, 0.1,   0.1,  0.1, 100};
+static float QuaternionEKF_P_Data[36] = {100000, 0.1, 0.1, 0.1, 0.1, 0.1,
+                                         0.1, 100000, 0.1, 0.1, 0.1, 0.1,
+                                         0.1, 0.1, 100000, 0.1, 0.1, 0.1,
+                                         0.1, 0.1, 0.1, 100000, 0.1, 0.1,
+                                         0.1, 0.1, 0.1, 0.1, 100, 0.1,
+                                         0.1, 0.1, 0.1, 0.1, 0.1, 100};
 
 /**
   * @brief the Initialize data of Temperature Control PID.
   */																				
-static float TemCtrl_PID_Param[PID_PARAMETER_NUM]={900,20,0,0,0,0,2000};
+static float TemCtrl_PID_Param[PID_PARAMETER_NUM] = {900, 20, 0, 0, 0, 0, 2000};
 
 /**
   * @brief the structure that contains the Information of Temperature Control PID.
@@ -90,62 +90,61 @@ void INS_Task(void)
     /* USER CODE BEGIN INS_Task */
     TickType_t INS_Task_SysTick = 0;
 
+    /* Initializes the INS_Task. */
+    INS_Task_Init();
 
-	/* Initializes the INS_Task. */
-	INS_Task_Init();
-	
     /* Infinite loop */
-    for(;;)
+    for (;;)
     {
-  	    INS_Task_SysTick = osKernelSysTick();
-		
-		/* Update the BMI088 measurement */
+        INS_Task_SysTick = osKernelSysTick();
+
+        /* Update the BMI088 measurement */
         BMI088_Info_Update(&BMI088_Info);
 
         /* Accel measurement LPF2p */
-        INS_Info.Accel[0]   =   LowPassFilter2p_Update(&INS_AccelPF2p[0],BMI088_Info.Accel[0]);
-        INS_Info.Accel[1]   =   LowPassFilter2p_Update(&INS_AccelPF2p[1],BMI088_Info.Accel[1]);
-        INS_Info.Accel[2]   =   LowPassFilter2p_Update(&INS_AccelPF2p[2],BMI088_Info.Accel[2]);
+        INS_Info.Accel[0] = LowPassFilter2p_Update(&INS_AccelPF2p[0], BMI088_Info.Accel[0]);
+        INS_Info.Accel[1] = LowPassFilter2p_Update(&INS_AccelPF2p[1], BMI088_Info.Accel[1]);
+        INS_Info.Accel[2] = LowPassFilter2p_Update(&INS_AccelPF2p[2], BMI088_Info.Accel[2]);
 
         /* Update the INS gyro in radians */
-  	    INS_Info.Gyro[0]   =   BMI088_Info.Gyro[0];
-  	    INS_Info.Gyro[1]   =   BMI088_Info.Gyro[1];
-        INS_Info.Gyro[2]   =   BMI088_Info.Gyro[2];
+        INS_Info.Gyro[0] = BMI088_Info.Gyro[0];
+        INS_Info.Gyro[1] = BMI088_Info.Gyro[1];
+        INS_Info.Gyro[2] = BMI088_Info.Gyro[2];
 
-		/* Update the QuaternionEKF */
-        QuaternionEKF_Update(&Quaternion_Info,INS_Info.Gyro,INS_Info.Accel,0.001f);
-		
-        memcpy(INS_Info.Angle,Quaternion_Info.EulerAngle,sizeof(INS_Info.Angle));
+        /* Update the QuaternionEKF */
+        QuaternionEKF_Update(&Quaternion_Info, INS_Info.Gyro, INS_Info.Accel, 0.001f);
 
-		/* Update the Euler angle in degrees. */
-        INS_Info.Pitch_Angle = Quaternion_Info.EulerAngle[IMU_ANGLE_INDEX_PITCH]*57.295779513f;
-        INS_Info.Yaw_Angle   = Quaternion_Info.EulerAngle[IMU_ANGLE_INDEX_YAW]   *57.295779513f;
-        INS_Info.Roll_Angle  = Quaternion_Info.EulerAngle[IMU_ANGLE_INDEX_ROLL]*57.295779513f;
-		
-		/* Update the yaw total angle */
-        if(INS_Info.Yaw_Angle - INS_Info.Last_Yaw_Angle < -180.f)
+        memcpy(INS_Info.Angle, Quaternion_Info.EulerAngle, sizeof(INS_Info.Angle));
+
+        /* Update the Euler angle in degrees. */
+        INS_Info.Pitch_Angle = Quaternion_Info.EulerAngle[IMU_ANGLE_INDEX_PITCH] * 57.295779513f;
+        INS_Info.Yaw_Angle = Quaternion_Info.EulerAngle[IMU_ANGLE_INDEX_YAW] * 57.295779513f;
+        INS_Info.Roll_Angle = Quaternion_Info.EulerAngle[IMU_ANGLE_INDEX_ROLL] * 57.295779513f;
+
+        /* Update the yaw total angle */
+        if (INS_Info.Yaw_Angle - INS_Info.Last_Yaw_Angle < -180.f)
         {
             INS_Info.YawRoundCount++;
-        }else if(INS_Info.Yaw_Angle - INS_Info.Last_Yaw_Angle > 180.f)
-	    {
-		    INS_Info.YawRoundCount--;
-	    }
-	    INS_Info.Last_Yaw_Angle = INS_Info.Yaw_Angle;
+        }
+        else if (INS_Info.Yaw_Angle - INS_Info.Last_Yaw_Angle > 180.f)
+        {
+            INS_Info.YawRoundCount--;
+        }
+        INS_Info.Last_Yaw_Angle = INS_Info.Yaw_Angle;
 
-	    INS_Info.Yaw_TolAngle = INS_Info.Yaw_Angle + INS_Info.YawRoundCount * 360.f;
-		
+        INS_Info.Yaw_TolAngle = INS_Info.Yaw_Angle + INS_Info.YawRoundCount * 360.f;
+
         /* Update the INS gyro in degrees */
-        INS_Info.Pitch_Gyro = INS_Info.Gyro[IMU_GYRO_INDEX_PITCH]*RadiansToDegrees;
-        INS_Info.Yaw_Gyro   = INS_Info.Gyro[IMU_GYRO_INDEX_YAW]*RadiansToDegrees;
-        // INS_Info.Roll_Gyro  = INS_Info.Gyro[IMU_GYRO_INDEX_ROLL]*RadiansToDegrees;
-		
-        if(INS_Task_SysTick%5 == 0)
+        INS_Info.Pitch_Gyro = INS_Info.Gyro[IMU_GYRO_INDEX_PITCH] * RadiansToDegrees;
+        INS_Info.Yaw_Gyro = INS_Info.Gyro[IMU_GYRO_INDEX_YAW] * RadiansToDegrees;
+        // INS_Info.Roll_Gyro  = INS_Info.Gyro[IMU_GYRO_INDEX_ROLL] * RadiansToDegrees;
+
+        if (INS_Task_SysTick % 5 == 0)
         {
             BMI088_Temp_Control(BMI088_Info.Temperature);
         }
 
-        osDelayUntil(&INS_Task_SysTick,1);
-		
+        osDelayUntil(&INS_Task_SysTick, 1);
     }
     /* USER CODE END INS_Task */
 }
@@ -156,15 +155,15 @@ void INS_Task(void)
 static void INS_Task_Init(void)
 {
     /* Initializes the Second order lowpass filter  */
-    LowPassFilter2p_Init(&INS_AccelPF2p[0],INS_LPF2p_Alpha);
-    LowPassFilter2p_Init(&INS_AccelPF2p[1],INS_LPF2p_Alpha);
-    LowPassFilter2p_Init(&INS_AccelPF2p[2],INS_LPF2p_Alpha);
-	
+    LowPassFilter2p_Init(&INS_AccelPF2p[0], INS_LPF2p_Alpha);
+    LowPassFilter2p_Init(&INS_AccelPF2p[1], INS_LPF2p_Alpha);
+    LowPassFilter2p_Init(&INS_AccelPF2p[2], INS_LPF2p_Alpha);
+
     /* Initializes the Temperature Control PID  */
-	PID_Init(&TempCtrl_PID,PID_POSITION,TemCtrl_PID_Param);
-	
+    PID_Init(&TempCtrl_PID, PID_POSITION, TemCtrl_PID_Param);
+
     /* Initializes the Quaternion EKF */
-	QuaternionEKF_Init(&Quaternion_Info,10.f, 0.001f, 1000000.f,QuaternionEKF_A_Data,QuaternionEKF_P_Data);
+    QuaternionEKF_Init(&Quaternion_Info, 10.f, 0.001f, 1000000.f, QuaternionEKF_A_Data, QuaternionEKF_P_Data);
 }
 //------------------------------------------------------------------------------
 /**
@@ -174,11 +173,11 @@ static void INS_Task_Init(void)
   */
 static void BMI088_Temp_Control(float Temp)
 {
-	PID_Calculate(&TempCtrl_PID,40.f,Temp);
-	
-	VAL_LIMIT(TempCtrl_PID.Output,-TempCtrl_PID.Param.LimitOutput,TempCtrl_PID.Param.LimitOutput);
+    PID_Calculate(&TempCtrl_PID, 40.f, Temp);
 
-	Heat_Power_Control((uint16_t)(TempCtrl_PID.Output));
+    VAL_LIMIT(TempCtrl_PID.Output, -TempCtrl_PID.Param.LimitOutput, TempCtrl_PID.Param.LimitOutput);
+
+    Heat_Power_Control((uint16_t)(TempCtrl_PID.Output));
 }
 //------------------------------------------------------------------------------
 

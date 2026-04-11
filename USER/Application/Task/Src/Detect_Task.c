@@ -95,12 +95,6 @@ void Detect_Task(void)
         Robotic_Arm_Motor[J6].Data.Temp_Target_Position = -joint_data_receive[J6];
         //USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J1].Data.Temp_Target_Position, Robotic_Arm_Motor[J2].Data.Temp_Target_Position, Elevator_Motor[RB].Data.Position);
 
-        if (switch_is_up(remote_ctrl.rc.sw[1])) {
-            hand_state = HAND_OPEN;
-        } else {
-            hand_state = HAND_CLOSE;
-        }
-        
         osDelay(1);
     }
     /* USER CODE END Detect_Task */
@@ -115,6 +109,12 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
     uint16_t s0 = remote_ctrl.rc.s[0];
     uint16_t sw0 = remote_ctrl.rc.sw[0];
     uint16_t sw1 = remote_ctrl.rc.sw[1];
+
+    if (switch_is_up(sw1)) {
+        hand_state = HAND_OPEN;
+    } else {
+        hand_state = HAND_CLOSE;
+    }
 
     if (switch_is_up(sw0)) {
         chassis->last_mode = chassis->mode;
@@ -146,9 +146,9 @@ static void chassis_ctrl_info_get(void)
 {
     chassis_info.target_vx = (float)remote_ctrl.rc.ch[1] * RC_TO_VX;
     chassis_info.target_vy = (float)remote_ctrl.rc.ch[0] * RC_TO_VY;
-    if (remote_ctrl.rc.ch[2] <= 3 && remote_ctrl.rc.ch[2] >= -3) {
-        remote_ctrl.rc.ch[2] = 0;
-    }
+    //if (remote_ctrl.rc.ch[2] <= 3 && remote_ctrl.rc.ch[2] >= -3) {
+    //    remote_ctrl.rc.ch[2] = 0;
+    //}
     chassis_info.target_vw = (float)remote_ctrl.rc.ch[2] * RC_TO_VW * 0.8f;
 
     Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
