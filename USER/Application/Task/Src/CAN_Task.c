@@ -47,6 +47,7 @@ extern uint8_t hand_state;
 
 void CAN_Task(void)
 {
+	osDelay(1800);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[LF],Motor_Save_Zero_Position);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[LB],Motor_Save_Zero_Position);
     osDelay(1);
@@ -64,10 +65,10 @@ void CAN_Task(void)
 		}
 		Robotic_Arm_set(robotic_arm_part);
 		robotic_arm_part = (robotic_arm_part + 1) % 3;
-        //Chassis_set(chassis_info.activated_flag);
+        Chassis_set(chassis_info.activated_flag);
         //Elevator_set(chassis_info.activated_flag);
         
-        //osDelay(1);
+        osDelay(1);
         //USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J4].Data.Position, Robotic_Arm_Motor[J5].Data.Position, Robotic_Arm_Motor[J6].Data.Position);
     }
 }
@@ -101,15 +102,12 @@ void Robotic_Arm_set(const int part)
 	if (part == 0) {
 		DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], Robotic_Arm_Motor[J1].Data.Temp_Target_Position, MIT_NO_USE, 28.0f, 4.2f, Robotic_Arm_Motor[J1].Data.Feedforward);
 		DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], Robotic_Arm_Motor[J2].Data.Temp_Target_Position, MIT_NO_USE, 45.0f, 12.2f, Robotic_Arm_Motor[J2].Data.Feedforward);
-		osDelay(1);
 	} else if (part == 1) {
 		DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], Robotic_Arm_Motor[J3].Data.Temp_Target_Position, MIT_NO_USE, 45.0f, 12.2f, Robotic_Arm_Motor[J3].Data.Feedforward);
 		DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], Robotic_Arm_Motor[J4].Data.Temp_Target_Position, MIT_NO_USE, 18.0f, 1.2f, Robotic_Arm_Motor[J4].Data.Feedforward);
-		osDelay(1);
 	} else if (part == 2) {
 		DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], Robotic_Arm_Motor[J5].Data.Temp_Target_Position, MIT_NO_USE, 20.0f, 1.2f, Robotic_Arm_Motor[J5].Data.Feedforward);
 		DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], Robotic_Arm_Motor[J6].Data.Temp_Target_Position, MIT_NO_USE, 12.0f, 1.2f, Robotic_Arm_Motor[J6].Data.Feedforward);
-		osDelay(1);
 	}
 }
 

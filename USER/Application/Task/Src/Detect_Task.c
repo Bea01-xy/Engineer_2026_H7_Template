@@ -169,11 +169,11 @@ static void MiniPC_Transmit_Robotic_Arm_Info(void)
 
 static void arm_ctrl_info_get(void)
 {
-    Robotic_Arm_Motor[J1].Data.Temp_Target_Position = joint_data_receive[J1];
-    Robotic_Arm_Motor[J2].Data.Temp_Target_Position = joint_data_receive[J2];
-    Robotic_Arm_Motor[J3].Data.Temp_Target_Position = joint_data_receive[J3];
-    Robotic_Arm_Motor[J4].Data.Temp_Target_Position = joint_data_receive[J4];
-    Robotic_Arm_Motor[J5].Data.Temp_Target_Position = joint_data_receive[J5];
-    Robotic_Arm_Motor[J6].Data.Temp_Target_Position = -joint_data_receive[J6];
+    Robotic_Arm_Motor[J1].Data.Target_Position = joint_data_receive[J1];
+    Robotic_Arm_Motor[J2].Data.Target_Position = joint_data_receive[J2];
+    Robotic_Arm_Motor[J3].Data.Target_Position = joint_data_receive[J3];
+    Robotic_Arm_Motor[J4].Data.Target_Position = joint_data_receive[J4];
+    Robotic_Arm_Motor[J5].Data.Target_Position = joint_data_receive[J5];
+    Robotic_Arm_Motor[J6].Data.Target_Position = -joint_data_receive[J6];
 }
   
