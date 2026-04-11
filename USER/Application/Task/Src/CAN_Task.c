@@ -30,8 +30,6 @@
 #include <math.h>
 #include <stdint.h>
 
-#define CAN_ID_SLAVE_J6_GRIPPER_CMD  0x2F0U
-
 /* USER CODE BEGIN Header_CAN_Task */
 /**
 * @brief Function implementing the StartCANTask thread.
@@ -66,11 +64,11 @@ void CAN_Task(void)
 		}
 		Robotic_Arm_set(robotic_arm_part);
 		robotic_arm_part = (robotic_arm_part + 1) % 3;
-        Chassis_set(chassis_info.activated_flag);
+        //Chassis_set(chassis_info.activated_flag);
         //Elevator_set(chassis_info.activated_flag);
         
         //osDelay(1);
-        USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J4].Data.Position, Robotic_Arm_Motor[J5].Data.Position, Robotic_Arm_Motor[J6].Data.Position);
+        //USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J4].Data.Position, Robotic_Arm_Motor[J5].Data.Position, Robotic_Arm_Motor[J6].Data.Position);
     }
 }
 
@@ -134,10 +132,6 @@ void Chassis_set(const bool activated)
 		M3508_motor_crt_ctrl(&hfdcan2, 0x200, 0, 0, 0, 0);
 		M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
 	}
-}
-
-bool mode_changed(void){
-    return chassis_info.last_mode != chassis_info.mode;
 }
 
 static void Robotic_Arm_Motor_Mode_Set(const bool activated){

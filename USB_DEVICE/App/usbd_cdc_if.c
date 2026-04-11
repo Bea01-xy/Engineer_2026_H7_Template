@@ -22,7 +22,7 @@
 #include "usbd_cdc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "Robotic_Arm_Config.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -85,7 +85,7 @@
   * @brief Private variables.
   * @{
   */
-float joint_data_receive[12];
+float joint_data_receive[12] = {J1_INITIAL_POS, J2_INITIAL_POS, J3_INITIAL_POS, J4_INITIAL_POS, J5_INITIAL_POS, J6_INITIAL_POS, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 /* Create buffer for reception and transmission           */
 /* It's up to user to redefine and/or remove those define */
 /** Received data over USB are stored in this buffer      */

@@ -46,6 +46,7 @@ PID_Info_TypeDef Chassis_PID[4];
 
 TickType_t Control_Task_SysTick = 0; //to lower the frequence
 TickType_t Timer_When_Lift_Stage_Changed = 0;
+TickType_t Timer_When_Mode_Switched_to_Normal = 0;
 void Control_Task(void)
 {
     /* USER CODE BEGIN Control_Task */
@@ -67,7 +68,9 @@ void Control_Task(void)
         }
 
 	    Timer_When_Lift_Stage_Changed++;
+        Timer_When_Mode_Switched_to_Normal++;
 	    //USART_Vofa_Justfloat_Transmit(Elevator_Motor[LF].Data.Target_Position, Elevator_Motor[LF].Data.Temp_Target_Position, Elevator_Motor[LF].Data.Position);
+        USART_Vofa_Justfloat_Transmit(Timer_When_Mode_Switched_to_Normal, 0, 0);
 		osDelay(1);
     }
 }
@@ -137,9 +140,13 @@ static void chassis_lifting_handler(void)
         Elevator_Motor[RB].Data.Error_Position = Elevator_Motor[RB].Data.Target_Position - Elevator_Motor[RB].Data.Start_Position;
         Elevator_Motor[RF].Data.Error_Position = Elevator_Motor[RF].Data.Target_Position - Elevator_Motor[RF].Data.Start_Position;
     }
+    if (mode_changed_to_normal()) {
+        Timer_When_Mode_Switched_to_Normal = 0;
+        //more to add
+    }
     Chassis_Motor_cal(chassis_info.activated_flag);
     Elevator_Motor_cal();
-    Robotic_Arm_target_cal();
+    //Robotic_Arm_target_cal();
 }
 
 static void chassis_disabled_handler(void)
@@ -153,7 +160,6 @@ static void chassis_disabled_handler(void)
     Chassis_Motor[LB].Data.Final_Output = 0u;
     Chassis_Motor[RB].Data.Final_Output = 0u;
     Chassis_Motor[RF].Data.Final_Output = 0u;
-    M2006_Gripper_Motor.Data.Final_Output = 0;
 }
 
 static void Chassis_Motor_cal(const bool acticated)
@@ -175,17 +181,25 @@ static void Chassis_Motor_cal(const bool acticated)
 static void Elevator_Motor_cal(void)
 {
     Elevator_Motor[LF].Data.Temp_Target_Position = Elevator_Motor[LF].Data.Start_Position + Elevator_Motor[LF].Data.Error_Position * 
-    SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
+        SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
     Elevator_Motor[LB].Data.Temp_Target_Position = Elevator_Motor[LB].Data.Start_Position + Elevator_Motor[LB].Data.Error_Position *
-     SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
+        SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
     Elevator_Motor[RB].Data.Temp_Target_Position = Elevator_Motor[RB].Data.Start_Position + Elevator_Motor[RB].Data.Error_Position *
-     SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
+        SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
     Elevator_Motor[RF].Data.Temp_Target_Position = Elevator_Motor[RF].Data.Start_Position + Elevator_Motor[RF].Data.Error_Position *
-     SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
+        SmootherStep(Timer_When_Lift_Stage_Changed, LIFTING_TIME);
 }
 
 static bool lifting_mode_changed(void){
     return chassis_info.last_lift_mode != chassis_info.lift_mode || chassis_info.last_mode != chassis_info.mode;
+}
+
+bool mode_changed(void){
+    return chassis_info.last_mode != chassis_info.mode;
+}
+
+bool mode_changed_to_normal(void){
+    return (chassis_info.last_mode != chassis_info.mode) && (chassis_info.mode != CHASSIS_DISABLE);
 }
 
 static void Elevator_set_feedforward_and_pos(void)

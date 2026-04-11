@@ -32,6 +32,8 @@
 static void chassis_set_mode(Chassis_Info_Typedef* chassis);
 static void chassis_ctrl_info_get(void);
 static void chassis_wheel_cal(void);
+static void MiniPC_Transmit_Robotic_Arm_Info(void);
+static void arm_ctrl_info_get(void);
 
 extern Chassis_Info_Typedef chassis_info;
 //float joint_data[6] = {1.1f,1.2f,1.3f,1.4f,3.2f,1.6f};
@@ -52,13 +54,6 @@ void Detect_Task(void)
 {
     /* USER CODE BEGIN Detect_Task */
     PID_Init(&Chassis_Direction_PID,PID_POSITION,Chassis_Direction_PID_Param);
-
-    joint_data_receive[J1] = J1_INITIAL_POS;
-    joint_data_receive[J2] = J2_INITIAL_POS;
-    joint_data_receive[J3] = J3_INITIAL_POS;
-    joint_data_receive[J4] = J4_INITIAL_POS;
-    joint_data_receive[J5] = J5_INITIAL_POS;
-    joint_data_receive[J6] = J6_INITIAL_POS;
     /* Infinite loop */
     for(;;)
     {
@@ -66,34 +61,15 @@ void Detect_Task(void)
         Remote_Message_Moniter(&remote_ctrl);
 		MiniPC_Receive_Info(receive_data, 6);
 
-        float J1_Pos = Robotic_Arm_Motor[J1].Data.Position;
-        float J2_Pos = Robotic_Arm_Motor[J2].Data.Position;
-        float J3_Pos = Robotic_Arm_Motor[J3].Data.Position;
-        float J4_Pos = Robotic_Arm_Motor[J4].Data.Position;
-        float J5_Pos = Robotic_Arm_Motor[J5].Data.Position;
-        float J6_Pos = -Robotic_Arm_Motor[J6].Data.Position;
-
-        float J1_Vel = Robotic_Arm_Motor[J1].Data.Velocity;
-        float J2_Vel = Robotic_Arm_Motor[J2].Data.Velocity;
-        float J3_Vel = Robotic_Arm_Motor[J3].Data.Velocity;
-        float J4_Vel = Robotic_Arm_Motor[J4].Data.Velocity;
-        float J5_Vel = Robotic_Arm_Motor[J5].Data.Velocity;
-        float J6_Vel = -Robotic_Arm_Motor[J6].Data.Velocity;
-
-        float Robotic_Arm_Info[12] = {J1_Pos, J2_Pos, J3_Pos, J4_Pos, J5_Pos, J6_Pos, J1_Vel, J2_Vel, J3_Vel, J4_Vel, J5_Vel, J6_Vel};
-		MiniPC_Transmit_Info(Robotic_Arm_Info, 12);
+        MiniPC_Transmit_Robotic_Arm_Info();
 
         chassis_set_mode(&chassis_info);
         chassis_ctrl_info_get();
         chassis_wheel_cal();
 
-        Robotic_Arm_Motor[J1].Data.Temp_Target_Position = joint_data_receive[J1];
-        Robotic_Arm_Motor[J2].Data.Temp_Target_Position = joint_data_receive[J2];
-        Robotic_Arm_Motor[J3].Data.Temp_Target_Position = joint_data_receive[J3];
-        Robotic_Arm_Motor[J4].Data.Temp_Target_Position = joint_data_receive[J4];
-        Robotic_Arm_Motor[J5].Data.Temp_Target_Position = joint_data_receive[J5];
-        Robotic_Arm_Motor[J6].Data.Temp_Target_Position = -joint_data_receive[J6];
-        //USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J1].Data.Temp_Target_Position, Robotic_Arm_Motor[J2].Data.Temp_Target_Position, Elevator_Motor[RB].Data.Position);
+        arm_ctrl_info_get();
+
+        //USART_Vofa_Justfloat_Transmit(remote_ctrl.rc.ch[3], remote_ctrl.rc.ch[4], remote_ctrl.rc.ch[5]);
 
         osDelay(1);
     }
@@ -144,17 +120,18 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
 
 static void chassis_ctrl_info_get(void)
 {
-    chassis_info.target_vx = (float)remote_ctrl.rc.ch[1] * RC_TO_VX;
-    chassis_info.target_vy = (float)remote_ctrl.rc.ch[0] * RC_TO_VY;
-    //if (remote_ctrl.rc.ch[2] <= 3 && remote_ctrl.rc.ch[2] >= -3) {
-    //    remote_ctrl.rc.ch[2] = 0;
-    //}
-    chassis_info.target_vw = (float)remote_ctrl.rc.ch[2] * RC_TO_VW * 0.8f;
+    chassis_info.target_vx = (float)remote_ctrl.rc.ch[3] * RC_TO_VX;
+    chassis_info.target_vy = (float)remote_ctrl.rc.ch[2] * RC_TO_VY;
+
+    if (remote_ctrl.rc.ch[0] <= 3 && remote_ctrl.rc.ch[0] >= -3) {
+        remote_ctrl.rc.ch[0] = 0;
+    }
+    chassis_info.target_vw = (float)remote_ctrl.rc.ch[0] * RC_TO_VW * 0.8f;
 
     Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
     chassis_info.target_vw += Chassis_Direction_PID.Output;
 
-    chassis_info.target_direction += remote_ctrl.rc.ch[2] * RC_TO_VW * 0.058f; //integrate to get direction
+    chassis_info.target_direction += remote_ctrl.rc.ch[0] * RC_TO_VW * 0.058f; //integrate to get direction
     chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
 }
 
@@ -168,5 +145,35 @@ static void chassis_wheel_cal(void)
     Chassis_Motor[LB].Data.Target_Velocity =  (vx + vy - vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
     Chassis_Motor[RB].Data.Target_Velocity = -(vx - vy + vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
     Chassis_Motor[RF].Data.Target_Velocity = -(vx + vy + vw*ROTATE_RATIO)*WHEEL_RPM_RATIO;
+}
+
+static void MiniPC_Transmit_Robotic_Arm_Info(void)
+{
+    float J1_Pos = Robotic_Arm_Motor[J1].Data.Position;
+    float J2_Pos = Robotic_Arm_Motor[J2].Data.Position;
+    float J3_Pos = Robotic_Arm_Motor[J3].Data.Position;
+    float J4_Pos = Robotic_Arm_Motor[J4].Data.Position;
+    float J5_Pos = Robotic_Arm_Motor[J5].Data.Position;
+    float J6_Pos = -Robotic_Arm_Motor[J6].Data.Position;
+
+    float J1_Vel = Robotic_Arm_Motor[J1].Data.Velocity;
+    float J2_Vel = Robotic_Arm_Motor[J2].Data.Velocity;
+    float J3_Vel = Robotic_Arm_Motor[J3].Data.Velocity;
+    float J4_Vel = Robotic_Arm_Motor[J4].Data.Velocity;
+    float J5_Vel = Robotic_Arm_Motor[J5].Data.Velocity;
+    float J6_Vel = -Robotic_Arm_Motor[J6].Data.Velocity;
+
+    float Robotic_Arm_Info[12] = {J1_Pos, J2_Pos, J3_Pos, J4_Pos, J5_Pos, J6_Pos, J1_Vel, J2_Vel, J3_Vel, J4_Vel, J5_Vel, J6_Vel};
+    MiniPC_Transmit_Info(Robotic_Arm_Info, 12);
+}
+
+static void arm_ctrl_info_get(void)
+{
+    Robotic_Arm_Motor[J1].Data.Temp_Target_Position = joint_data_receive[J1];
+    Robotic_Arm_Motor[J2].Data.Temp_Target_Position = joint_data_receive[J2];
+    Robotic_Arm_Motor[J3].Data.Temp_Target_Position = joint_data_receive[J3];
+    Robotic_Arm_Motor[J4].Data.Temp_Target_Position = joint_data_receive[J4];
+    Robotic_Arm_Motor[J5].Data.Temp_Target_Position = joint_data_receive[J5];
+    Robotic_Arm_Motor[J6].Data.Temp_Target_Position = -joint_data_receive[J6];
 }
   

@@ -47,4 +47,7 @@ typedef struct
 
 
 extern Control_Info_Typedef Control_Info;
+bool mode_changed(void);
+bool mode_changed_to_normal(void);
+
 #endif //CONTROL_TASK_H
