@@ -50,7 +50,6 @@ void Control_Task(void)
 {
     /* USER CODE BEGIN Control_Task */
 	Control_Init();
-    osDelay(1800);
     /* Infinite loop */
 	for(;;)
     {

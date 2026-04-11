@@ -47,14 +47,13 @@ extern uint8_t hand_state;
 
 void CAN_Task(void)
 {
-	osDelay(1800);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[LF],Motor_Save_Zero_Position);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[LB],Motor_Save_Zero_Position);
     osDelay(1);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RB],Motor_Save_Zero_Position);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RF],Motor_Save_Zero_Position);
 
-	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J4],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J3],Motor_Save_Zero_Position);
 	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J5],Motor_Save_Zero_Position);
 	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J6],Motor_Save_Zero_Position);
 	static int robotic_arm_part = 0;
@@ -69,7 +68,7 @@ void CAN_Task(void)
         //Elevator_set(chassis_info.activated_flag);
         
         osDelay(1);
-        //USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J4].Data.Position, Robotic_Arm_Motor[J5].Data.Position, Robotic_Arm_Motor[J6].Data.Position);
+        //USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J3].Data.Position, Robotic_Arm_Motor[J5].Data.Position, Robotic_Arm_Motor[J6].Data.Position);
     }
 }
 

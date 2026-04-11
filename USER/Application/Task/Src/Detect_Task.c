@@ -69,7 +69,7 @@ void Detect_Task(void)
 
         arm_ctrl_info_get();
 
-        //USART_Vofa_Justfloat_Transmit(remote_ctrl.rc.ch[3], remote_ctrl.rc.ch[4], remote_ctrl.rc.ch[5]);
+        USART_Vofa_Justfloat_Transmit(remote_ctrl.rc.ch[3], remote_ctrl.rc.ch[4], remote_ctrl.rc.ch[5]);
 
         osDelay(1);
     }
@@ -81,6 +81,10 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
     if(chassis == NULL)
         return;
 
+    if(remote_ctrl.rc.ch[4] >= 630 && remote_ctrl.rc.ch[5] <= -630)
+    {
+        HAL_NVIC_SystemReset();
+    }
     uint16_t s1 = remote_ctrl.rc.s[1];
     uint16_t s0 = remote_ctrl.rc.s[0];
     uint16_t sw0 = remote_ctrl.rc.sw[0];
