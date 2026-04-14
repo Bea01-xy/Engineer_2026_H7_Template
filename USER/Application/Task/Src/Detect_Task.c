@@ -69,7 +69,7 @@ void Detect_Task(void)
 
         arm_ctrl_info_get();
 
-        USART_Vofa_Justfloat_Transmit(remote_ctrl.rc.ch[3], remote_ctrl.rc.ch[4], remote_ctrl.rc.ch[5]);
+        //USART_Vofa_Justfloat_Transmit(remote_ctrl.rc.ch[3], remote_ctrl.rc.ch[4], remote_ctrl.rc.ch[5]);
 
         osDelay(1);
     }

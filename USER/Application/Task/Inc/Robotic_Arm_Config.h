@@ -92,8 +92,8 @@ typedef enum
 } Hand_State_e;
 
 #define J1_INITIAL_POS 0.00f
-#define J2_INITIAL_POS 0.00f
-#define J3_INITIAL_POS 0.00f
+#define J2_INITIAL_POS 1.20f
+#define J3_INITIAL_POS 0.40f
 #define J4_INITIAL_POS 0.00f
 #define J5_INITIAL_POS 0.00f
 #define J6_INITIAL_POS 0.00f 
