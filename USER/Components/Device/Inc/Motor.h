@@ -77,6 +77,7 @@ typedef struct
     uint8_t  Temperature;   /*!< Motor Temperature */
 	
     float  Target_Velocity;    /*!< Target motor rotate velocity (RPM)*/
+    float  Target_Angle;
     int16_t  Final_Output;     /*Final voltage value output to the motor*/
 }DJI_Motor_Data_Typedef;
 

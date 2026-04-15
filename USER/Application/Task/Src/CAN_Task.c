@@ -67,9 +67,9 @@ void CAN_Task(void)
 		robotic_arm_part = (robotic_arm_part + 1) % 3;
         Chassis_set(chassis_info.activated_flag);
         Elevator_set(chassis_info.activated_flag);
-        
+
         osDelay(1);
-        USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J2].Data.Position, Robotic_Arm_Motor[J3].Data.Position, Robotic_Arm_Motor[J4].Data.Position);
+        //USART_Vofa_Justfloat_Transmit(M2006_Gripper_Motor.Data.Angle, Robotic_Arm_Motor[J2].Data.Position, Robotic_Arm_Motor[J3].Data.Position);
     }
 }
 
@@ -139,13 +139,8 @@ void Chassis_set(const bool activated)
 							 Chassis_Motor[LB].Data.Final_Output,
 							 Chassis_Motor[RB].Data.Final_Output,
 							 Chassis_Motor[RF].Data.Final_Output);
-		if (hand_state == HAND_OPEN) {
-			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0,
+		M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0,
 							 0, 0, 0);
-		} else {
-			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 3500,
-							 0, 0, 0);
-		}
 	} else {
 		M3508_motor_crt_ctrl(&hfdcan2, 0x200, 0, 0, 0, 0);
 		M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);

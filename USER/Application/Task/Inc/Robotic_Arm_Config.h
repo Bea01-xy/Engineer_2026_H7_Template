@@ -92,11 +92,21 @@ typedef enum
 } Hand_State_e;
 
 #define J1_INITIAL_POS 0.00f
-#define J2_INITIAL_POS 1.20f
-#define J3_INITIAL_POS 0.40f
+#define J2_INITIAL_POS 2.64f
+#define J3_INITIAL_POS -2.64f
 #define J4_INITIAL_POS 0.00f
 #define J5_INITIAL_POS 0.00f
 #define J6_INITIAL_POS 0.00f 
 
+#define GRIPPER_OPEN_POS -67.3f
+#define GRIPPER_CLOSE_POS 6.3f
+
+#define GRIPPER_KP 20.0f
+#define GRIPPER_KI 3.0f
+#define GRIPPER_KD 1.0f
+#define GRIPPER_Alpha 0.1f
+#define GRIPPER_Deadband 0.5f
+#define GRIPPER_LimitIntegral 3000u
+#define GRIPPER_LimitOutput 3000u
 #endif /* ROBOTIC_ARM_CONFIG_H */
 

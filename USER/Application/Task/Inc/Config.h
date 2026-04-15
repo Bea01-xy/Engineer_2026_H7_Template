@@ -34,7 +34,7 @@
                                     else if ((x) < (min)) {(x) = (min);} \
                                 }while(0U)
  
-#define GravityAccel  9.788f
+#define GravityAccel  9.7880f
 
 /**
   * @brief Euler's Number

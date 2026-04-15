@@ -42,7 +42,10 @@ Chassis_Info_Typedef chassis_info;
 
 static float Chassis_PID_Param[PID_PARAMETER_NUM] = {CHASSIS_KP, CHASSIS_KI, CHASSIS_KD, CHASSIS_Alpha, CHASSIS_Deadband, CHASSIS_LimitIntegral, CHASSIS_LimitOutput};
 
+static float Gripper_PID_Param[PID_PARAMETER_NUM] = {CHASSIS_KP, CHASSIS_KI, CHASSIS_KD, CHASSIS_Alpha, CHASSIS_Deadband, CHASSIS_LimitIntegral, CHASSIS_LimitOutput};
+
 PID_Info_TypeDef Chassis_PID[4];
+PID_Info_TypeDef Gripper_PID;
 
 TickType_t Control_Task_SysTick = 0; //to lower the frequence
 TickType_t Timer_When_Lift_Stage_Changed = 0;
@@ -66,7 +69,8 @@ void Control_Task(void)
         }
 
 	    Timer_When_Lift_Stage_Changed++;
-	    //USART_Vofa_Justfloat_Transmit(Elevator_Motor[LF].Data.Target_Position, Elevator_Motor[LF].Data.Temp_Target_Position, Elevator_Motor[LF].Data.Position);
+
+	    USART_Vofa_Justfloat_Transmit(INS_Info.Yaw_Angle, Chassis_Motor[LF].Data.Velocity, Elevator_Motor[LF].Data.Position);
 		osDelay(1);
     }
 }
@@ -77,6 +81,8 @@ static void Control_Init(void)
     PID_Init(&Chassis_PID[LB],PID_POSITION,Chassis_PID_Param);
     PID_Init(&Chassis_PID[RB],PID_POSITION,Chassis_PID_Param);
     PID_Init(&Chassis_PID[RF],PID_POSITION,Chassis_PID_Param);
+
+    PID_Init(&Gripper_PID,PID_POSITION, Gripper_PID_Param);
 
     chassis_info.activated_flag = false;
     chassis_info.mode = CHASSIS_DISABLE;
@@ -152,6 +158,9 @@ static void chassis_lifting_handler(void)
     Chassis_Motor_cal(chassis_info.activated_flag);
     Elevator_Motor_cal();
     Robotic_Arm_Motor_cal();
+
+    PID_Calculate(&Gripper_PID, M2006_Gripper_Motor.Data.Encoder, M2006_Gripper_Motor.Data.Angle);
+    M2006_Gripper_Motor.Data.Final_Output = Gripper_PID.Output;
 }
 
 static void chassis_disabled_handler(void)
@@ -176,10 +185,10 @@ static void Chassis_Motor_cal(const bool acticated)
         PID_Calculate(&Chassis_PID[RF], Chassis_Motor[RF].Data.Target_Velocity, Chassis_Motor[RF].Data.Velocity);
 
         //just for now
-        Chassis_Motor[LF].Data.Final_Output = Chassis_PID[LF].Output;
-        Chassis_Motor[LB].Data.Final_Output = Chassis_PID[LB].Output;
-        Chassis_Motor[RB].Data.Final_Output = Chassis_PID[RB].Output;
-        Chassis_Motor[RF].Data.Final_Output = Chassis_PID[RF].Output;
+        Chassis_Motor[LF].Data.Final_Output = Chassis_PID[LF].Output + Chassis_Motor[LF].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
+        Chassis_Motor[LB].Data.Final_Output = Chassis_PID[LB].Output + Chassis_Motor[LB].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
+        Chassis_Motor[RB].Data.Final_Output = Chassis_PID[RB].Output + Chassis_Motor[RB].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
+        Chassis_Motor[RF].Data.Final_Output = Chassis_PID[RF].Output + Chassis_Motor[RF].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
     }
 }
 

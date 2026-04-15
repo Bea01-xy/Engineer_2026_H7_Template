@@ -57,7 +57,6 @@ void Detect_Task(void)
     /* Infinite loop */
     for(;;)
     {
-        //original code
         Remote_Message_Moniter(&remote_ctrl);
 		MiniPC_Receive_Info(receive_data, 6);
 
@@ -69,8 +68,7 @@ void Detect_Task(void)
 
         arm_ctrl_info_get();
 
-        //USART_Vofa_Justfloat_Transmit(remote_ctrl.rc.ch[3], remote_ctrl.rc.ch[4], remote_ctrl.rc.ch[5]);
-
+        //USART_Vofa_Justfloat_Transmit(INS_Info.Yaw_Angle,BMI088_Info.Offsets_Gyro_Y,BMI088_Info.Offsets_Gyro_Z);
         osDelay(1);
     }
     /* USER CODE END Detect_Task */
@@ -81,7 +79,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
     if(chassis == NULL)
         return;
 
-    if(remote_ctrl.rc.ch[4] >= 630 && remote_ctrl.rc.ch[5] <= -630)
+    if(remote_ctrl.rc.ch[5] <= -630)
     {
         HAL_NVIC_SystemReset();
     }
@@ -92,8 +90,10 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
 
     if (switch_is_up(sw1)) {
         hand_state = HAND_OPEN;
+        M2006_Gripper_Motor.Data.Target_Angle = GRIPPER_OPEN_POS;
     } else {
         hand_state = HAND_CLOSE;
+        M2006_Gripper_Motor.Data.Target_Angle = GRIPPER_CLOSE_POS;
     }
 
     if (switch_is_up(sw0)) {
@@ -129,6 +129,12 @@ static void chassis_ctrl_info_get(void)
 
     if (remote_ctrl.rc.ch[0] <= 3 && remote_ctrl.rc.ch[0] >= -3) {
         remote_ctrl.rc.ch[0] = 0;
+    }
+    if (remote_ctrl.rc.ch[2] <= 3 && remote_ctrl.rc.ch[2] >= -3) {
+        remote_ctrl.rc.ch[2] = 0;
+    }
+    if (remote_ctrl.rc.ch[3] <= 3 && remote_ctrl.rc.ch[3] >= -3) {
+        remote_ctrl.rc.ch[3] = 0;
     }
     chassis_info.target_vw = (float)remote_ctrl.rc.ch[0] * RC_TO_VW * 0.8f;
 
