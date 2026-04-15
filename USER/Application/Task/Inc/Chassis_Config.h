@@ -78,6 +78,7 @@ typedef enum
 {
     CHASSIS_DISABLE,
     CHASSIS_LIFT,
+    CHASSIS_AUTO_LIFT,
 } Chassis_Mode_e;
 
 typedef enum
@@ -104,6 +105,10 @@ typedef struct
     float target_direction;
 
     bool activated_flag;
+    uint16_t lift_counter_1;
+    bool countering_1;
+    uint16_t lift_counter_2;
+    bool countering_2;
 } Chassis_Info_Typedef;
 
 /* @brief Elevator (DM6006) parameters*/

@@ -28,6 +28,7 @@ static void Control_Init(void);
 static float SmootherStep(float NowTime,float UseTime);
 
 static void chassis_lifting_handler(void);
+static void chassis_auto_lifting_handler(void);
 static void chassis_disabled_handler(void);
 
 static void Chassis_Motor_cal(bool acticated);
@@ -36,12 +37,13 @@ static void Robotic_Arm_Motor_cal(void);
 
 static bool lifting_mode_changed(void);
 static void Elevator_set_feedforward_and_pos(void);
+static void Elevator_set_start_error_pos(void);
+static void Robotic_Arm_set_start_error_pos(void);
 static void chassis_set_leds(GPIO_PinState state);
 
 Chassis_Info_Typedef chassis_info;
 
 static float Chassis_PID_Param[PID_PARAMETER_NUM] = {CHASSIS_KP, CHASSIS_KI, CHASSIS_KD, CHASSIS_Alpha, CHASSIS_Deadband, CHASSIS_LimitIntegral, CHASSIS_LimitOutput};
-
 static float Gripper_PID_Param[PID_PARAMETER_NUM] = {CHASSIS_KP, CHASSIS_KI, CHASSIS_KD, CHASSIS_Alpha, CHASSIS_Deadband, CHASSIS_LimitIntegral, CHASSIS_LimitOutput};
 
 PID_Info_TypeDef Chassis_PID[4];
@@ -65,12 +67,15 @@ void Control_Task(void)
             case CHASSIS_LIFT:
                 chassis_lifting_handler();
                 break;
+            case CHASSIS_AUTO_LIFT:
+                chassis_auto_lifting_handler();
+                break;
             default: break;
         }
 
 	    Timer_When_Lift_Stage_Changed++;
 
-	    USART_Vofa_Justfloat_Transmit(INS_Info.Yaw_Angle, Chassis_Motor[LF].Data.Velocity, Elevator_Motor[LF].Data.Position);
+	    USART_Vofa_Justfloat_Transmit(chassis_info.lift_counter_1,chassis_info.lift_counter_2, Elevator_Motor[LF].Data.Position);
 		osDelay(1);
     }
 }
@@ -107,6 +112,9 @@ static void Control_Init(void)
     Robotic_Arm_Motor[J4].Data.Temp_Target_Position = J4_INITIAL_POS;
     Robotic_Arm_Motor[J5].Data.Temp_Target_Position = J5_INITIAL_POS;
     Robotic_Arm_Motor[J6].Data.Temp_Target_Position = J6_INITIAL_POS;
+
+    chassis_info.countering_1 = true;
+    chassis_info.countering_2 = false;
 }
 
 static float SmootherStep(float NowTime,float UseTime)
@@ -131,29 +139,10 @@ static void chassis_lifting_handler(void)
     if (lifting_mode_changed()) {
         Timer_When_Lift_Stage_Changed = 0;
         Elevator_set_feedforward_and_pos();
-        Elevator_Motor[LF].Data.Start_Position = Elevator_Motor[LF].Data.Position;
-        Elevator_Motor[LB].Data.Start_Position = Elevator_Motor[LB].Data.Position;
-        Elevator_Motor[RB].Data.Start_Position = Elevator_Motor[RB].Data.Position;
-        Elevator_Motor[RF].Data.Start_Position = Elevator_Motor[RF].Data.Position;
-
-        Elevator_Motor[LF].Data.Error_Position = Elevator_Motor[LF].Data.Target_Position - Elevator_Motor[LF].Data.Start_Position;
-        Elevator_Motor[LB].Data.Error_Position = Elevator_Motor[LB].Data.Target_Position - Elevator_Motor[LB].Data.Start_Position;
-        Elevator_Motor[RB].Data.Error_Position = Elevator_Motor[RB].Data.Target_Position - Elevator_Motor[RB].Data.Start_Position;
-        Elevator_Motor[RF].Data.Error_Position = Elevator_Motor[RF].Data.Target_Position - Elevator_Motor[RF].Data.Start_Position;
-
-        Robotic_Arm_Motor[J1].Data.Start_Position = Robotic_Arm_Motor[J1].Data.Position;
-        Robotic_Arm_Motor[J2].Data.Start_Position = Robotic_Arm_Motor[J2].Data.Position;
-        Robotic_Arm_Motor[J3].Data.Start_Position = Robotic_Arm_Motor[J3].Data.Position;
-        Robotic_Arm_Motor[J4].Data.Start_Position = Robotic_Arm_Motor[J4].Data.Position;
-        Robotic_Arm_Motor[J5].Data.Start_Position = Robotic_Arm_Motor[J5].Data.Position;
-        Robotic_Arm_Motor[J6].Data.Start_Position = Robotic_Arm_Motor[J6].Data.Position;
-
-        Robotic_Arm_Motor[J1].Data.Error_Position = Robotic_Arm_Motor[J1].Data.Target_Position - Robotic_Arm_Motor[J1].Data.Start_Position;
-        Robotic_Arm_Motor[J2].Data.Error_Position = Robotic_Arm_Motor[J2].Data.Target_Position - Robotic_Arm_Motor[J2].Data.Start_Position;
-        Robotic_Arm_Motor[J3].Data.Error_Position = Robotic_Arm_Motor[J3].Data.Target_Position - Robotic_Arm_Motor[J3].Data.Start_Position;
-        Robotic_Arm_Motor[J4].Data.Error_Position = Robotic_Arm_Motor[J4].Data.Target_Position - Robotic_Arm_Motor[J4].Data.Start_Position;
-        Robotic_Arm_Motor[J5].Data.Error_Position = Robotic_Arm_Motor[J5].Data.Target_Position - Robotic_Arm_Motor[J5].Data.Start_Position;
-        Robotic_Arm_Motor[J6].Data.Error_Position = Robotic_Arm_Motor[J6].Data.Target_Position - Robotic_Arm_Motor[J6].Data.Start_Position;
+        Elevator_set_start_error_pos();
+    }
+    if (mode_changed_to_normal()){
+        Robotic_Arm_set_start_error_pos();
     }
     Chassis_Motor_cal(chassis_info.activated_flag);
     Elevator_Motor_cal();
@@ -174,6 +163,39 @@ static void chassis_disabled_handler(void)
     Chassis_Motor[LB].Data.Final_Output = 0u;
     Chassis_Motor[RB].Data.Final_Output = 0u;
     Chassis_Motor[RF].Data.Final_Output = 0u;
+}
+
+static void chassis_auto_lifting_handler(void)
+{
+    Chassis_Motor[LF].Data.Target_Velocity =  650;
+    Chassis_Motor[LB].Data.Target_Velocity =  650;
+    Chassis_Motor[RB].Data.Target_Velocity = -650;
+    Chassis_Motor[RF].Data.Target_Velocity = -650;
+
+    if (abs(Chassis_Motor[LF].Data.Velocity) < 50 && abs(Chassis_Motor[LB].Data.Velocity) < 50 &&
+        abs(Chassis_Motor[RB].Data.Velocity) < 50 && abs(Chassis_Motor[RF].Data.Velocity) < 50 && chassis_info.countering_1 == true)
+    {
+        chassis_info.lift_counter_1++;
+    }
+    if (abs(Chassis_Motor[RF].Data.Velocity) < 50 && abs(Chassis_Motor[LF].Data.Velocity) < 50 && chassis_info.countering_2 == true)
+    {
+        chassis_info.lift_counter_2++;
+    }
+    if (chassis_info.lift_counter_1 >= 100 && chassis_info.countering_1 == true)
+    {
+        chassis_info.lift_mode = LIFT_STAGE_2;
+        chassis_info.lift_counter_1 = 0;
+        chassis_info.countering_1 = false;
+        chassis_info.countering_2 = true;
+    }
+    if (chassis_info.lift_counter_2 >= 300 && chassis_info.countering_2 == true)
+    {
+        chassis_info.lift_mode = LIFT_STAGE_3;
+        chassis_info.lift_counter_2 = 0;
+        chassis_info.countering_1 = true;
+        chassis_info.countering_2 = false;
+    }
+    chassis_lifting_handler();
 }
 
 static void Chassis_Motor_cal(const bool acticated)
@@ -322,4 +344,32 @@ static void chassis_set_leds(GPIO_PinState state)
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, state);
 }
 
-  /* USER CODE END Control_Task */
+static void Elevator_set_start_error_pos(void)
+{
+    Elevator_Motor[LF].Data.Start_Position = Elevator_Motor[LF].Data.Position;
+    Elevator_Motor[LB].Data.Start_Position = Elevator_Motor[LB].Data.Position;
+    Elevator_Motor[RB].Data.Start_Position = Elevator_Motor[RB].Data.Position;
+    Elevator_Motor[RF].Data.Start_Position = Elevator_Motor[RF].Data.Position;
+
+    Elevator_Motor[LF].Data.Error_Position = Elevator_Motor[LF].Data.Target_Position - Elevator_Motor[LF].Data.Start_Position;
+    Elevator_Motor[LB].Data.Error_Position = Elevator_Motor[LB].Data.Target_Position - Elevator_Motor[LB].Data.Start_Position;
+    Elevator_Motor[RB].Data.Error_Position = Elevator_Motor[RB].Data.Target_Position - Elevator_Motor[RB].Data.Start_Position;
+    Elevator_Motor[RF].Data.Error_Position = Elevator_Motor[RF].Data.Target_Position - Elevator_Motor[RF].Data.Start_Position;
+}
+static void Robotic_Arm_set_start_error_pos(void)
+{
+    Robotic_Arm_Motor[J1].Data.Start_Position = Robotic_Arm_Motor[J1].Data.Position;
+    Robotic_Arm_Motor[J2].Data.Start_Position = Robotic_Arm_Motor[J2].Data.Position;
+    Robotic_Arm_Motor[J3].Data.Start_Position = Robotic_Arm_Motor[J3].Data.Position;
+    Robotic_Arm_Motor[J4].Data.Start_Position = Robotic_Arm_Motor[J4].Data.Position;
+    Robotic_Arm_Motor[J5].Data.Start_Position = Robotic_Arm_Motor[J5].Data.Position;
+    Robotic_Arm_Motor[J6].Data.Start_Position = Robotic_Arm_Motor[J6].Data.Position;
+
+    Robotic_Arm_Motor[J1].Data.Error_Position = Robotic_Arm_Motor[J1].Data.Target_Position - Robotic_Arm_Motor[J1].Data.Start_Position;
+    Robotic_Arm_Motor[J2].Data.Error_Position = Robotic_Arm_Motor[J2].Data.Target_Position - Robotic_Arm_Motor[J2].Data.Start_Position;
+    Robotic_Arm_Motor[J3].Data.Error_Position = Robotic_Arm_Motor[J3].Data.Target_Position - Robotic_Arm_Motor[J3].Data.Start_Position;
+    Robotic_Arm_Motor[J4].Data.Error_Position = Robotic_Arm_Motor[J4].Data.Target_Position - Robotic_Arm_Motor[J4].Data.Start_Position;
+    Robotic_Arm_Motor[J5].Data.Error_Position = Robotic_Arm_Motor[J5].Data.Target_Position - Robotic_Arm_Motor[J5].Data.Start_Position;
+    Robotic_Arm_Motor[J6].Data.Error_Position = Robotic_Arm_Motor[J6].Data.Target_Position - Robotic_Arm_Motor[J6].Data.Start_Position;
+}
+/* USER CODE END Control_Task */

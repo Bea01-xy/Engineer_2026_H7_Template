@@ -68,7 +68,7 @@ void Detect_Task(void)
 
         arm_ctrl_info_get();
 
-        //USART_Vofa_Justfloat_Transmit(INS_Info.Yaw_Angle,BMI088_Info.Offsets_Gyro_Y,BMI088_Info.Offsets_Gyro_Z);
+        //USART_Vofa_Justfloat_Transmit(cnt,0,0);
         osDelay(1);
     }
     /* USER CODE END Detect_Task */
@@ -112,12 +112,9 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
     } else if (switch_is_down(s1)) {
         chassis->last_mode = chassis->mode;
         chassis->last_lift_mode = chassis->lift_mode;
-        chassis->mode = CHASSIS_LIFT;
-        switch (s0) {
-            case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_4; break;
-            case RC_SW_MID:  chassis->lift_mode = LIFT_STAGE_5; break;
-            case RC_SW_UP:   chassis->lift_mode = LIFT_STAGE_6; break;
-            default: break;
+        chassis->mode = CHASSIS_AUTO_LIFT;
+        if(chassis->last_mode == CHASSIS_LIFT) {
+            chassis->lift_mode = LIFT_STAGE_1;
         }
     }
 }
