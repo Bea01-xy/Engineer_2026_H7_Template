@@ -44,13 +44,14 @@ static void chassis_set_leds(GPIO_PinState state);
 Chassis_Info_Typedef chassis_info;
 
 static float Chassis_PID_Param[PID_PARAMETER_NUM] = {CHASSIS_KP, CHASSIS_KI, CHASSIS_KD, CHASSIS_Alpha, CHASSIS_Deadband, CHASSIS_LimitIntegral, CHASSIS_LimitOutput};
-static float Gripper_PID_Param[PID_PARAMETER_NUM] = {CHASSIS_KP, CHASSIS_KI, CHASSIS_KD, CHASSIS_Alpha, CHASSIS_Deadband, CHASSIS_LimitIntegral, CHASSIS_LimitOutput};
+static float Gripper_PID_Param[PID_PARAMETER_NUM] = {GRIPPER_KP, GRIPPER_KI, GRIPPER_KD, GRIPPER_Alpha, GRIPPER_Deadband, GRIPPER_LimitIntegral, GRIPPER_LimitOutput};
 
 PID_Info_TypeDef Chassis_PID[4];
 PID_Info_TypeDef Gripper_PID;
 
 TickType_t Control_Task_SysTick = 0; //to lower the frequence
 TickType_t Timer_When_Lift_Stage_Changed = 0;
+TickType_t Timer_When_Mode_Changed = 0;
 void Control_Task(void)
 {
     /* USER CODE BEGIN Control_Task */
@@ -74,8 +75,9 @@ void Control_Task(void)
         }
 
 	    Timer_When_Lift_Stage_Changed++;
+        Timer_When_Mode_Changed++;
 
-	    USART_Vofa_Justfloat_Transmit(chassis_info.lift_counter_1,chassis_info.lift_counter_2, Elevator_Motor[LF].Data.Position);
+	    USART_Vofa_Justfloat_Transmit(M2006_Gripper_Motor.Data.Target_Angle,M2006_Gripper_Motor.Data.Angle, Gripper_PID.Output);
 		osDelay(1);
     }
 }
@@ -142,13 +144,14 @@ static void chassis_lifting_handler(void)
         Elevator_set_start_error_pos();
     }
     if (mode_changed_to_normal()){
+        Timer_When_Mode_Changed = 0;
         Robotic_Arm_set_start_error_pos();
     }
     Chassis_Motor_cal(chassis_info.activated_flag);
     Elevator_Motor_cal();
     Robotic_Arm_Motor_cal();
 
-    PID_Calculate(&Gripper_PID, M2006_Gripper_Motor.Data.Encoder, M2006_Gripper_Motor.Data.Angle);
+    PID_Calculate(&Gripper_PID, M2006_Gripper_Motor.Data.Target_Angle, M2006_Gripper_Motor.Data.Angle);
     M2006_Gripper_Motor.Data.Final_Output = Gripper_PID.Output;
 }
 
@@ -177,10 +180,11 @@ static void chassis_auto_lifting_handler(void)
     {
         chassis_info.lift_counter_1++;
     }
-    if (abs(Chassis_Motor[RF].Data.Velocity) < 50 && abs(Chassis_Motor[LF].Data.Velocity) < 50 && chassis_info.countering_2 == true)
+    else if (abs(Chassis_Motor[RF].Data.Velocity) < 50 && abs(Chassis_Motor[LF].Data.Velocity) < 50 && chassis_info.countering_2 == true)
     {
         chassis_info.lift_counter_2++;
     }
+
     if (chassis_info.lift_counter_1 >= 100 && chassis_info.countering_1 == true)
     {
         chassis_info.lift_mode = LIFT_STAGE_2;
@@ -188,7 +192,7 @@ static void chassis_auto_lifting_handler(void)
         chassis_info.countering_1 = false;
         chassis_info.countering_2 = true;
     }
-    if (chassis_info.lift_counter_2 >= 300 && chassis_info.countering_2 == true)
+    else if (chassis_info.lift_counter_2 >= 300 && chassis_info.countering_2 == true)
     {
         chassis_info.lift_mode = LIFT_STAGE_3;
         chassis_info.lift_counter_2 = 0;
@@ -206,7 +210,6 @@ static void Chassis_Motor_cal(const bool acticated)
         PID_Calculate(&Chassis_PID[RB], Chassis_Motor[RB].Data.Target_Velocity, Chassis_Motor[RB].Data.Velocity);
         PID_Calculate(&Chassis_PID[RF], Chassis_Motor[RF].Data.Target_Velocity, Chassis_Motor[RF].Data.Velocity);
 
-        //just for now
         Chassis_Motor[LF].Data.Final_Output = Chassis_PID[LF].Output + Chassis_Motor[LF].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
         Chassis_Motor[LB].Data.Final_Output = Chassis_PID[LB].Output + Chassis_Motor[LB].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
         Chassis_Motor[RB].Data.Final_Output = Chassis_PID[RB].Output + Chassis_Motor[RB].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
@@ -228,7 +231,7 @@ static void Elevator_Motor_cal(void)
 
 static void Robotic_Arm_Motor_cal(void)
 {
-    if (Timer_When_Lift_Stage_Changed > ROBOTIC_ARM_MOVING_TIME) {
+    if (Timer_When_Mode_Changed > ROBOTIC_ARM_MOVING_TIME) {
         Robotic_Arm_Motor[J1].Data.Temp_Target_Position = Robotic_Arm_Motor[J1].Data.Target_Position;
         Robotic_Arm_Motor[J2].Data.Temp_Target_Position = Robotic_Arm_Motor[J2].Data.Target_Position;
         Robotic_Arm_Motor[J3].Data.Temp_Target_Position = Robotic_Arm_Motor[J3].Data.Target_Position;
@@ -261,7 +264,7 @@ bool mode_changed(void){
 }
 
 bool mode_changed_to_normal(void){
-    return (chassis_info.last_mode != chassis_info.mode) && (chassis_info.mode != CHASSIS_DISABLE);
+    return (chassis_info.last_mode == CHASSIS_DISABLE) && (chassis_info.mode != CHASSIS_DISABLE);
 }
 
 static void Elevator_set_feedforward_and_pos(void)

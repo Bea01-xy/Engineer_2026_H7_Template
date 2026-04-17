@@ -139,7 +139,7 @@ void Chassis_set(const bool activated)
 							 Chassis_Motor[LB].Data.Final_Output,
 							 Chassis_Motor[RB].Data.Final_Output,
 							 Chassis_Motor[RF].Data.Final_Output);
-		M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0,
+		M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, M2006_Gripper_Motor.Data.Final_Output,
 							 0, 0, 0);
 	} else {
 		M3508_motor_crt_ctrl(&hfdcan2, 0x200, 0, 0, 0, 0);

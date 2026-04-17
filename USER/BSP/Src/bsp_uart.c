@@ -28,7 +28,7 @@ static void USART_RxDMA_MultiBuffer_Init(UART_HandleTypeDef *, uint32_t *, uint3
 
 PLL2_ClocksTypeDef PLL2_ClockFreq;
 
-#define USART1_RX_Switch  1  //Referee_System 0  Image_Transmission 1
+#define USART1_RX_Switch  0  //Referee_System 0  Image_Transmission 1
 /**
   * @brief  Configures the USART.
   * @param  None
