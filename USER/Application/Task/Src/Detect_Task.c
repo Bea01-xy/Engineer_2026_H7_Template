@@ -44,6 +44,7 @@ static float Chassis_Direction_PID_Param[PID_PARAMETER_NUM] = {0.02f, 0.007f, 0.
 PID_Info_TypeDef Chassis_Direction_PID;
 
 Hand_State_e hand_state = HAND_OPEN;
+TickType_t Detect_Task_SysTick = 0;
 /**
 * @brief Function implementing the StartDetectTask thread.
 * @param argument: Not used
@@ -57,6 +58,7 @@ void Detect_Task(void)
     /* Infinite loop */
     for(;;)
     {
+        Detect_Task_SysTick = osKernelSysTick();
         Remote_Message_Moniter(&remote_ctrl);
 		MiniPC_Receive_Info(receive_data, 6);
 
@@ -69,7 +71,7 @@ void Detect_Task(void)
         arm_ctrl_info_get();
 
         //USART_Vofa_Justfloat_Transmit(cnt,0,0);
-        osDelay(1);
+        osDelayUntil(&Detect_Task_SysTick, 1);
     }
     /* USER CODE END Detect_Task */
 }

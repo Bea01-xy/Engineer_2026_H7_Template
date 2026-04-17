@@ -50,6 +50,7 @@ file(GLOB_RECURSE SOURCES
         "USER/Components/Device/Src/*.c"
         "USER/Components/Algorithm/Src/*.c"
         "USER/Components/Controller/Src/*.c"
+        "USER/Components/PowerControl/Src/*.c"
         "USER/Application/Task/Src/*.c"
         # 可按需添加其他目录
 )
@@ -68,6 +69,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         USER/Components/Device/Inc
         USER/Components/Algorithm/Inc
         USER/Components/Controller/Inc
+        USER/Components/PowerControl/Inc
         USER/Application/Task/Inc
         USER/BSP/Inc
         Middlewares/ST/STM32_USB_Device_Library/Core/Inc

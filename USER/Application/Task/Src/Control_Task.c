@@ -49,7 +49,7 @@ static float Gripper_PID_Param[PID_PARAMETER_NUM] = {GRIPPER_KP, GRIPPER_KI, GRI
 PID_Info_TypeDef Chassis_PID[4];
 PID_Info_TypeDef Gripper_PID;
 
-TickType_t Control_Task_SysTick = 0; //to lower the frequence
+TickType_t Control_Task_SysTick = 0;
 TickType_t Timer_When_Lift_Stage_Changed = 0;
 TickType_t Timer_When_Mode_Changed = 0;
 void Control_Task(void)
@@ -78,7 +78,7 @@ void Control_Task(void)
         Timer_When_Mode_Changed++;
 
 	    USART_Vofa_Justfloat_Transmit(M2006_Gripper_Motor.Data.Target_Angle,M2006_Gripper_Motor.Data.Angle, Gripper_PID.Output);
-		osDelay(1);
+		osDelayUntil(&Control_Task_SysTick, 1);
     }
 }
 
