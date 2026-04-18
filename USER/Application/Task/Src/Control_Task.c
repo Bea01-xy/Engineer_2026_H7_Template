@@ -23,6 +23,7 @@
 #include "INS_Task.h"
 #include "CAN_Task.h"
 #include "Robotic_Arm_Config.h"
+#include "../../Components/PowerControl/Inc/PowerLimiter.h"
 
 static void Control_Init(void);
 static float SmootherStep(float NowTime,float UseTime);
@@ -42,6 +43,20 @@ static void Robotic_Arm_set_start_error_pos(void);
 static void chassis_set_leds(GPIO_PinState state);
 
 Chassis_Info_Typedef chassis_info;
+
+// 功率限制器相关变量
+static Limiter_t chassis_power_limiter[4];
+static Limiter_t* chassis_limiter_list[4] = {
+    &chassis_power_limiter[0],
+    &chassis_power_limiter[1],
+    &chassis_power_limiter[2],
+    &chassis_power_limiter[3]
+};
+static LimiterScheduler_t chassis_scheduler;
+
+// 置信度边界参数（需要根据实际测试调整）
+#define CHASSIS_E_UPPER  3000.0f   // 转速差总和上界
+#define CHASSIS_E_LOWER  500.0f    // 转速差总和下界
 
 static float Chassis_PID_Param[PID_PARAMETER_NUM] = {CHASSIS_KP, CHASSIS_KI, CHASSIS_KD, CHASSIS_Alpha, CHASSIS_Deadband, CHASSIS_LimitIntegral, CHASSIS_LimitOutput};
 static float Gripper_PID_Param[PID_PARAMETER_NUM] = {GRIPPER_KP, GRIPPER_KI, GRIPPER_KD, GRIPPER_Alpha, GRIPPER_Deadband, GRIPPER_LimitIntegral, GRIPPER_LimitOutput};
@@ -90,6 +105,15 @@ static void Control_Init(void)
     PID_Init(&Chassis_PID[RF],PID_POSITION,Chassis_PID_Param);
 
     PID_Init(&Gripper_PID,PID_POSITION, Gripper_PID_Param);
+
+    // 初始化功率限制器（4个3508电机）
+    for(int i = 0; i < 4; i++) {
+        powerInitialiseLimiter(&chassis_power_limiter[i], MODEL_3508);
+    }
+
+    // 初始化功率限制器调度器
+    powerInitialiseLimiterScheduler(&chassis_scheduler, 4, chassis_limiter_list,
+                                    CHASSIS_E_UPPER, CHASSIS_E_LOWER);
 
     chassis_info.activated_flag = false;
     chassis_info.mode = CHASSIS_DISABLE;
@@ -205,15 +229,39 @@ static void chassis_auto_lifting_handler(void)
 static void Chassis_Motor_cal(const bool acticated)
 {
     if (acticated) {
+        // ========== Step 1: PID计算 ==========
         PID_Calculate(&Chassis_PID[LF], Chassis_Motor[LF].Data.Target_Velocity, Chassis_Motor[LF].Data.Velocity);
         PID_Calculate(&Chassis_PID[LB], Chassis_Motor[LB].Data.Target_Velocity, Chassis_Motor[LB].Data.Velocity);
         PID_Calculate(&Chassis_PID[RB], Chassis_Motor[RB].Data.Target_Velocity, Chassis_Motor[RB].Data.Velocity);
         PID_Calculate(&Chassis_PID[RF], Chassis_Motor[RF].Data.Target_Velocity, Chassis_Motor[RF].Data.Velocity);
 
-        Chassis_Motor[LF].Data.Final_Output = Chassis_PID[LF].Output + Chassis_Motor[LF].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
-        Chassis_Motor[LB].Data.Final_Output = Chassis_PID[LB].Output + Chassis_Motor[LB].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
-        Chassis_Motor[RB].Data.Final_Output = Chassis_PID[RB].Output + Chassis_Motor[RB].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
-        Chassis_Motor[RF].Data.Final_Output = Chassis_PID[RF].Output + Chassis_Motor[RF].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
+        // ========== Step 2: 计算原始输出（PID + 前馈） ==========
+        int16_t raw_output[4];
+        raw_output[LF] = Chassis_PID[LF].Output + Chassis_Motor[LF].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
+        raw_output[LB] = Chassis_PID[LB].Output + Chassis_Motor[LB].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
+        raw_output[RB] = Chassis_PID[RB].Output + Chassis_Motor[RB].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
+        raw_output[RF] = Chassis_PID[RF].Output + Chassis_Motor[RF].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
+
+        // ========== Step 3: 功率控制 ==========
+
+        // 3.1 更新每个电机的功率限制器数据
+        for(int i = 0; i < 4; i++) {
+            fp32 speed_error = Chassis_Motor[i].Data.Target_Velocity - Chassis_Motor[i].Data.Velocity;
+            powerLimiterUpdate(&chassis_power_limiter[i],
+                              Chassis_Motor[i].Data.Velocity,
+                              raw_output[i],
+                              speed_error);
+        }
+
+        // 3.2 调度器统一计算功率分配
+        int16_t power_limit = 120;  // 单位：W
+        powerSchedulerUpdate(&chassis_scheduler, power_limit);
+
+        // 3.3 获取限幅后的输出报文
+        Chassis_Motor[LF].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[0], raw_output[LF]);
+        Chassis_Motor[LB].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[1], raw_output[LB]);
+        Chassis_Motor[RB].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[2], raw_output[RB]);
+        Chassis_Motor[RF].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[3], raw_output[RF]);
     }
 }
 
