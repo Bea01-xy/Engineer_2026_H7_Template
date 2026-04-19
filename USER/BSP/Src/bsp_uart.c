@@ -26,7 +26,8 @@ static void USER_USART3_RxHandler(UART_HandleTypeDef *huart,uint16_t Size);
 
 static void USART_RxDMA_MultiBuffer_Init(UART_HandleTypeDef *, uint32_t *, uint32_t *, uint32_t );
 
-PLL2_ClocksTypeDef PLL2_ClockFreq;
+/* 已废弃: PLL2 时钟不再用于 USART1，USART1 使用 D2PCLK2 (80MHz) */
+/* PLL2_ClocksTypeDef PLL2_ClockFreq; */
 
 #define USART1_RX_Switch  0  //Referee_System 0  Image_Transmission 1
 /**
@@ -36,8 +37,12 @@ PLL2_ClocksTypeDef PLL2_ClockFreq;
   */
 void BSP_USART_Init(void){
    
-	 HAL_RCCEx_GetPLL2ClockFreq(&PLL2_ClockFreq);// Get PLL2 P Q R  Clock Frequency
-	 uint32_t USART1_ClockFreq = PLL2_ClockFreq.PLL2_Q_Frequency;//USART1 use PLL2Q Clock Frequency
+	 /* 
+	  * USART1 时钟源修正
+	  * .ioc 配置: RCC_USART16910CLKSOURCE_D2PCLK2 (APB2 = 80MHz)
+	  * 原代码错误地使用了 PLL2_Q (100MHz)，导致 25% 波特率误差
+	  */
+	 uint32_t USART1_ClockFreq = 80000000U;  // APB2 时钟 = 80MHz
 	
 	#if USART1_RX_Switch
 	
@@ -49,7 +54,7 @@ void BSP_USART_Init(void){
 	#else 
    
 	 USART1->CR1 &= ~USART_CR1_UE;
-   USART1->BRR = (uint32_t)(USART1_ClockFreq/115200);// Set baudrate 115200
+   USART1->BRR = (uint32_t)(USART1_ClockFreq/115200);// Set baudrate 115200 (BRR=694)
 	 USART1->CR1 |= USART_CR1_UE;
 	 USART_RxDMA_MultiBuffer_Init(&huart1,(uint32_t *)Referee_System_Info_MultiRx_Buf[0],(uint32_t *)Referee_System_Info_MultiRx_Buf[1],REFEREE_RXFRAME_LENGTH);
 	
@@ -58,6 +63,8 @@ void BSP_USART_Init(void){
 	//USART3 Init
 	 USART_RxDMA_MultiBuffer_Init(&huart5,(uint32_t *)SBUS_MultiRx_Buf[0],(uint32_t *)SBUS_MultiRx_Buf[1],SBUS_RX_BUF_NUM);
 
+	/* 初始化VOFA通讯 (UART7用于调试输出) */
+	USART_Vofa_Init();
 }
 
 /**
@@ -314,33 +321,231 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,uint16_t Size)
    __HAL_DMA_ENABLE(huart->hdmarx);
 }
 
-void USART_Vofa_Justfloat_Transmit(float SendValue1,float SendValue2,float SendValue3){
- 
-    __attribute__((section (".AXI_SRAM")))  static uint8_t Rx_Buf[16];
+/*============================ VOFA 通讯扩展 =============================*/
 
-		uint8_t *SendValue1_Pointer,*SendValue2_Pointer,*SendValue3_Pointer;
+/* UART7 VOFA 发送缓冲区 (高速921600，用于调试输出) */
+__attribute__((section(".AXI_SRAM"))) static uint8_t Vofa_TxBuffer[VOFA_MAX_FLOAT_COUNT * 4 + 4];
 
-		SendValue1_Pointer = (uint8_t *)&SendValue1;
-		SendValue2_Pointer = (uint8_t *)&SendValue2;
-		SendValue3_Pointer = (uint8_t *)&SendValue3;
+/* UART1 VOFA 发送缓冲区 (115200，用于裁判系统替代调试) */
+__attribute__((section(".AXI_SRAM"))) static uint8_t USART1_Vofa_TxBuffer[VOFA_MAX_FLOAT_COUNT * 4 + 4];
 
+/* VOFA 句柄 */
+static Vofa_HandleTypeDef Vofa_Handle = {
+    .tx_buf = Vofa_TxBuffer,
+    .buf_size = sizeof(Vofa_TxBuffer),
+    .is_busy = false
+};
 
-		Rx_Buf[0] =  *SendValue1_Pointer;
-		Rx_Buf[1] =  *(SendValue1_Pointer + 1);
-		Rx_Buf[2] =  *(SendValue1_Pointer + 2);
-		Rx_Buf[3] =  *(SendValue1_Pointer + 3);
-		Rx_Buf[4] =  *SendValue2_Pointer;
-		Rx_Buf[5] =  *(SendValue2_Pointer + 1);
-		Rx_Buf[6] =  *(SendValue2_Pointer + 2);
-		Rx_Buf[7] =  *(SendValue2_Pointer + 3);
-		Rx_Buf[8] =  *SendValue3_Pointer;
-		Rx_Buf[9] =  *(SendValue3_Pointer + 1);
-		Rx_Buf[10] = *(SendValue3_Pointer + 2);
-		Rx_Buf[11] = *(SendValue3_Pointer + 3);
-		Rx_Buf[12] =  0x00;
-		Rx_Buf[13] =  0x00;
-		Rx_Buf[14] =  0x80;
-		Rx_Buf[15] =  0x7F;
-		HAL_UART_Transmit_DMA(&huart7,Rx_Buf,sizeof(Rx_Buf));
+static Vofa_HandleTypeDef USART1_Vofa_Handle = {
+    .tx_buf = USART1_Vofa_TxBuffer,
+    .buf_size = sizeof(USART1_Vofa_TxBuffer),
+    .is_busy = false
+};
+
+/**
+  * @brief  初始化VOFA通讯 (UART7)
+  * @param  None
+  * @retval None
+  */
+void USART_Vofa_Init(void)
+{
+    Vofa_Handle.is_busy = false;
+    USART1_Vofa_Handle.is_busy = false;
+}
+
+/**
+  * @brief  非阻塞方式发送float数组到VOFA (使用DMA)
+  * @param  data: float数据指针
+  * @param  count: float数据数量 (最大VOFA_MAX_FLOAT_COUNT)
+  * @retval true: 发送成功启动, false: 发送忙或参数错误
+  */
+bool USART_Vofa_SendFloat(float *data, uint8_t count)
+{
+    if (count == 0 || count > VOFA_MAX_FLOAT_COUNT) {
+        return false;
+    }
+    
+    if (Vofa_Handle.is_busy) {
+        return false;  // DMA正在发送
+    }
+    
+    uint8_t *buf = Vofa_Handle.tx_buf;
+    uint8_t *float_ptr;
+    
+    /* 拷贝float数据 (小端格式) */
+    for (uint8_t i = 0; i < count; i++) {
+        float_ptr = (uint8_t *)&data[i];
+        buf[i * 4 + 0] = float_ptr[0];
+        buf[i * 4 + 1] = float_ptr[1];
+        buf[i * 4 + 2] = float_ptr[2];
+        buf[i * 4 + 3] = float_ptr[3];
+    }
+    
+    /* 添加帧尾 (0x00 0x00 0x80 0x7F = float +inf) */
+    buf[count * 4 + 0] = 0x00;
+    buf[count * 4 + 1] = 0x00;
+    buf[count * 4 + 2] = 0x80;
+    buf[count * 4 + 3] = 0x7F;
+    
+    Vofa_Handle.is_busy = true;
+    HAL_UART_Transmit_DMA(&huart7, buf, count * 4 + 4);
+    
+    return true;
+}
+
+/**
+  * @brief  阻塞方式发送float数组到VOFA
+  * @param  data: float数据指针
+  * @param  count: float数据数量 (最大VOFA_MAX_FLOAT_COUNT)
+  * @retval true: 发送成功, false: 参数错误
+  */
+bool USART_Vofa_SendFloat_Block(float *data, uint8_t count)
+{
+    if (count == 0 || count > VOFA_MAX_FLOAT_COUNT) {
+        return false;
+    }
+    
+    uint8_t *buf = Vofa_Handle.tx_buf;
+    uint8_t *float_ptr;
+    
+    /* 拷贝float数据 */
+    for (uint8_t i = 0; i < count; i++) {
+        float_ptr = (uint8_t *)&data[i];
+        buf[i * 4 + 0] = float_ptr[0];
+        buf[i * 4 + 1] = float_ptr[1];
+        buf[i * 4 + 2] = float_ptr[2];
+        buf[i * 4 + 3] = float_ptr[3];
+    }
+    
+    /* 添加帧尾 */
+    buf[count * 4 + 0] = 0x00;
+    buf[count * 4 + 1] = 0x00;
+    buf[count * 4 + 2] = 0x80;
+    buf[count * 4 + 3] = 0x7F;
+    
+    HAL_UART_Transmit(&huart7, buf, count * 4 + 4, 100);
+    
+    return true;
+}
+
+/**
+  * @brief  检查VOFA DMA发送是否忙
+  * @param  None
+  * @retval true: 正在发送, false: 空闲
+  */
+bool USART_Vofa_IsBusy(void)
+{
+    return Vofa_Handle.is_busy;
+}
+
+/**
+  * @brief  UART DMA发送完成回调 (用于清除VOFA忙标志)
+  * @param  huart: UART句柄
+  * @retval None
+  */
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart == &huart7) {
+        Vofa_Handle.is_busy = false;
+    }
+    if (huart == &huart1) {
+        USART1_Vofa_Handle.is_busy = false;
+    }
+}
+
+/**
+  * @brief  原始VOFA发送函数 (向后兼容)
+  */
+void USART_Vofa_Justfloat_Transmit(float SendValue1, float SendValue2, float SendValue3)
+{
+    float data[3] = {SendValue1, SendValue2, SendValue3};
+    USART_Vofa_SendFloat(data, 3);
+}
+
+/*============================ UART1 VOFA 支持 =============================*/
+
+/**
+  * @brief  UART1非阻塞方式发送float数组到VOFA (115200波特率)
+  * @param  data: float数据指针
+  * @param  count: float数据数量 (最大VOFA_MAX_FLOAT_COUNT)
+  * @retval true: 发送成功启动, false: 发送忙或参数错误
+  */
+bool USART1_Vofa_SendFloat(float *data, uint8_t count)
+{
+    if (count == 0 || count > VOFA_MAX_FLOAT_COUNT) {
+        return false;
+    }
+    
+    if (USART1_Vofa_Handle.is_busy) {
+        return false;  // DMA正在发送
+    }
+    
+    uint8_t *buf = USART1_Vofa_Handle.tx_buf;
+    uint8_t *float_ptr;
+    
+    /* 拷贝float数据 (小端格式) */
+    for (uint8_t i = 0; i < count; i++) {
+        float_ptr = (uint8_t *)&data[i];
+        buf[i * 4 + 0] = float_ptr[0];
+        buf[i * 4 + 1] = float_ptr[1];
+        buf[i * 4 + 2] = float_ptr[2];
+        buf[i * 4 + 3] = float_ptr[3];
+    }
+    
+    /* 添加帧尾 (0x00 0x00 0x80 0x7F = float +inf) */
+    buf[count * 4 + 0] = 0x00;
+    buf[count * 4 + 1] = 0x00;
+    buf[count * 4 + 2] = 0x80;
+    buf[count * 4 + 3] = 0x7F;
+    
+    USART1_Vofa_Handle.is_busy = true;
+    HAL_UART_Transmit_DMA(&huart1, buf, count * 4 + 4);
+    
+    return true;
+}
+
+/**
+  * @brief  UART1阻塞方式发送float数组到VOFA (115200波特率)
+  * @param  data: float数据指针
+  * @param  count: float数据数量 (最大VOFA_MAX_FLOAT_COUNT)
+  * @retval true: 发送成功, false: 参数错误
+  */
+bool USART1_Vofa_SendFloat_Block(float *data, uint8_t count)
+{
+    if (count == 0 || count > VOFA_MAX_FLOAT_COUNT) {
+        return false;
+    }
+    
+    uint8_t *buf = USART1_Vofa_Handle.tx_buf;
+    uint8_t *float_ptr;
+    
+    /* 拷贝float数据 */
+    for (uint8_t i = 0; i < count; i++) {
+        float_ptr = (uint8_t *)&data[i];
+        buf[i * 4 + 0] = float_ptr[0];
+        buf[i * 4 + 1] = float_ptr[1];
+        buf[i * 4 + 2] = float_ptr[2];
+        buf[i * 4 + 3] = float_ptr[3];
+    }
+    
+    /* 添加帧尾 */
+    buf[count * 4 + 0] = 0x00;
+    buf[count * 4 + 1] = 0x00;
+    buf[count * 4 + 2] = 0x80;
+    buf[count * 4 + 3] = 0x7F;
+    
+    HAL_UART_Transmit(&huart1, buf, count * 4 + 4, 100);
+    
+    return true;
+}
+
+/**
+  * @brief  检查UART1 VOFA DMA发送是否忙
+  * @param  None
+  * @retval true: 正在发送, false: 空闲
+  */
+bool USART1_Vofa_IsBusy(void)
+{
+    return USART1_Vofa_Handle.is_busy;
 }
 

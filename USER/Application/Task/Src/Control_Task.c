@@ -92,7 +92,11 @@ void Control_Task(void)
 	    Timer_When_Lift_Stage_Changed++;
         Timer_When_Mode_Changed++;
 
-	    USART_Vofa_Justfloat_Transmit(M2006_Gripper_Motor.Data.Target_Angle,M2006_Gripper_Motor.Data.Angle, Gripper_PID.Output);
+        float debug_data[4] = {
+            (float)Chassis_Motor[LF].Data.Velocity, (float)Chassis_Motor[LF].Data.Final_Output,
+            (float)Chassis_Motor[LB].Data.Velocity, (float)Chassis_Motor[LB].Data.Final_Output,
+        };
+        USART1_Vofa_SendFloat(debug_data, 4);
 		osDelayUntil(&Control_Task_SysTick, 1);
     }
 }
@@ -226,6 +230,7 @@ static void chassis_auto_lifting_handler(void)
     chassis_lifting_handler();
 }
 
+//#define POWER_CONTROL
 static void Chassis_Motor_cal(const bool acticated)
 {
     if (acticated) {
@@ -257,11 +262,18 @@ static void Chassis_Motor_cal(const bool acticated)
         int16_t power_limit = 120;  // 单位：W
         powerSchedulerUpdate(&chassis_scheduler, power_limit);
 
+#if defined(POWER_CONTROL)
         // 3.3 获取限幅后的输出报文
         Chassis_Motor[LF].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[0], raw_output[LF]);
         Chassis_Motor[LB].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[1], raw_output[LB]);
         Chassis_Motor[RB].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[2], raw_output[RB]);
         Chassis_Motor[RF].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[3], raw_output[RF]);
+#else
+        Chassis_Motor[LF].Data.Final_Output = raw_output[LF];
+        Chassis_Motor[LB].Data.Final_Output = raw_output[LB];
+        Chassis_Motor[RB].Data.Final_Output = raw_output[RB];
+        Chassis_Motor[RF].Data.Final_Output = raw_output[RF];
+#endif
     }
 }
 
