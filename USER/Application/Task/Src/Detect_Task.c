@@ -27,7 +27,7 @@
 #include "PID.h"
 #include "Robotic_Arm_Config.h"
 #include <stdint.h>
-
+#include "Referee_System.h"
 /* USER CODE BEGIN Header_Detect_Task */
 static void chassis_set_mode(Chassis_Info_Typedef* chassis);
 static void chassis_ctrl_info_get(void);
@@ -43,6 +43,9 @@ extern float joint_data_receive[12]; //to be used
 static float Chassis_Direction_PID_Param[PID_PARAMETER_NUM] = {0.02f, 0.007f, 0.03f, 0.2f, 2.f, 1.f, 2.f};
 PID_Info_TypeDef Chassis_Direction_PID;
 
+/* 使用全局裁判系统数据（在 Referee_System.c 中定义） */
+extern Referee_System_Info_TypeDef Referee_System_Info;
+
 Hand_State_e hand_state = HAND_OPEN;
 TickType_t Detect_Task_SysTick = 0;
 /**
@@ -55,13 +58,13 @@ void Detect_Task(void)
 {
     /* USER CODE BEGIN Detect_Task */
     PID_Init(&Chassis_Direction_PID,PID_POSITION,Chassis_Direction_PID_Param);
+
     /* Infinite loop */
     for(;;)
     {
         Detect_Task_SysTick = osKernelSysTick();
         Remote_Message_Moniter(&remote_ctrl);
-		MiniPC_Receive_Info(receive_data, 6);
-
+        MiniPC_Receive_Info(receive_data, 6);
         MiniPC_Transmit_Robotic_Arm_Info();
 
         chassis_set_mode(&chassis_info);
@@ -70,7 +73,29 @@ void Detect_Task(void)
 
         arm_ctrl_info_get();
 
-        //USART_Vofa_Justfloat_Transmit(cnt,0,0);
+        /* ========== VOFA 高速发送裁判系统关键信息（1kHz，用于验证数据接收）========== */
+        /* 构建裁判系统调试数据包 */
+        float referee_debug_data[9] = {
+            /* 数据包1: 机器人状态 (0x0201) */
+            (float)Referee_System_Info.robot_status.current_HP,           /* [0] 当前血量 */
+            (float)Referee_System_Info.robot_status.maximum_HP,           /* [1] 最大血量 */
+            (float)Referee_System_Info.robot_status.chassis_power_limit,  /* [2] 底盘功率限制(W) */
+
+            /* 数据包2: 功率热量数据 (0x0202) */
+            (float)Referee_System_Info.power_heat_data.buffer_energy,             /* [3] 缓冲能量(J) */
+            (float)Referee_System_Info.power_heat_data.shooter_17mm_1_barrel_heat, /* [4] 17mm发射机构热量 */
+            (float)Referee_System_Info.power_heat_data.shooter_42mm_barrel_heat,   /* [5] 42mm发射机构热量 */
+
+            /* 数据包3: 增益数据 (0x0204) - V1.3.0 协议已修正 */
+            (float)Referee_System_Info.buff.cooling_buff,      /* [6] 热量冷却增益(直接值) */
+            (float)Referee_System_Info.buff.attack_buff,       /* [7] 攻击增益(百分比) */
+            (float)Referee_System_Info.buff.remaining_energy     /* [8] 能量状态位 */
+        };
+
+        /* 非阻塞方式发送到VOFA (UART7, 921600波特率) */
+        USART_Vofa_SendFloat(referee_debug_data, 9);
+        /* ================================================================= */
+
         osDelayUntil(&Detect_Task_SysTick, 1);
     }
     /* USER CODE END Detect_Task */
@@ -191,4 +216,96 @@ static void arm_ctrl_info_get(void)
     Robotic_Arm_Motor[J5].Data.Target_Position = joint_data_receive[J5];
     Robotic_Arm_Motor[J6].Data.Target_Position = -joint_data_receive[J6];
 }
-  
+
+/**
+  * @brief  获取裁判系统数据示例（从全局 Referee_System_Info 读取）
+  * @note   裁判系统数据由 UART 中断自动解析更新，此处直接读取即可
+  * @retval None
+  */
+__attribute__((unused)) static void referee_data_usage_example(void)
+{
+    /* 获取机器人状态 (0x0201) */
+    uint8_t robot_id = Referee_System_Info.robot_status.robot_id;
+    uint16_t current_hp = Referee_System_Info.robot_status.current_HP;
+    uint16_t max_hp = Referee_System_Info.robot_status.maximum_HP;
+    uint16_t chassis_power_limit = Referee_System_Info.robot_status.chassis_power_limit;
+
+    /* 获取功率热量数据 (0x0202) - 用于功率控制 */
+    uint16_t buffer_energy = Referee_System_Info.power_heat_data.buffer_energy;
+    uint16_t shooter_heat = Referee_System_Info.power_heat_data.shooter_17mm_1_barrel_heat;
+
+    /* 获取增益数据 (0x0204) - V1.3.0 协议已修正解析 */
+    uint16_t cooling_buff = Referee_System_Info.buff.cooling_buff;  /* 热量冷却增益 (直接值) */
+    uint16_t attack_buff = Referee_System_Info.buff.attack_buff;      /* 攻击增益 (百分比) */
+    uint8_t remaining_energy = Referee_System_Info.buff.remaining_energy; /* 能量状态位 */
+
+    /* 获取弹丸剩余量 (0x0208) - V1.3.0 协议已新增 fortress 字段 */
+    uint16_t allowance_17mm = Referee_System_Info.projectile_allowance.projectile_allowance_17mm;
+    uint16_t fortress_allowance = Referee_System_Info.projectile_allowance.projectile_allowance_fortress; /* NEW V1.3.0 */
+
+    /* 获取比赛状态 (0x0001) */
+    uint8_t game_progress = Referee_System_Info.game_status.game_progress;
+    uint16_t stage_remain_time = Referee_System_Info.game_status.stage_remain_time;
+
+    /* 抑制未使用变量警告 */
+    (void)robot_id; (void)current_hp; (void)max_hp; (void)chassis_power_limit;
+    (void)buffer_energy; (void)shooter_heat;
+    (void)cooling_buff; (void)attack_buff; (void)remaining_energy;
+    (void)allowance_17mm; (void)fortress_allowance;
+    (void)game_progress; (void)stage_remain_time;
+
+    /* 示例：血量过低预警（可通过VOFA或LED提示）
+     * if (current_hp < max_hp * 0.2f) {
+     *     // 低血量警告
+     * }
+     */
+
+    /* 示例：功率限制计算
+     * float power_limit_ratio = chassis_power_limit / 150.0f; // 归一化到最大值
+     */
+
+    /* 示例：发送裁判系统数据到VOFA调试（可选）
+     * float debug_data[3] = {(float)current_hp, (float)buffer_energy, (float)shooter_heat};
+     * USART_Vofa_SendFloat(debug_data, 3);
+     */
+}
+
+/**
+  * @brief  扩展裁判系统VOFA调试函数 - 可自定义发送更多数据
+  * @note   调用此函数发送扩展的裁判系统信息到VOFA
+  *         使用 JustFloat 协议，帧尾自动添加 (0x00 0x00 0x80 0x7F)
+  * @retval None
+  */
+__attribute__((unused)) static void referee_data_vofa_debug_extended(void)
+{
+    /* 方案1: 发送比赛状态 + 机器人状态 (5个float) */
+    float debug_packet_1[5] = {
+        (float)Referee_System_Info.game_status.game_progress,     /* 比赛阶段 0-5 */
+        (float)Referee_System_Info.game_status.stage_remain_time, /* 剩余时间(秒) */
+        (float)Referee_System_Info.robot_status.robot_id,         /* 机器人ID */
+        (float)Referee_System_Info.robot_status.current_HP,       /* 当前血量 */
+        (float)Referee_System_Info.robot_status.maximum_HP        /* 最大血量 */
+    };
+    USART_Vofa_SendFloat_Block(debug_packet_1, 5);
+
+    /* 方案2: 发送功率系统详细数据 (6个float) */
+    float debug_packet_2[6] = {
+        (float)Referee_System_Info.robot_status.chassis_power_limit,           /* 功率限制 */
+        (float)Referee_System_Info.power_heat_data.buffer_energy,              /* 缓冲能量 */
+        (float)Referee_System_Info.power_heat_data.shooter_17mm_1_barrel_heat, /* 17mm热量1 */
+        (float)Referee_System_Info.power_heat_data.shooter_17mm_2_barrel_heat, /* 17mm热量2 */
+        (float)Referee_System_Info.power_heat_data.shooter_42mm_barrel_heat,   /* 42mm热量 */
+        (float)Referee_System_Info.buff.cooling_buff                            /* 冷却增益 */
+    };
+    USART_Vofa_SendFloat_Block(debug_packet_2, 6);
+
+    /* 方案3: 发送弹丸信息 - V1.3.0新增堡垒储备弹量 (4个float) */
+    float debug_packet_3[4] = {
+        (float)Referee_System_Info.projectile_allowance.projectile_allowance_17mm,     /* 17mm允许发弹量 */
+        (float)Referee_System_Info.projectile_allowance.projectile_allowance_42mm,     /* 42mm允许发弹量 */
+        (float)Referee_System_Info.projectile_allowance.remaining_gold_coin,             /* 剩余金币 */
+        (float)Referee_System_Info.projectile_allowance.projectile_allowance_fortress   /* 堡垒储备弹量 - NEW V1.3.0 */
+    };
+    USART_Vofa_SendFloat_Block(debug_packet_3, 4);
+}
+

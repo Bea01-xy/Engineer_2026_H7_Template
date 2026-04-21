@@ -172,13 +172,13 @@ static void Referee_System_Info_Update(uint8_t *Buff,Referee_System_Info_TypeDef
 
 #ifdef BUFF_ID
     case BUFF_ID:
-				Referee_System_Info->buff.recovery_buff = Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length];
-				Referee_System_Info->buff.cooling_buff  = Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 1];
-				Referee_System_Info->buff.defence_buff  = Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 2];
-				Referee_System_Info->buff.vulnerability_buff  = Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 3];
-				Referee_System_Info->buff.attack_buff = bit8TObit16 (&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 4]);
-				Referee_System_Info->buff.remaining_energy = Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 5];
-		
+        /* V1.3.0 Protocol: 0:recovery(1B), 1:cooling(2B), 3:defence(1B), 4:vulnerability(1B), 5:attack(2B), 7:energy(1B) = 8 bytes */
+        Referee_System_Info->buff.recovery_buff      = Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 0];
+        Referee_System_Info->buff.cooling_buff       = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 1]); /* FIXED: was reading 1 byte */
+        Referee_System_Info->buff.defence_buff       = Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 3]; /* Offset fixed */
+        Referee_System_Info->buff.vulnerability_buff = Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 4]; /* Offset fixed */
+        Referee_System_Info->buff.attack_buff        = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 5]); /* Offset fixed */
+        Referee_System_Info->buff.remaining_energy   = Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 7]; /* Offset fixed */
     break;
 #endif
 
@@ -200,15 +200,19 @@ static void Referee_System_Info_Update(uint8_t *Buff,Referee_System_Info_TypeDef
 
 #ifdef PROJECTILE_ALLOWANCE_ID
     case PROJECTILE_ALLOWANCE_ID:
-      Referee_System_Info->projectile_allowance.projectile_allowance_17mm = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length]);
-      Referee_System_Info->projectile_allowance.projectile_allowance_42mm = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 2]);
-      Referee_System_Info->projectile_allowance.remaining_gold_coin       = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 4]);
+        /* V1.3.0 Protocol: 0:17mm(2B), 2:42mm(2B), 4:coin(2B), 6:fortress(2B) = 8 bytes */
+        Referee_System_Info->projectile_allowance.projectile_allowance_17mm   = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 0]);
+        Referee_System_Info->projectile_allowance.projectile_allowance_42mm   = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 2]);
+        Referee_System_Info->projectile_allowance.remaining_gold_coin         = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 4]);
+        Referee_System_Info->projectile_allowance.projectile_allowance_fortress = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 6]); /* NEW in V1.2.0 */
     break;
 #endif
 
 #ifdef RFID_STATUS_ID
     case RFID_STATUS_ID:
-      Referee_System_Info->rfid_status.rfid_status = bit8TObit32(&Buff[Referee_System_Info->Index+FrameHeader_Length+CMDID_Length]);
+        /* V1.3.0 Protocol: 0:rfid_status(4B), 4:rfid_status_2(1B) = 5 bytes (revised in V1.2.0) */
+        Referee_System_Info->rfid_status.rfid_status   = bit8TObit32(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 0]);
+        Referee_System_Info->rfid_status.rfid_status_2 = Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 4]; /* NEW in V1.2.0: opponent tunnel RFID */
     break;
 #endif
 
@@ -273,19 +277,39 @@ static void Referee_System_Info_Update(uint8_t *Buff,Referee_System_Info_TypeDef
 #endif	 
 
 #ifdef MAP_ROBOT_DATA_ID
-	    Referee_System_Info->map_robot_data.hero_position_x       = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length]);
-	    Referee_System_Info->map_robot_data.hero_position_y       = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 2]);
-	    Referee_System_Info->map_robot_data.engineer_position_x   = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 4]);
-	   	Referee_System_Info->map_robot_data.engineer_position_y   = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 6]);
-      Referee_System_Info->map_robot_data.infantry_3_position_x = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 8]);
-	    Referee_System_Info->map_robot_data.infantry_3_position_y = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 10]);
-	    Referee_System_Info->map_robot_data.infantry_4_position_x = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 12]);
-	   	Referee_System_Info->map_robot_data.infantry_4_position_y = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 14]);
-	    Referee_System_Info->map_robot_data.infantry_5_position_x = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 16]);
-	   	Referee_System_Info->map_robot_data.infantry_5_position_y = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 18]);
-	    Referee_System_Info->map_robot_data.sentry_position_x     = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 20]);
-	   	Referee_System_Info->map_robot_data.sentry_position_y     = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 22]);
-#endif	 
+    case MAP_ROBOT_DATA_ID:
+        /* V1.3.0 Protocol: Opponent(hero, eng, 3/4/infantry, aerial, sentry) + Ally(same) = 48 bytes (revised in V1.3.0) */
+        /* REMOVED: infantry_5, ADDED: aerial positions for both sides */
+
+        /* Opponent robots (24 bytes) */
+        Referee_System_Info->map_robot_data.opponent_hero_position_x       = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 0]);
+        Referee_System_Info->map_robot_data.opponent_hero_position_y       = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 2]);
+        Referee_System_Info->map_robot_data.opponent_engineer_position_x   = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 4]);
+        Referee_System_Info->map_robot_data.opponent_engineer_position_y   = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 6]);
+        Referee_System_Info->map_robot_data.opponent_infantry_3_position_x = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 8]);
+        Referee_System_Info->map_robot_data.opponent_infantry_3_position_y = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 10]);
+        Referee_System_Info->map_robot_data.opponent_infantry_4_position_x = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 12]);
+        Referee_System_Info->map_robot_data.opponent_infantry_4_position_y = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 14]);
+        Referee_System_Info->map_robot_data.opponent_aerial_position_x     = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 16]); /* NEW in V1.3.0 */
+        Referee_System_Info->map_robot_data.opponent_aerial_position_y     = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 18]); /* NEW in V1.3.0 */
+        Referee_System_Info->map_robot_data.opponent_sentry_position_x     = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 20]);
+        Referee_System_Info->map_robot_data.opponent_sentry_position_y     = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 22]);
+
+        /* Ally robots (24 bytes) */
+        Referee_System_Info->map_robot_data.ally_hero_position_x             = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 24]);
+        Referee_System_Info->map_robot_data.ally_hero_position_y             = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 26]);
+        Referee_System_Info->map_robot_data.ally_engineer_position_x         = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 28]);
+        Referee_System_Info->map_robot_data.ally_engineer_position_y         = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 30]);
+        Referee_System_Info->map_robot_data.ally_infantry_3_position_x       = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 32]);
+        Referee_System_Info->map_robot_data.ally_infantry_3_position_y     = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 34]);
+        Referee_System_Info->map_robot_data.ally_infantry_4_position_x       = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 36]);
+        Referee_System_Info->map_robot_data.ally_infantry_4_position_y       = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 38]);
+        Referee_System_Info->map_robot_data.ally_aerial_position_x           = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 40]); /* NEW in V1.3.0 */
+        Referee_System_Info->map_robot_data.ally_aerial_position_y           = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 42]); /* NEW in V1.3.0 */
+        Referee_System_Info->map_robot_data.ally_sentry_position_x           = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 44]);
+        Referee_System_Info->map_robot_data.ally_sentry_position_y           = bit8TObit16(&Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length + 46]);
+    break;
+#endif
 	 
 #ifdef MAP_DATA_ID
       Referee_System_Info->map_data.intention = Buff[Referee_System_Info->Index + FrameHeader_Length + CMDID_Length];

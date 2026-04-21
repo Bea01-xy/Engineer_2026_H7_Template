@@ -21,7 +21,7 @@ typedef struct PowerLimiter {
 
     fp32    speedFeedback;      // 转速反馈
     fp32    torqueCmd;          // 力矩输入
-    fp32    absSpeedError;      // 转速误差绝对值
+    fp32    absSpeedError;      // 转速2误差绝对值
     fp32    predictPower;       // 模型正解得出预测功率
 
     uint8_t limitFlag;          // 是否限制功率

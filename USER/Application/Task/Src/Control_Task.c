@@ -13,6 +13,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "Control_Task.h"
+#include "Power_Limit_communication.h"
 #include "cmsis_os.h"
 #include "bsp_uart.h"
 #include "Remote_Control.h"
@@ -92,11 +93,14 @@ void Control_Task(void)
 	    Timer_When_Lift_Stage_Changed++;
         Timer_When_Mode_Changed++;
 
-        float debug_data[4] = {
-            (float)Chassis_Motor[LF].Data.Velocity, (float)Chassis_Motor[LF].Data.Final_Output,
-            (float)Chassis_Motor[LB].Data.Velocity, (float)Chassis_Motor[LB].Data.Final_Output,
+        float debug_data[9] = {
+            Chassis_Motor[LF].Data.Current, Chassis_Motor[LB].Data.Current,
+            Chassis_Motor[RB].Data.Current, Chassis_Motor[RF].Data.Current,
+            Chassis_Motor[LF].Data.Velocity, Chassis_Motor[LB].Data.Velocity,
+            Chassis_Motor[RB].Data.Velocity, Chassis_Motor[RF].Data.Velocity,
+            PowerMeter_Get_Power(),
         };
-        USART1_Vofa_SendFloat(debug_data, 4);
+        ////USART_Vofa_SendFloat(debug_data, 9);
 		osDelayUntil(&Control_Task_SysTick, 1);
     }
 }
@@ -230,7 +234,7 @@ static void chassis_auto_lifting_handler(void)
     chassis_lifting_handler();
 }
 
-//#define POWER_CONTROL
+#define POWER_CONTROL
 static void Chassis_Motor_cal(const bool acticated)
 {
     if (acticated) {

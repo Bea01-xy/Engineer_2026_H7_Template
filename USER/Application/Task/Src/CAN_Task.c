@@ -53,19 +53,18 @@ void CAN_Task(void)
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RB],Motor_Save_Zero_Position);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RF],Motor_Save_Zero_Position);
 
-	DM_Motor_Mode_Set(false);
 	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J3],Motor_Save_Zero_Position);
 	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J4],Motor_Save_Zero_Position);
 	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J6],Motor_Save_Zero_Position);
 	static int robotic_arm_part = 0;
 	for(;;)
     {
-		if (mode_changed()) {
-			//DM_Motor_Mode_Set(chassis_info.mode == CHASSIS_DISABLE ? false : true);
-		}
 		Robotic_Arm_set(robotic_arm_part, chassis_info.activated_flag);
 		robotic_arm_part = (robotic_arm_part + 1) % 3;
+
         Chassis_set(chassis_info.activated_flag);
+
+		//Delay in here
         Elevator_set(chassis_info.activated_flag);
 
         osDelay(1);

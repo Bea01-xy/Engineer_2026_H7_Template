@@ -19,6 +19,7 @@
 #include "Remote_Control.h"
 #include "Chassis_Config.h"
 #include "Robotic_Arm_Config.h"
+#include "Power_Limit_communication.h"
 /**
  * @brief The structure that contains the Information of FDCAN1 and FDCAN2 Receive.
  */
@@ -83,6 +84,8 @@ FDCAN_TxFrame_TypeDef FDCAN3_TxFrame = {
   * @retval None
   */
 void BSP_FDCAN_Init(void){
+
+  PowerMeter_Init();
 
   FDCAN_FilterTypeDef FDCAN1_FilterConfig;
 	
@@ -170,6 +173,9 @@ static void FDCAN1_RxFifo0RxHandler(uint32_t *Identifier,uint8_t Data[8])
 	DM_Motor_Info_Update(Identifier,Data,&Elevator_Motor[LB]);
 	DM_Motor_Info_Update(Identifier,Data,&Elevator_Motor[RB]);
 	DM_Motor_Info_Update(Identifier,Data,&Elevator_Motor[RF]);
+
+	// 功率计数据更新（ID: 0x306）
+	PowerMeter_Info_Update(Identifier, Data);
 }
 
 /**

@@ -303,24 +303,25 @@ typedef struct
 
 /**
  * @brief typedef structure that contains the information of robot buff data, id: 0x0204U
+ * @note V1.3.0 protocol: 0:recovery(1B), 1:cooling(2B), 3:defence(1B), 4:vulnerability(1B), 5:attack(2B), 7:energy(1B) = 8 bytes
  */
 typedef struct
 {
-   uint8_t recovery_buff;       /* Robot healing gain (percentage, value of 10 represents 10% of the maximum healing volume per second) */
-   uint8_t cooling_buff;        /* Robot shooting heat cooling rate (direct value, a value of 5 indicates 5 times cooling; the fixed heat cooling gain provided by the fortress gain point is temporarily not applicable) */
-   uint8_t defence_buff;        /* Robot defense gain (percentage, a value of 50 represents a 50% defense gain) */
-   uint8_t vulnerability_buff;  /* Robot negative defense gain (percentage, a value of 30 represents -30% defense gain) */
-   uint16_t attack_buff;        /* Robot attack gain (percentage, a value of 50 represents 50% attack gain) */
+   uint8_t recovery_buff;       /* Offset 0, Robot healing gain (percentage, value of 10 represents 10% of the maximum healing volume per second) */
+   uint16_t cooling_buff;       /* Offset 1, Robot shooting heat cooling rate (direct value, a value of x indicates x/s cooling) */
+   uint8_t defence_buff;        /* Offset 3, Robot defense gain (percentage, a value of 50 represents a 50% defense gain) */
+   uint8_t vulnerability_buff;  /* Offset 4, Robot negative defense gain (percentage, a value of 30 represents -30% defense gain) */
+   uint16_t attack_buff;        /* Offset 5, Robot attack gain (percentage, a value of 50 represents 50% attack gain) */
 	
 	 /**
-	 * @brief remaining_energy
-	 *	bit0-4: Feedback on the remaining energy value of the robot, identifying the proportion of the remaining energy value of the robot in hexadecimal, only
-	 *	Feedback when the remaining energy of the robot is less than 50%, and default feedback for the rest is 0x32.
-	 *	bit0: When the remaining energy is greater than 50%, it is 1, and in other cases, it is 0
-	 *	bit 1: When the remaining energy is greater than 30%, it is 1, and in other cases, it is 0
-	 *	bit2: When the remaining energy is greater than 15%, it is 1, and in other cases, it is 0
-	 *	bit3: When the remaining energy is greater than 5%, it is 1, and in other cases it is 0 Bit4: when the remaining energy is greater than 1%
-	 *	When is 1, in other cases it is 0
+	 * @brief remaining_energy, Offset 7
+	 *	bit0: When the remaining energy is greater than 125%, it is 1, otherwise 0 (V1.3.0 updated from 50%)
+	 *	bit1: When the remaining energy is greater than 100%, it is 1, otherwise 0
+	 *	bit2: When the remaining energy is greater than 50%, it is 1, otherwise 0
+	 *	bit3: When the remaining energy is greater than 30%, it is 1, otherwise 0
+	 *	bit4: When the remaining energy is greater than 15%, it is 1, otherwise 0
+	 *	bit5: When the remaining energy is greater than 5%, it is 1, otherwise 0
+	 *	bit6: When the remaining energy is greater than 1%, it is 1, otherwise 0
 	 */
 	 uint8_t remaining_energy;
 }buff_t;
@@ -360,20 +361,24 @@ typedef  struct
 
 /**
  * @brief typedef structure that contains the information of bullet remaining number, id: 0x0208U
+ * @note V1.3.0 protocol: 0:17mm(2B), 2:42mm(2B), 4:coin(2B), 6:fortress(2B) = 8 bytes (revised in V1.2.0)
  */
 typedef  struct
 {
-  uint16_t projectile_allowance_17mm; 
-  uint16_t projectile_allowance_42mm;  
-  uint16_t remaining_gold_coin; 
-}projectile_allowance_t;;
+  uint16_t projectile_allowance_17mm;       /* Offset 0, Robot 17mm allowance */
+  uint16_t projectile_allowance_42mm;         /* Offset 2, Robot 42mm allowance */
+  uint16_t remaining_gold_coin;               /* Offset 4, Remaining gold coins */
+  uint16_t projectile_allowance_fortress;     /* Offset 6, NEW in V1.2.0: Fortress gain point reserve 17mm allowance */
+}projectile_allowance_t;
 
 /**
  * @brief typedef structure that contains the information of RFID status, id: 0x0209U
+ * @note V1.3.0 protocol: 0:rfid_status(4B), 4:rfid_status_2(1B) = 5 bytes (revised in V1.2.0)
  */
 typedef struct
 {
- uint32_t rfid_status;
+ uint32_t rfid_status;     /* Offset 0, RFID status bits 0-31 */
+ uint8_t rfid_status_2;    /* Offset 4, NEW in V1.2.0: RFID status bits 32-37 (tunnel opponent side) */
 }rfid_status_t;
 
 /**
@@ -452,21 +457,38 @@ typedef struct
 }map_command_t;
 /**
  * @brief typedef structure that contains the information of client receive data, id: 0x0305U
+ * @note V1.3.0 protocol: Opponent hero, engineer, 3/4/infantry, aerial, sentry + Ally same = 48 bytes
+ * @note REMOVED infantry_5, ADDED aerial positions (revised in V1.3.0)
  */
 typedef struct
 {
-	uint16_t hero_position_x;
-	uint16_t hero_position_y;
-	uint16_t engineer_position_x;
-	uint16_t engineer_position_y;
-	uint16_t infantry_3_position_x;
-	uint16_t infantry_3_position_y;
-	uint16_t infantry_4_position_x;
-	uint16_t infantry_4_position_y;
-	uint16_t infantry_5_position_x;
-	uint16_t infantry_5_position_y;
-	uint16_t sentry_position_x;
-	uint16_t sentry_position_y;
+	/* Opponent robots (24 bytes) */
+	uint16_t opponent_hero_position_x;        /* Offset 0 */
+	uint16_t opponent_hero_position_y;        /* Offset 2 */
+	uint16_t opponent_engineer_position_x;  /* Offset 4 */
+	uint16_t opponent_engineer_position_y;  /* Offset 6 */
+	uint16_t opponent_infantry_3_position_x;  /* Offset 8 */
+	uint16_t opponent_infantry_3_position_y;  /* Offset 10 */
+	uint16_t opponent_infantry_4_position_x;  /* Offset 12 */
+	uint16_t opponent_infantry_4_position_y;  /* Offset 14 */
+	uint16_t opponent_aerial_position_x;      /* Offset 16, NEW in V1.3.0 */
+	uint16_t opponent_aerial_position_y;      /* Offset 18, NEW in V1.3.0 */
+	uint16_t opponent_sentry_position_x;      /* Offset 20 */
+	uint16_t opponent_sentry_position_y;      /* Offset 22 */
+
+	/* Ally robots (24 bytes) */
+	uint16_t ally_hero_position_x;            /* Offset 24 */
+	uint16_t ally_hero_position_y;            /* Offset 26 */
+	uint16_t ally_engineer_position_x;        /* Offset 28 */
+	uint16_t ally_engineer_position_y;        /* Offset 30 */
+	uint16_t ally_infantry_3_position_x;      /* Offset 32 */
+	uint16_t ally_infantry_3_position_y;      /* Offset 34 */
+	uint16_t ally_infantry_4_position_x;      /* Offset 36 */
+	uint16_t ally_infantry_4_position_y;      /* Offset 38 */
+	uint16_t ally_aerial_position_x;          /* Offset 40, NEW in V1.3.0 */
+	uint16_t ally_aerial_position_y;          /* Offset 42, NEW in V1.3.0 */
+	uint16_t ally_sentry_position_x;          /* Offset 44 */
+	uint16_t ally_sentry_position_y;          /* Offset 46 */
 }map_robot_data_t;
 /**
  * @brief typedef structure that contains the information of sentry path, id: 0x0307U
