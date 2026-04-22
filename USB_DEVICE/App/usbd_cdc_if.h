@@ -31,8 +31,50 @@
 #include "usbd_cdc.h"
 
 /* USER CODE BEGIN INCLUDE */
+
+/* MiniPC 数据结构定义 - 用于接收来自上位机的数据 */
+typedef struct {
+    /* 关节数据 - 6个float = 24字节 */
+    float joint_data[6];
+
+    /* 鼠标数据 - 3个int16_t = 6字节 */
+    int16_t mouse_x;
+    int16_t mouse_y;
+    int16_t mouse_z;
+
+    /* 鼠标按键 - 3个uint8_t = 3字节 */
+    uint8_t mouse_left;
+    uint8_t mouse_right;
+    uint8_t mouse_mid;
+
+    /* 键盘按键 - 16个uint8_t = 16字节 */
+    uint8_t key_w;
+    uint8_t key_s;
+    uint8_t key_a;
+    uint8_t key_d;
+    uint8_t key_shift;
+    uint8_t key_ctrl;
+    uint8_t key_q;
+    uint8_t key_e;
+    uint8_t key_r;
+    uint8_t key_f;
+    uint8_t key_g;
+    uint8_t key_z;
+    uint8_t key_x;
+    uint8_t key_c;
+    uint8_t key_v;
+    uint8_t key_b;
+} MiniPC_DataTypeDef;
+
+/* 全局实例声明 - 在 usbd_cdc_if.c 中定义 */
+extern MiniPC_DataTypeDef MiniPC_Data;
+
+/* 旧接口兼容 - 直接映射到结构体成员 */
+//#define joint_data_receive MiniPC_Data.joint_data
+
+/* 函数声明 */
 extern uint8_t MiniPC_Transmit_Info(float* Buf, uint16_t Len);
-extern void MiniPC_Receive_Info(uint8_t* Buff, uint32_t Len);
+extern void MiniPC_Receive_Info(void);
 
 /* USER CODE END INCLUDE */
 

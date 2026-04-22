@@ -36,9 +36,6 @@ static void MiniPC_Transmit_Robotic_Arm_Info(void);
 static void arm_ctrl_info_get(void);
 
 extern Chassis_Info_Typedef chassis_info;
-//float joint_data[6] = {1.1f,1.2f,1.3f,1.4f,3.2f,1.6f};
-uint8_t receive_data[51];
-extern float joint_data_receive[12]; //to be used
 
 static float Chassis_Direction_PID_Param[PID_PARAMETER_NUM] = {0.02f, 0.007f, 0.03f, 0.2f, 2.f, 1.f, 2.f};
 PID_Info_TypeDef Chassis_Direction_PID;
@@ -64,7 +61,7 @@ void Detect_Task(void)
     {
         Detect_Task_SysTick = osKernelSysTick();
         Remote_Message_Moniter(&remote_ctrl);
-        MiniPC_Receive_Info(receive_data, 6);
+        MiniPC_Receive_Info();  /* 接收小电脑发送的6个float关节数据 */
         MiniPC_Transmit_Robotic_Arm_Info();
 
         chassis_set_mode(&chassis_info);
@@ -91,10 +88,21 @@ void Detect_Task(void)
             (float)Referee_System_Info.buff.attack_buff,       /* [7] 攻击增益(百分比) */
             (float)Referee_System_Info.buff.remaining_energy     /* [8] 能量状态位 */
         };
+        //USART_Vofa_SendFloat(referee_debug_data, 9);
 
-        /* 非阻塞方式发送到VOFA (UART7, 921600波特率) */
-        USART_Vofa_SendFloat(referee_debug_data, 9);
-        /* ================================================================= */
+        /* ========== 键盘按键状态调试（测试MiniPC接收）========== */
+        float key_debug_data[8] = {
+            (float)MiniPC_Data.key_w,       /* [0] W键 */
+            (float)MiniPC_Data.key_a,       /* [1] A键 */
+            (float)MiniPC_Data.key_s,       /* [2] S键 */
+            (float)MiniPC_Data.key_d,       /* [3] D键 */
+            (float)MiniPC_Data.key_shift,   /* [4] Shift键 */
+            (float)MiniPC_Data.key_q,       /* [5] Q键 */
+            (float)MiniPC_Data.key_e,       /* [6] E键 */
+            (float)MiniPC_Data.key_f        /* [7] F键 */
+        };
+        USART_Vofa_SendFloat(key_debug_data, 8);
+        /* ========================================================= */
 
         osDelayUntil(&Detect_Task_SysTick, 1);
     }
@@ -209,12 +217,12 @@ static void MiniPC_Transmit_Robotic_Arm_Info(void)
 
 static void arm_ctrl_info_get(void)
 {
-    Robotic_Arm_Motor[J1].Data.Target_Position = joint_data_receive[J1];
-    Robotic_Arm_Motor[J2].Data.Target_Position = joint_data_receive[J2];
-    Robotic_Arm_Motor[J3].Data.Target_Position = joint_data_receive[J3];
-    Robotic_Arm_Motor[J4].Data.Target_Position = joint_data_receive[J4];
-    Robotic_Arm_Motor[J5].Data.Target_Position = joint_data_receive[J5];
-    Robotic_Arm_Motor[J6].Data.Target_Position = -joint_data_receive[J6];
+    Robotic_Arm_Motor[J1].Data.Target_Position = MiniPC_Data.joint_data[J1];
+    Robotic_Arm_Motor[J2].Data.Target_Position = MiniPC_Data.joint_data[J2];
+    Robotic_Arm_Motor[J3].Data.Target_Position = MiniPC_Data.joint_data[J3];
+    Robotic_Arm_Motor[J4].Data.Target_Position = MiniPC_Data.joint_data[J4];
+    Robotic_Arm_Motor[J5].Data.Target_Position = MiniPC_Data.joint_data[J5];
+    Robotic_Arm_Motor[J6].Data.Target_Position = -MiniPC_Data.joint_data[J6];
 }
 
 /**
