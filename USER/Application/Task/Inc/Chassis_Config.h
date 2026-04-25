@@ -32,6 +32,12 @@
 /** * @brief Remote control channel max value*/
 #define MAX_RC_CH_VALUE 660.0f
 
+/** * @brief Remote control channel deadband) */
+#define RC_CH_DEADBAND 3
+#define RC_CH_APPLY_DEADBAND(ch) do { \
+    if ((ch) <= RC_CH_DEADBAND && (ch) >= -RC_CH_DEADBAND) { (ch) = 0; } \
+} while (0U)
+
 #define MAX_CHASSIS_VX_SPEED 3.0f
 #define MAX_CHASSIS_VY_SPEED 3.0f
 #define MAX_CHASSIS_VW_SPEED 3.0f
@@ -54,6 +60,15 @@
 #define CHASSIS_Deadband 2.0f
 #define CHASSIS_LimitIntegral 2000.0f
 #define CHASSIS_LimitOutput 15000.0f
+
+/* @brief Chassis Direction PID (Yaw Angle Loop) parameters */
+#define CHASSIS_DIRECTION_KP 0.02f
+#define CHASSIS_DIRECTION_KI 0.007f
+#define CHASSIS_DIRECTION_KD 0.03f
+#define CHASSIS_DIRECTION_Alpha 0.2f
+#define CHASSIS_DIRECTION_Deadband 2.0f
+#define CHASSIS_DIRECTION_LimitIntegral 1.0f
+#define CHASSIS_DIRECTION_LimitOutput 2.0f
 /* ----------------------- RC Switch Definition----------------------------- */
 #define RC_SW_UP                ((uint16_t)1)
 #define RC_SW_MID               ((uint16_t)3)
@@ -132,5 +147,11 @@ typedef struct
 
 /* @brief Robotic Arm parameters */
 #define ROBOTIC_ARM_MOVING_TIME 1000u //ms
+
+/* @brief Chassis auto-lifting parameters */
+#define CHASSIS_AUTO_LIFT_TARGET_VELOCITY       650     // 自动抬升时底盘电机目标转速 (rpm)
+#define CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH     50      // 判定电机堵转的速度阈值 (rpm)
+#define CHASSIS_AUTO_LIFT_STAGE1_COUNTER_TH     100     // 阶段1->阶段2 堵转计数阈值 (ms)
+#define CHASSIS_AUTO_LIFT_STAGE2_COUNTER_TH     300     // 阶段2->阶段3 堵转计数阈值 (ms)
 
 #endif /* CHASSIS_CONFIG_H */

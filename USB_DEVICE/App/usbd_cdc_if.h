@@ -64,6 +64,8 @@ typedef struct {
     uint8_t key_c;
     uint8_t key_v;
     uint8_t key_b;
+    uint8_t key_1;
+    uint8_t key_2;
 } MiniPC_DataTypeDef;
 
 /* 全局实例声明 - 在 usbd_cdc_if.c 中定义 */

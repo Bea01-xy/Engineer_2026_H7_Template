@@ -75,7 +75,7 @@ DJI_Motor_Info_Typedef Chassis_Motor[4] = {
  * @brief The structure that contains the Information of joint motor.Use DM 6006 motor.
  */
 DM_Motor_Info_Typedef Elevator_Motor[4] = {
-    [0] = {
+    [LB] = {
         .Control_Mode = MIT,
         .Param_Range = {
             .P_MAX = 12.5f,
@@ -87,7 +87,7 @@ DM_Motor_Info_Typedef Elevator_Motor[4] = {
             .RxIdentifier = 0x11,
         },
     },
-    [1] = {
+    [LF] = {
         .Control_Mode = MIT,
         .Param_Range = {
             .P_MAX = 12.5f,
@@ -99,7 +99,7 @@ DM_Motor_Info_Typedef Elevator_Motor[4] = {
             .RxIdentifier = 0x12,
         },
     },
-    [2] = {
+    [RB] = {
         .Control_Mode = MIT,
         .Param_Range = {
             .P_MAX = 12.5f,
@@ -111,7 +111,7 @@ DM_Motor_Info_Typedef Elevator_Motor[4] = {
             .RxIdentifier = 0x13,
         },
     },
-    [3] = {
+    [RF] = {
         .Control_Mode = MIT,
         .Param_Range = {
             .P_MAX = 12.5f,

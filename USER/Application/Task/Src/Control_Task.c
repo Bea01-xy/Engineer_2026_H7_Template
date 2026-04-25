@@ -202,29 +202,34 @@ static void chassis_disabled_handler(void)
 
 static void chassis_auto_lifting_handler(void)
 {
-    Chassis_Motor[LF].Data.Target_Velocity =  650;
-    Chassis_Motor[LB].Data.Target_Velocity =  650;
-    Chassis_Motor[RB].Data.Target_Velocity = -650;
-    Chassis_Motor[RF].Data.Target_Velocity = -650;
+    Chassis_Motor[LF].Data.Target_Velocity =  CHASSIS_AUTO_LIFT_TARGET_VELOCITY;
+    Chassis_Motor[LB].Data.Target_Velocity =  CHASSIS_AUTO_LIFT_TARGET_VELOCITY;
+    Chassis_Motor[RB].Data.Target_Velocity = -CHASSIS_AUTO_LIFT_TARGET_VELOCITY;
+    Chassis_Motor[RF].Data.Target_Velocity = -CHASSIS_AUTO_LIFT_TARGET_VELOCITY;
 
-    if (abs(Chassis_Motor[LF].Data.Velocity) < 50 && abs(Chassis_Motor[LB].Data.Velocity) < 50 &&
-        abs(Chassis_Motor[RB].Data.Velocity) < 50 && abs(Chassis_Motor[RF].Data.Velocity) < 50 && chassis_info.countering_1 == true)
+    if (abs(Chassis_Motor[LF].Data.Velocity) < CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH &&
+        abs(Chassis_Motor[LB].Data.Velocity) < CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH &&
+        abs(Chassis_Motor[RB].Data.Velocity) < CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH &&
+        abs(Chassis_Motor[RF].Data.Velocity) < CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH &&
+        chassis_info.countering_1 == true)
     {
         chassis_info.lift_counter_1++;
     }
-    else if (abs(Chassis_Motor[RF].Data.Velocity) < 50 && abs(Chassis_Motor[LF].Data.Velocity) < 50 && chassis_info.countering_2 == true)
+    else if (abs(Chassis_Motor[RF].Data.Velocity) < CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH &&
+             abs(Chassis_Motor[LF].Data.Velocity) < CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH &&
+             chassis_info.countering_2 == true)
     {
         chassis_info.lift_counter_2++;
     }
 
-    if (chassis_info.lift_counter_1 >= 100 && chassis_info.countering_1 == true)
+    if (chassis_info.lift_counter_1 >= CHASSIS_AUTO_LIFT_STAGE1_COUNTER_TH && chassis_info.countering_1 == true)
     {
         chassis_info.lift_mode = LIFT_STAGE_2;
         chassis_info.lift_counter_1 = 0;
         chassis_info.countering_1 = false;
         chassis_info.countering_2 = true;
     }
-    else if (chassis_info.lift_counter_2 >= 300 && chassis_info.countering_2 == true)
+    else if (chassis_info.lift_counter_2 >= CHASSIS_AUTO_LIFT_STAGE2_COUNTER_TH && chassis_info.countering_2 == true)
     {
         chassis_info.lift_mode = LIFT_STAGE_3;
         chassis_info.lift_counter_2 = 0;
@@ -234,7 +239,7 @@ static void chassis_auto_lifting_handler(void)
     chassis_lifting_handler();
 }
 
-#define POWER_CONTROL
+#define POWER_CONTROL 0
 static void Chassis_Motor_cal(const bool acticated)
 {
     if (acticated) {
@@ -266,7 +271,7 @@ static void Chassis_Motor_cal(const bool acticated)
         int16_t power_limit = 120;  // 单位：W
         powerSchedulerUpdate(&chassis_scheduler, power_limit);
 
-#if defined(POWER_CONTROL)
+#if POWER_CONTROL
         // 3.3 获取限幅后的输出报文
         Chassis_Motor[LF].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[0], raw_output[LF]);
         Chassis_Motor[LB].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[1], raw_output[LB]);

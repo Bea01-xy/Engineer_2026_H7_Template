@@ -37,11 +37,20 @@ static void arm_ctrl_info_get(void);
 
 extern Chassis_Info_Typedef chassis_info;
 
-static float Chassis_Direction_PID_Param[PID_PARAMETER_NUM] = {0.02f, 0.007f, 0.03f, 0.2f, 2.f, 1.f, 2.f};
+static float Chassis_Direction_PID_Param[PID_PARAMETER_NUM] = {
+    CHASSIS_DIRECTION_KP,
+    CHASSIS_DIRECTION_KI,
+    CHASSIS_DIRECTION_KD,
+    CHASSIS_DIRECTION_Alpha,
+    CHASSIS_DIRECTION_Deadband,
+    CHASSIS_DIRECTION_LimitIntegral,
+    CHASSIS_DIRECTION_LimitOutput
+};
 PID_Info_TypeDef Chassis_Direction_PID;
 
-/* 使用全局裁判系统数据（在 Referee_System.c 中定义） */
 extern Referee_System_Info_TypeDef Referee_System_Info;
+
+#define KEYBOARD_CTL 0
 
 Hand_State_e hand_state = HAND_OPEN;
 TickType_t Detect_Task_SysTick = 0;
@@ -55,7 +64,6 @@ void Detect_Task(void)
 {
     /* USER CODE BEGIN Detect_Task */
     PID_Init(&Chassis_Direction_PID,PID_POSITION,Chassis_Direction_PID_Param);
-
     /* Infinite loop */
     for(;;)
     {
@@ -91,19 +99,15 @@ void Detect_Task(void)
         //USART_Vofa_SendFloat(referee_debug_data, 9);
 
         /* ========== 键盘按键状态调试（测试MiniPC接收）========== */
-        float key_debug_data[8] = {
-            (float)MiniPC_Data.key_w,       /* [0] W键 */
-            (float)MiniPC_Data.key_a,       /* [1] A键 */
-            (float)MiniPC_Data.key_s,       /* [2] S键 */
-            (float)MiniPC_Data.key_d,       /* [3] D键 */
-            (float)MiniPC_Data.key_shift,   /* [4] Shift键 */
-            (float)MiniPC_Data.key_q,       /* [5] Q键 */
-            (float)MiniPC_Data.key_e,       /* [6] E键 */
-            (float)MiniPC_Data.key_f        /* [7] F键 */
+        float key_debug_data[5] = {
+            (float)chassis_info.target_vx,       /* [0] 底盘X轴速度 */
+            (float)chassis_info.target_vy,       /* [1] 底盘Y轴速度 */
+            (float)chassis_info.target_vw,       /* [2] 底盘转向速度 */
+            (float)MiniPC_Data.key_1,       /* [3] 底盘方向 */
+            (float)MiniPC_Data.key_2,       /* [4] 底盘方向 */
         };
-        USART_Vofa_SendFloat(key_debug_data, 8);
+        USART_Vofa_SendFloat(key_debug_data, 5);
         /* ========================================================= */
-
         osDelayUntil(&Detect_Task_SysTick, 1);
     }
     /* USER CODE END Detect_Task */
@@ -113,15 +117,23 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
 {
     if(chassis == NULL)
         return;
+#if KEYBOARD_CTL
+    if(MiniPC_Data.key_r) HAL_NVIC_SystemReset();
+#else
+    // if(remote_ctrl.rc_lost)
+    // {
+    //     chassis->last_mode = chassis->mode;
+    //     chassis->mode = CHASSIS_DISABLE;
+    //     chassis->last_lift_mode = chassis->lift_mode;
+    //     chassis->lift_mode = LIFT_STAGE_1;
+    //     return;
+    // }
+    if(remote_ctrl.rc.ch[5] <= -630) HAL_NVIC_SystemReset();
 
-    if(remote_ctrl.rc.ch[5] <= -630)
-    {
-        HAL_NVIC_SystemReset();
-    }
-    uint16_t s1 = remote_ctrl.rc.s[1];
-    uint16_t s0 = remote_ctrl.rc.s[0];
-    uint16_t sw0 = remote_ctrl.rc.sw[0];
-    uint16_t sw1 = remote_ctrl.rc.sw[1];
+    const uint16_t s1 = remote_ctrl.rc.s[1];
+    const uint16_t s0 = remote_ctrl.rc.s[0];
+    const uint16_t sw0 = remote_ctrl.rc.sw[0];
+    const uint16_t sw1 = remote_ctrl.rc.sw[1];
 
     if (switch_is_up(sw1)) {
         hand_state = HAND_OPEN;
@@ -158,29 +170,34 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
             chassis->lift_mode = LIFT_STAGE_1;
         }
     }
+#endif
 }
 
 static void chassis_ctrl_info_get(void)
 {
+#if KEYBOARD_CTL
+    chassis_info.target_vx = (float)MiniPC_Data.key_w * 3 - (float)MiniPC_Data.key_s * 3;
+    chassis_info.target_vy = (float)MiniPC_Data.key_a * 3 - (float)MiniPC_Data.key_d * 3;
+    chassis_info.target_vw = (float)MiniPC_Data.mouse_x * 0.1f;
+    Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
+    chassis_info.target_vw += Chassis_Direction_PID.Output;
+
+    chassis_info.target_direction += (float)MiniPC_Data.mouse_x * 0.1f * 0.058f;
+    chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
+#else
+    RC_CH_APPLY_DEADBAND(remote_ctrl.rc.ch[0]);
+    RC_CH_APPLY_DEADBAND(remote_ctrl.rc.ch[2]);
+    RC_CH_APPLY_DEADBAND(remote_ctrl.rc.ch[3]);
+
     chassis_info.target_vx = (float)remote_ctrl.rc.ch[3] * RC_TO_VX;
     chassis_info.target_vy = (float)remote_ctrl.rc.ch[2] * RC_TO_VY;
-
-    if (remote_ctrl.rc.ch[0] <= 3 && remote_ctrl.rc.ch[0] >= -3) {
-        remote_ctrl.rc.ch[0] = 0;
-    }
-    if (remote_ctrl.rc.ch[2] <= 3 && remote_ctrl.rc.ch[2] >= -3) {
-        remote_ctrl.rc.ch[2] = 0;
-    }
-    if (remote_ctrl.rc.ch[3] <= 3 && remote_ctrl.rc.ch[3] >= -3) {
-        remote_ctrl.rc.ch[3] = 0;
-    }
     chassis_info.target_vw = (float)remote_ctrl.rc.ch[0] * RC_TO_VW * 0.8f;
-
     Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
     chassis_info.target_vw += Chassis_Direction_PID.Output;
 
     chassis_info.target_direction += remote_ctrl.rc.ch[0] * RC_TO_VW * 0.058f; //integrate to get direction
     chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
+#endif
 }
 
 static void chassis_wheel_cal(void)

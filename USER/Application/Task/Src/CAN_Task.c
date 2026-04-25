@@ -64,11 +64,10 @@ void CAN_Task(void)
 
         Chassis_set(chassis_info.activated_flag);
 
-		//Delay in here
         Elevator_set(chassis_info.activated_flag);
 
         osDelay(1);
-        //USART_Vofa_Justfloat_Transmit(M2006_Gripper_Motor.Data.Angle, Robotic_Arm_Motor[J2].Data.Position, Robotic_Arm_Motor[J3].Data.Position);
+        USART_Vofa_Justfloat_Transmit(M2006_Gripper_Motor.Data.Angle, Robotic_Arm_Motor[J2].Data.Position, Robotic_Arm_Motor[J3].Data.Position);
     }
 }
 

@@ -87,7 +87,8 @@
   */
 /* MiniPC 数据全局实例 - 结构体定义在 usbd_cdc_if.h 中 */
 MiniPC_DataTypeDef MiniPC_Data = {
-    .joint_data = {J1_INITIAL_POS, J2_INITIAL_POS, J3_INITIAL_POS, J4_INITIAL_POS, J5_INITIAL_POS, J6_INITIAL_POS},
+    .joint_data = {J1_INITIAL_POS, J2_INITIAL_POS, J3_INITIAL_POS, 
+      J4_INITIAL_POS, J5_INITIAL_POS, J6_INITIAL_POS},
     .mouse_x = 0, .mouse_y = 0, .mouse_z = 0,
     .mouse_left = 0, .mouse_right = 0, .mouse_mid = 0,
     .key_w = 0, .key_s = 0, .key_a = 0, .key_d = 0,
@@ -308,7 +309,7 @@ int8_t CDC_Receive_HS(uint8_t* Buf, uint32_t *Len)
     USB_RxReady = 1;  /* 标记新数据已接收 */
   }
 
-  /* 继续接收下一个数据包 - 这才是回调函数的主要职责 */
+  /* 继续接收下一个数据包 */
   USBD_CDC_SetRxBuffer(&hUsbDeviceHS, UserRxBufferHS);
   USBD_CDC_ReceivePacket(&hUsbDeviceHS);
 
@@ -380,16 +381,16 @@ uint8_t MiniPC_Transmit_Info(float* Buf, uint16_t Len){
 
 /**
   * @brief  解析从小电脑接收的USB虚拟串口数据
-  * @note   数据包格式：帧头(0xAA) + 数据(49字节) + 校验和(1字节) + 帧尾(0x55)
-  *         数据布局：6个float(24B) + 3个int16_t(6B) + 19个uint8_t(19B)
+  * @note   数据包格式：帧头(0xAA) + 数据(51字节) + 校验和(1字节) + 帧尾(0x55)
+  *         数据布局：6个float(24B) + 3个int16_t(6B) + 21个uint8_t(21B)
   *         总长度：52字节
   * @retval None - 解析结果存入全局变量 MiniPC_Data
   */
 void MiniPC_Receive_Info(void)
 {
-    /* 数据部分大小：6*4 + 3*2 + 19*1 = 49字节 */
-    const uint32_t data_len = 49;
-    /* 完整数据包：帧头(1) + 数据(49) + 校验(1) + 帧尾(1) = 52字节 */
+    /* 数据部分大小：6*4 + 3*2 + 21*1 = 51字节 */
+    const uint32_t data_len = 51;
+    /* 完整数据包：帧头(1) + 数据(51) + 校验(1) + 帧尾(1) = 52字节 */
     const uint32_t packet_len = data_len + 3;
 
     /* 检查是否有新数据到达 */
@@ -462,6 +463,8 @@ void MiniPC_Receive_Info(void)
     MiniPC_Data.key_c       = pbuf[idx++];
     MiniPC_Data.key_v       = pbuf[idx++];
     MiniPC_Data.key_b       = pbuf[idx++];
+    MiniPC_Data.key_1       = pbuf[idx++];
+    MiniPC_Data.key_2       = pbuf[idx++];
 }
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
