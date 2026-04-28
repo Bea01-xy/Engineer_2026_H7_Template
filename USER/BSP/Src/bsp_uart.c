@@ -323,7 +323,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,uint16_t Size)
 
 /*============================ VOFA 通讯扩展 =============================*/
 
-/* UART7 VOFA 发送缓冲区 (高速921600，用于调试输出) */
+/* UART7 VOFA 发送缓冲区 (115200，用于调试输出) */
 __attribute__((section(".AXI_SRAM"))) static uint8_t Vofa_TxBuffer[VOFA_MAX_FLOAT_COUNT * 4 + 4];
 
 /* UART1 VOFA 发送缓冲区 (115200，用于裁判系统替代调试) */

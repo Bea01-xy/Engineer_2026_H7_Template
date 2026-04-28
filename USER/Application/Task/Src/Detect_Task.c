@@ -20,7 +20,7 @@
 #include "bsp_gpio.h"
 #include "Bmi088.h"
 #include "INS_Task.h"
-#include "usbd_cdc_if.h"
+#include "Minipc.h"
 #include "Chassis_Config.h"
 #include "bsp_uart.h"
 #include "Motor.h"
@@ -68,8 +68,8 @@ void Detect_Task(void)
     for(;;)
     {
         Detect_Task_SysTick = osKernelSysTick();
-        Remote_Message_Moniter(&remote_ctrl);
-        MiniPC_Receive_Info();  /* 接收小电脑发送的6个float关节数据 */
+        //Remote_Message_Moniter(&remote_ctrl);
+        MiniPC_Receive_Info();
         MiniPC_Transmit_Robotic_Arm_Info();
 
         chassis_set_mode(&chassis_info);
@@ -78,36 +78,18 @@ void Detect_Task(void)
 
         arm_ctrl_info_get();
 
-        /* ========== VOFA 高速发送裁判系统关键信息（1kHz，用于验证数据接收）========== */
-        /* 构建裁判系统调试数据包 */
-        float referee_debug_data[9] = {
-            /* 数据包1: 机器人状态 (0x0201) */
-            (float)Referee_System_Info.robot_status.current_HP,           /* [0] 当前血量 */
-            (float)Referee_System_Info.robot_status.maximum_HP,           /* [1] 最大血量 */
-            (float)Referee_System_Info.robot_status.chassis_power_limit,  /* [2] 底盘功率限制(W) */
-
-            /* 数据包2: 功率热量数据 (0x0202) */
-            (float)Referee_System_Info.power_heat_data.buffer_energy,             /* [3] 缓冲能量(J) */
-            (float)Referee_System_Info.power_heat_data.shooter_17mm_1_barrel_heat, /* [4] 17mm发射机构热量 */
-            (float)Referee_System_Info.power_heat_data.shooter_42mm_barrel_heat,   /* [5] 42mm发射机构热量 */
-
-            /* 数据包3: 增益数据 (0x0204) - V1.3.0 协议已修正 */
-            (float)Referee_System_Info.buff.cooling_buff,      /* [6] 热量冷却增益(直接值) */
-            (float)Referee_System_Info.buff.attack_buff,       /* [7] 攻击增益(百分比) */
-            (float)Referee_System_Info.buff.remaining_energy     /* [8] 能量状态位 */
+        float key_debug_data[6] = {
+            MiniPC_Data.key_q,
+            MiniPC_Data.joint_data[1],
+            MiniPC_Data.joint_data[2],
+            MiniPC_Data.joint_data[3],
+            MiniPC_Data.joint_data[4],
+            MiniPC_Data.joint_data[5]
         };
-        //USART_Vofa_SendFloat(referee_debug_data, 9);
-
-        /* ========== 键盘按键状态调试（测试MiniPC接收）========== */
-        float key_debug_data[5] = {
-            (float)chassis_info.target_vx,       /* [0] 底盘X轴速度 */
-            (float)chassis_info.target_vy,       /* [1] 底盘Y轴速度 */
-            (float)chassis_info.target_vw,       /* [2] 底盘转向速度 */
-            (float)MiniPC_Data.key_1,       /* [3] 底盘方向 */
-            (float)MiniPC_Data.key_2,       /* [4] 底盘方向 */
-        };
-        USART_Vofa_SendFloat(key_debug_data, 5);
+        USART_Vofa_SendFloat(key_debug_data, 6);
         /* ========================================================= */
+
+        MiniPC_Data_Update_Last();
         osDelayUntil(&Detect_Task_SysTick, 1);
     }
     /* USER CODE END Detect_Task */
@@ -119,6 +101,16 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
         return;
 #if KEYBOARD_CTL
     if(MiniPC_Data.key_r) HAL_NVIC_SystemReset();
+    if(MINIPC_KEY_RISING_EDGE(key_q))
+    {
+        if (chassis->mode == CHASSIS_LIFT) {
+            chassis->last_mode = chassis->mode;
+            chassis->mode = CHASSIS_DISABLE;
+        } else {
+            chassis->last_mode = chassis->mode;
+            chassis->mode = CHASSIS_LIFT;
+        }
+    }
 #else
     // if(remote_ctrl.rc_lost)
     // {
@@ -236,8 +228,8 @@ static void arm_ctrl_info_get(void)
 {
     Robotic_Arm_Motor[J1].Data.Target_Position = MiniPC_Data.joint_data[J1];
     Robotic_Arm_Motor[J2].Data.Target_Position = MiniPC_Data.joint_data[J2];
-    Robotic_Arm_Motor[J3].Data.Target_Position = MiniPC_Data.joint_data[J3];
-    Robotic_Arm_Motor[J4].Data.Target_Position = MiniPC_Data.joint_data[J4];
+    Robotic_Arm_Motor[J3].Data.Target_Position = -MiniPC_Data.joint_data[J3];
+    Robotic_Arm_Motor[J4].Data.Target_Position = -MiniPC_Data.joint_data[J4];
     Robotic_Arm_Motor[J5].Data.Target_Position = MiniPC_Data.joint_data[J5];
     Robotic_Arm_Motor[J6].Data.Target_Position = -MiniPC_Data.joint_data[J6];
 }

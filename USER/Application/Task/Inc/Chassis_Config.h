@@ -47,7 +47,7 @@
 #define RC_TO_VW  (MAX_CHASSIS_VW_SPEED/-MAX_RC_CH_VALUE)    //MAX_CHASSIS_VR_SPEED / RC_MAX_VALUE
 
 #define ROTATE_RATIO 0.6f
-#define WHEEL_RPM_RATIO 2000.0f
+#define WHEEL_RPM_RATIO 2200.0f
 #define CHASSIS_FF_SPEED_COEF 0.005f
 #define CHASSIS_FF_ACCEL_COEF 120.0f
 
@@ -128,7 +128,7 @@ typedef struct
 
 /* @brief Elevator (DM6006) parameters*/
 #define MIT_NO_USE 0u
-#define LIFTING_TIME 800u //ms
+#define LIFTING_TIME 1000u //ms
 #define ELEVATOR_KP 2.f
 #define ELEVATOR_FEEDFORWARD_FOR_LB_RF 1.37f
 #define ELEVATOR_FEEDFORWARD_FOR_LF_RB -1.37f
@@ -144,9 +144,6 @@ typedef struct
 #define ELEVATOR_LB_2nd_ACTIVATED_POS (ELEVATOR_LB_1st_ACTIVATED_POS*0.1f)
 #define ELEVATOR_RB_2nd_ACTIVATED_POS (ELEVATOR_RB_1st_ACTIVATED_POS*0.1f)
 #define ELEVATOR_RF_2nd_ACTIVATED_POS (ELEVATOR_RF_1st_ACTIVATED_POS*1.0f)
-
-/* @brief Robotic Arm parameters */
-#define ROBOTIC_ARM_MOVING_TIME 1000u //ms
 
 /* @brief Chassis auto-lifting parameters */
 #define CHASSIS_AUTO_LIFT_TARGET_VELOCITY       650     // 自动抬升时底盘电机目标转速 (rpm)

@@ -24,7 +24,9 @@
 #include "INS_Task.h"
 #include "CAN_Task.h"
 #include "Robotic_Arm_Config.h"
-#include "../../Components/PowerControl/Inc/PowerLimiter.h"
+#include "PowerLimiter.h"
+#include "GravityCompensation.h"
+#include "Referee_System.h"
 
 static void Control_Init(void);
 static float SmootherStep(float NowTime,float UseTime);
@@ -41,9 +43,11 @@ static bool lifting_mode_changed(void);
 static void Elevator_set_feedforward_and_pos(void);
 static void Elevator_set_start_error_pos(void);
 static void Robotic_Arm_set_start_error_pos(void);
+static void Robotic_Arm_set_feedfoward(void);
 static void chassis_set_leds(GPIO_PinState state);
 
 Chassis_Info_Typedef chassis_info;
+extern Referee_System_Info_TypeDef Referee_System_Info;
 
 // 功率限制器相关变量
 static Limiter_t chassis_power_limiter[4];
@@ -60,10 +64,20 @@ static LimiterScheduler_t chassis_scheduler;
 #define CHASSIS_E_LOWER  500.0f    // 转速差总和下界
 
 static float Chassis_PID_Param[PID_PARAMETER_NUM] = {CHASSIS_KP, CHASSIS_KI, CHASSIS_KD, CHASSIS_Alpha, CHASSIS_Deadband, CHASSIS_LimitIntegral, CHASSIS_LimitOutput};
-static float Gripper_PID_Param[PID_PARAMETER_NUM] = {GRIPPER_KP, GRIPPER_KI, GRIPPER_KD, GRIPPER_Alpha, GRIPPER_Deadband, GRIPPER_LimitIntegral, GRIPPER_LimitOutput};
+
+static float Robotic_Arm_FF_PID_Param_A[PID_PARAMETER_NUM] = {
+    ROBOTIC_ARM_FF_A_KP, ROBOTIC_ARM_FF_A_KI, ROBOTIC_ARM_FF_A_KD,
+    ROBOTIC_ARM_FF_A_Alpha, ROBOTIC_ARM_FF_A_Deadband,
+    ROBOTIC_ARM_FF_A_LimitIntegral, ROBOTIC_ARM_FF_A_LimitOutput
+};
+static float Robotic_Arm_FF_PID_Param_B[PID_PARAMETER_NUM] = {
+    ROBOTIC_ARM_FF_B_KP, ROBOTIC_ARM_FF_B_KI, ROBOTIC_ARM_FF_B_KD,
+    ROBOTIC_ARM_FF_B_Alpha, ROBOTIC_ARM_FF_B_Deadband,
+    ROBOTIC_ARM_FF_B_LimitIntegral, ROBOTIC_ARM_FF_B_LimitOutput
+};
 
 PID_Info_TypeDef Chassis_PID[4];
-PID_Info_TypeDef Gripper_PID;
+PID_Info_TypeDef Robotic_Arm_FF_PID[ROBOTIC_ARM_DOF];
 
 TickType_t Control_Task_SysTick = 0;
 TickType_t Timer_When_Lift_Stage_Changed = 0;
@@ -93,14 +107,15 @@ void Control_Task(void)
 	    Timer_When_Lift_Stage_Changed++;
         Timer_When_Mode_Changed++;
 
-        float debug_data[9] = {
+        float power_data[9] = {
             Chassis_Motor[LF].Data.Current, Chassis_Motor[LB].Data.Current,
             Chassis_Motor[RB].Data.Current, Chassis_Motor[RF].Data.Current,
             Chassis_Motor[LF].Data.Velocity, Chassis_Motor[LB].Data.Velocity,
             Chassis_Motor[RB].Data.Velocity, Chassis_Motor[RF].Data.Velocity,
             PowerMeter_Get_Power(),
         };
-        ////USART_Vofa_SendFloat(debug_data, 9);
+        //USART_Vofa_SendFloat(power_data, 9);
+        //USART_Vofa_SendFloat(gGravityComp.feedforward_torque, 6);
 		osDelayUntil(&Control_Task_SysTick, 1);
     }
 }
@@ -112,7 +127,17 @@ static void Control_Init(void)
     PID_Init(&Chassis_PID[RB],PID_POSITION,Chassis_PID_Param);
     PID_Init(&Chassis_PID[RF],PID_POSITION,Chassis_PID_Param);
 
-    PID_Init(&Gripper_PID,PID_POSITION, Gripper_PID_Param);
+    PID_Init(&Robotic_Arm_FF_PID[J1], PID_POSITION, Robotic_Arm_FF_PID_Param_A);
+    PID_Init(&Robotic_Arm_FF_PID[J2], PID_POSITION, Robotic_Arm_FF_PID_Param_A);
+    PID_Init(&Robotic_Arm_FF_PID[J3], PID_POSITION, Robotic_Arm_FF_PID_Param_A);
+    PID_Init(&Robotic_Arm_FF_PID[J4], PID_POSITION, Robotic_Arm_FF_PID_Param_B);
+    PID_Init(&Robotic_Arm_FF_PID[J5], PID_POSITION, Robotic_Arm_FF_PID_Param_B);
+    PID_Init(&Robotic_Arm_FF_PID[J6], PID_POSITION, Robotic_Arm_FF_PID_Param_B);
+    for (uint8_t i = 0; i < ROBOTIC_ARM_DOF; i++) {
+        Robotic_Arm_Motor[i].Data.Feedforward = 0.f;
+    }
+
+    GravityComp_Init();
 
     // 初始化功率限制器（4个3508电机）
     for(int i = 0; i < 4; i++) {
@@ -120,8 +145,7 @@ static void Control_Init(void)
     }
 
     // 初始化功率限制器调度器
-    powerInitialiseLimiterScheduler(&chassis_scheduler, 4, chassis_limiter_list,
-                                    CHASSIS_E_UPPER, CHASSIS_E_LOWER);
+    powerInitialiseLimiterScheduler(&chassis_scheduler, 4, chassis_limiter_list, CHASSIS_E_UPPER, CHASSIS_E_LOWER);
 
     chassis_info.activated_flag = false;
     chassis_info.mode = CHASSIS_DISABLE;
@@ -142,13 +166,14 @@ static void Control_Init(void)
 
     Robotic_Arm_Motor[J1].Data.Temp_Target_Position = J1_INITIAL_POS;
     Robotic_Arm_Motor[J2].Data.Temp_Target_Position = J2_INITIAL_POS;
-    Robotic_Arm_Motor[J3].Data.Temp_Target_Position = J3_INITIAL_POS;
-    Robotic_Arm_Motor[J4].Data.Temp_Target_Position = J4_INITIAL_POS;
+    Robotic_Arm_Motor[J3].Data.Temp_Target_Position = -J3_INITIAL_POS;
+    Robotic_Arm_Motor[J4].Data.Temp_Target_Position = -J4_INITIAL_POS;
     Robotic_Arm_Motor[J5].Data.Temp_Target_Position = J5_INITIAL_POS;
-    Robotic_Arm_Motor[J6].Data.Temp_Target_Position = J6_INITIAL_POS;
+    Robotic_Arm_Motor[J6].Data.Temp_Target_Position = -J6_INITIAL_POS;
 
     chassis_info.countering_1 = true;
     chassis_info.countering_2 = false;
+    Referee_System_Info.power_heat_data.buffer_energy = 60u;
 }
 
 static float SmootherStep(float NowTime,float UseTime)
@@ -182,9 +207,7 @@ static void chassis_lifting_handler(void)
     Chassis_Motor_cal(chassis_info.activated_flag);
     Elevator_Motor_cal();
     Robotic_Arm_Motor_cal();
-
-    PID_Calculate(&Gripper_PID, M2006_Gripper_Motor.Data.Target_Angle, M2006_Gripper_Motor.Data.Angle);
-    M2006_Gripper_Motor.Data.Final_Output = Gripper_PID.Output;
+    Robotic_Arm_set_feedfoward();
 }
 
 static void chassis_disabled_handler(void)
@@ -198,6 +221,12 @@ static void chassis_disabled_handler(void)
     Chassis_Motor[LB].Data.Final_Output = 0u;
     Chassis_Motor[RB].Data.Final_Output = 0u;
     Chassis_Motor[RF].Data.Final_Output = 0u;
+
+    /* 关节失能时清空前馈 PID, 防止积分饱和与残留前馈输出 */
+    for (uint8_t i = 0; i < ROBOTIC_ARM_DOF; i++) {
+        Robotic_Arm_FF_PID[i].PID_Calc_Clear(&Robotic_Arm_FF_PID[i]);
+        Robotic_Arm_Motor[i].Data.Feedforward = 0.f;
+    }
 }
 
 static void chassis_auto_lifting_handler(void)
@@ -239,7 +268,7 @@ static void chassis_auto_lifting_handler(void)
     chassis_lifting_handler();
 }
 
-#define POWER_CONTROL 0
+#define POWER_CONTROL 1
 static void Chassis_Motor_cal(const bool acticated)
 {
     if (acticated) {
@@ -269,6 +298,9 @@ static void Chassis_Motor_cal(const bool acticated)
 
         // 3.2 调度器统一计算功率分配
         int16_t power_limit = 120;  // 单位：W
+        if (Referee_System_Info.power_heat_data.buffer_energy <= 40u) {
+            power_limit = 90;
+        }
         powerSchedulerUpdate(&chassis_scheduler, power_limit);
 
 #if POWER_CONTROL
@@ -443,5 +475,41 @@ static void Robotic_Arm_set_start_error_pos(void)
     Robotic_Arm_Motor[J4].Data.Error_Position = Robotic_Arm_Motor[J4].Data.Target_Position - Robotic_Arm_Motor[J4].Data.Start_Position;
     Robotic_Arm_Motor[J5].Data.Error_Position = Robotic_Arm_Motor[J5].Data.Target_Position - Robotic_Arm_Motor[J5].Data.Start_Position;
     Robotic_Arm_Motor[J6].Data.Error_Position = Robotic_Arm_Motor[J6].Data.Target_Position - Robotic_Arm_Motor[J6].Data.Start_Position;
+}
+
+/**
+ * @brief 通过位置环 PID 计算各关节 MIT 模式下的前馈力矩, 用于消除稳态误差
+ * @note  - 输入误差: Temp_Target_Position - Position (rad)
+ *        - 输出: PID->Output (N·m), 直接写入 Motor.Data.Feedforward
+ *        - J3/J4/J6 电机正转方向与关节正转方向相反, 前馈值需取反
+ */
+#define GravityCompensation 1
+static void Robotic_Arm_set_feedfoward(void)
+{
+    PID_Calculate(&Robotic_Arm_FF_PID[J1], Robotic_Arm_Motor[J1].Data.Temp_Target_Position, Robotic_Arm_Motor[J1].Data.Position);
+    PID_Calculate(&Robotic_Arm_FF_PID[J2], Robotic_Arm_Motor[J2].Data.Temp_Target_Position, Robotic_Arm_Motor[J2].Data.Position);
+    PID_Calculate(&Robotic_Arm_FF_PID[J3], Robotic_Arm_Motor[J3].Data.Temp_Target_Position, Robotic_Arm_Motor[J3].Data.Position);
+    PID_Calculate(&Robotic_Arm_FF_PID[J4], Robotic_Arm_Motor[J4].Data.Temp_Target_Position, Robotic_Arm_Motor[J4].Data.Position);
+    PID_Calculate(&Robotic_Arm_FF_PID[J5], Robotic_Arm_Motor[J5].Data.Temp_Target_Position, Robotic_Arm_Motor[J5].Data.Position);
+    PID_Calculate(&Robotic_Arm_FF_PID[J6], Robotic_Arm_Motor[J6].Data.Temp_Target_Position, Robotic_Arm_Motor[J6].Data.Position);
+
+#if !GravityCompensation
+    Robotic_Arm_Motor[J1].Data.Feedforward =  Robotic_Arm_FF_PID[J1].Output;
+    Robotic_Arm_Motor[J2].Data.Feedforward =  Robotic_Arm_FF_PID[J2].Output;
+    Robotic_Arm_Motor[J3].Data.Feedforward =  Robotic_Arm_FF_PID[J3].Output;  /* J3 电机方向与关节相反 */
+    Robotic_Arm_Motor[J4].Data.Feedforward =  Robotic_Arm_FF_PID[J4].Output;  /* J4 电机方向与关节相反 */
+    Robotic_Arm_Motor[J5].Data.Feedforward =  Robotic_Arm_FF_PID[J5].Output;
+    Robotic_Arm_Motor[J6].Data.Feedforward =  Robotic_Arm_FF_PID[J6].Output;  /* J6 电机方向与关节相反 */
+
+#else
+    float theta[6] = {Robotic_Arm_Motor[J1].Data.Position, Robotic_Arm_Motor[J2].Data.Position, -Robotic_Arm_Motor[J3].Data.Position, -Robotic_Arm_Motor[J4].Data.Position, Robotic_Arm_Motor[J5].Data.Position, -Robotic_Arm_Motor[J6].Data.Position};
+    GravityComp_UpdateFeedforward(theta);
+    Robotic_Arm_Motor[J1].Data.Feedforward =      gGravityComp.feedforward_torque[J1] + Robotic_Arm_FF_PID[J1].Output;
+    Robotic_Arm_Motor[J2].Data.Feedforward =  0.4*gGravityComp.feedforward_torque[J2] + Robotic_Arm_FF_PID[J2].Output;
+    Robotic_Arm_Motor[J3].Data.Feedforward =     -gGravityComp.feedforward_torque[J3] + Robotic_Arm_FF_PID[J3].Output;
+    Robotic_Arm_Motor[J4].Data.Feedforward =     -gGravityComp.feedforward_torque[J4] + Robotic_Arm_FF_PID[J4].Output;
+    Robotic_Arm_Motor[J5].Data.Feedforward =      gGravityComp.feedforward_torque[J5] + Robotic_Arm_FF_PID[J5].Output;
+    Robotic_Arm_Motor[J6].Data.Feedforward =     -gGravityComp.feedforward_torque[J6] + Robotic_Arm_FF_PID[J6].Output;
+#endif
 }
 /* USER CODE END Control_Task */

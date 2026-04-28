@@ -40,7 +40,6 @@
 void Elevator_set(bool activated);
 void Robotic_Arm_set(int part, bool activated);
 void Chassis_set(bool activated);
-static void DM_Motor_Mode_Set(const bool activated);
 
 extern Chassis_Info_Typedef chassis_info;
 extern uint8_t hand_state;
@@ -53,8 +52,8 @@ void CAN_Task(void)
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RB],Motor_Save_Zero_Position);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RF],Motor_Save_Zero_Position);
 
-	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J3],Motor_Save_Zero_Position);
 	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J4],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J5],Motor_Save_Zero_Position);
 	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J6],Motor_Save_Zero_Position);
 	static int robotic_arm_part = 0;
 	for(;;)
@@ -67,7 +66,7 @@ void CAN_Task(void)
         Elevator_set(chassis_info.activated_flag);
 
         osDelay(1);
-        USART_Vofa_Justfloat_Transmit(M2006_Gripper_Motor.Data.Angle, Robotic_Arm_Motor[J2].Data.Position, Robotic_Arm_Motor[J3].Data.Position);
+        //USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J3].Data.Feedforward, Robotic_Arm_Motor[J3].Data.Position, Robotic_Arm_Motor[J3].Data.Temp_Target_Position);
     }
 }
 
@@ -137,25 +136,13 @@ void Chassis_set(const bool activated)
 							 Chassis_Motor[LB].Data.Final_Output,
 							 Chassis_Motor[RB].Data.Final_Output,
 							 Chassis_Motor[RF].Data.Final_Output);
-		M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0,
-							 0, 0, 0);
+		if (hand_state == HAND_OPEN) {
+			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 1000, 0, 0, 0);
+		} else {
+			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -2500, 0, 0, 0);
+		}
 	} else {
 		M3508_motor_crt_ctrl(&hfdcan2, 0x200, 0, 0, 0, 0);
 		M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
 	}
-}
-
-static void DM_Motor_Mode_Set(const bool activated){
-	DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], activated ? Motor_Enable : Motor_Disable);
-	DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], activated ? Motor_Enable : Motor_Disable);
-	DM_Motor_Command(&FDCAN1_TxFrame, &Elevator_Motor[LF], activated ? Motor_Enable : Motor_Disable);
-	DM_Motor_Command(&FDCAN1_TxFrame, &Elevator_Motor[LB], activated ? Motor_Enable : Motor_Disable);
-	osDelay(1);
-	DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], activated ? Motor_Enable : Motor_Disable);
-	DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], activated ? Motor_Enable : Motor_Disable);
-	DM_Motor_Command(&FDCAN1_TxFrame, &Elevator_Motor[RB], activated ? Motor_Enable : Motor_Disable);
-	DM_Motor_Command(&FDCAN1_TxFrame, &Elevator_Motor[RF], activated ? Motor_Enable : Motor_Disable);
-	osDelay(1);
-	DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], activated ? Motor_Enable : Motor_Disable);
-	DM_Motor_Command(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], activated ? Motor_Enable : Motor_Disable);
 }
