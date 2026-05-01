@@ -83,7 +83,7 @@ void Detect_Task(void)
             INS_Info.Yaw_Angle,
             chassis_info.target_vw,
         };
-        USART_Vofa_SendFloat(key_debug_data, 5);
+        //USART_Vofa_SendFloat(key_debug_data, 5);
         /* ========================================================= */
 
         MiniPC_Data_Update_Last();

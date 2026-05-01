@@ -60,9 +60,12 @@ static Limiter_t* chassis_limiter_list[4] = {
 };
 static LimiterScheduler_t chassis_scheduler;
 
-// 置信度边界参数（需要根据实际测试调整）
-#define CHASSIS_E_UPPER  3000.0f   // 转速差总和上界
-#define CHASSIS_E_LOWER  500.0f    // 转速差总和下界
+/* 置信度边界参数: 让 K_coe 始终为 0, 强制按 predictPower 分配功率。
+ * 原因: 按 |speed_error| 分配会让"已超目标的内侧轮"分到最多功率(error 最大),
+ * 但内侧轮其实需要减速, 给功率反而推它继续加速 → 全速转向时差速反向。
+ * predictPower 隐含考虑了加速/减速方向, 是物理正确的分配依据。 */
+#define CHASSIS_E_UPPER  2000000.0f
+#define CHASSIS_E_LOWER  1000000.0f
 
 static float Chassis_PID_Param[PID_PARAMETER_NUM] = {CHASSIS_KP, CHASSIS_KI, CHASSIS_KD, CHASSIS_Alpha, CHASSIS_Deadband, CHASSIS_LimitIntegral, CHASSIS_LimitOutput};
 
@@ -275,7 +278,7 @@ static void chassis_auto_lifting_handler(void)
     chassis_lifting_handler();
 }
 
-#define POWER_CONTROL 0
+#define POWER_CONTROL 1
 static void Chassis_Motor_cal(const bool activated)
 {
     if (activated) {
@@ -305,11 +308,25 @@ static void Chassis_Motor_cal(const bool activated)
         PID_Calculate(&Chassis_PID[RF], Chassis_Motor[RF].Data.Ramped_Target_Velocity, Chassis_Motor[RF].Data.Velocity);
 
         // ========== Step 2: 计算原始输出（PID + 前馈） ==========
-        int16_t raw_output[4];
-        raw_output[LF] = Chassis_PID[LF].Output + Chassis_Motor[LF].Data.Ramped_Target_Velocity * CHASSIS_FF_SPEED_COEF;
-        raw_output[LB] = Chassis_PID[LB].Output + Chassis_Motor[LB].Data.Ramped_Target_Velocity * CHASSIS_FF_SPEED_COEF;
-        raw_output[RB] = Chassis_PID[RB].Output + Chassis_Motor[RB].Data.Ramped_Target_Velocity * CHASSIS_FF_SPEED_COEF;
-        raw_output[RF] = Chassis_PID[RF].Output + Chassis_Motor[RF].Data.Ramped_Target_Velocity * CHASSIS_FF_SPEED_COEF;
+        /* PID.Output ±15000 + 前馈 ±(6600*9)=±59400, 合计 ±74400, 远超 int16 ±32767。
+         * 必须用 int32 计算; 限幅时不能逐轮独立截断(会破坏差速比例导致高速转向反向),
+         * 而要找最大绝对值, 整组按比例缩到 M3508 电流环报文范围 ±16384. */
+        int32_t raw_output[4];
+        raw_output[LF] = (int32_t)(Chassis_PID[LF].Output + Chassis_Motor[LF].Data.Ramped_Target_Velocity * CHASSIS_FF_SPEED_COEF);
+        raw_output[LB] = (int32_t)(Chassis_PID[LB].Output + Chassis_Motor[LB].Data.Ramped_Target_Velocity * CHASSIS_FF_SPEED_COEF);
+        raw_output[RB] = (int32_t)(Chassis_PID[RB].Output + Chassis_Motor[RB].Data.Ramped_Target_Velocity * CHASSIS_FF_SPEED_COEF);
+        raw_output[RF] = (int32_t)(Chassis_PID[RF].Output + Chassis_Motor[RF].Data.Ramped_Target_Velocity * CHASSIS_FF_SPEED_COEF);
+
+        int32_t max_abs = 0;
+        for (uint8_t i = 0; i < 4; i++) {
+            int32_t abs_val = raw_output[i] >= 0 ? raw_output[i] : -raw_output[i];
+            if (abs_val > max_abs) max_abs = abs_val;
+        }
+        if (max_abs > 16384) {
+            for (uint8_t i = 0; i < 4; i++) {
+                raw_output[i] = raw_output[i] * 16384 / max_abs;
+            }
+        }
 
         // ========== Step 3: 功率控制 ==========
 
@@ -335,6 +352,17 @@ static void Chassis_Motor_cal(const bool activated)
         Chassis_Motor[LB].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[1], raw_output[LB]);
         Chassis_Motor[RB].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[2], raw_output[RB]);
         Chassis_Motor[RF].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[3], raw_output[RF]);
+        float output_data[8] = {
+            Chassis_Motor[LF].Data.Final_Output,
+            raw_output[LF],
+            Chassis_Motor[LB].Data.Final_Output,
+            raw_output[LB],
+            Chassis_Motor[RB].Data.Final_Output,
+            raw_output[RB],
+            Chassis_Motor[RF].Data.Final_Output,
+            raw_output[RF],
+        };
+        USART_Vofa_SendFloat(output_data, 8);
 #else
         Chassis_Motor[LF].Data.Final_Output = raw_output[LF];
         Chassis_Motor[LB].Data.Final_Output = raw_output[LB];

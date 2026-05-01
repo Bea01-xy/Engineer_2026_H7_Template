@@ -38,9 +38,9 @@
     if ((ch) <= RC_CH_DEADBAND && (ch) >= -RC_CH_DEADBAND) { (ch) = 0; } \
 } while (0U)
 
-#define MAX_CHASSIS_VX_SPEED 0.8f
-#define MAX_CHASSIS_VY_SPEED 0.8f
-#define MAX_CHASSIS_VW_SPEED 0.2f
+#define MAX_CHASSIS_VX_SPEED 1.8f
+#define MAX_CHASSIS_VY_SPEED 1.8f
+#define MAX_CHASSIS_VW_SPEED 1.5f
 
 #define RC_TO_VX  (MAX_CHASSIS_VX_SPEED/MAX_RC_CH_VALUE)
 #define RC_TO_VY  (MAX_CHASSIS_VY_SPEED/-MAX_RC_CH_VALUE)
@@ -57,17 +57,17 @@
 #define CHASSIS_KD 70.0f
 #define CHASSIS_Alpha 0.6f
 #define CHASSIS_Deadband 0.0f
-#define CHASSIS_LimitIntegral 40000.0f
-#define CHASSIS_LimitOutput 11000.0f
+#define CHASSIS_LimitIntegral 4000.0f
+#define CHASSIS_LimitOutput 15000.0f
 
 /* @brief Chassis Direction PID (Yaw Angle Loop) parameters */
-#define CHASSIS_DIRECTION_KP 0.05f
+#define CHASSIS_DIRECTION_KP 0.1f
 #define CHASSIS_DIRECTION_KI 0.0001f
-#define CHASSIS_DIRECTION_KD 10.0f
-#define CHASSIS_DIRECTION_Alpha 0.2f
+#define CHASSIS_DIRECTION_KD 5.0f
+#define CHASSIS_DIRECTION_Alpha 0.5f
 #define CHASSIS_DIRECTION_Deadband 0.0f
-#define CHASSIS_DIRECTION_LimitIntegral 1000.0f
-#define CHASSIS_DIRECTION_LimitOutput 1.2f
+#define CHASSIS_DIRECTION_LimitIntegral 2000.0f
+#define CHASSIS_DIRECTION_LimitOutput 3.0f
 /* ----------------------- RC Switch Definition----------------------------- */
 #define RC_SW_UP                ((uint16_t)1)
 #define RC_SW_MID               ((uint16_t)3)
