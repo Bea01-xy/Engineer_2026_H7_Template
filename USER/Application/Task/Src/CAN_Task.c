@@ -66,7 +66,7 @@ void CAN_Task(void)
         Elevator_set(chassis_info.activated_flag);
 
         osDelay(1);
-        //USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J3].Data.Feedforward, Robotic_Arm_Motor[J3].Data.Position, Robotic_Arm_Motor[J3].Data.Temp_Target_Position);
+        //USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J2].Data.Temp_Target_Position, Robotic_Arm_Motor[J3].Data.Temp_Target_Position, Robotic_Arm_Motor[J3].Data.Temp_Target_Position);
     }
 }
 

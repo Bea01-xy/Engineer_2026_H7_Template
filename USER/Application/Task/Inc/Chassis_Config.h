@@ -33,14 +33,14 @@
 #define MAX_RC_CH_VALUE 660.0f
 
 /** * @brief Remote control channel deadband) */
-#define RC_CH_DEADBAND 3
+#define RC_CH_DEADBAND 6
 #define RC_CH_APPLY_DEADBAND(ch) do { \
     if ((ch) <= RC_CH_DEADBAND && (ch) >= -RC_CH_DEADBAND) { (ch) = 0; } \
 } while (0U)
 
-#define MAX_CHASSIS_VX_SPEED 3.0f
-#define MAX_CHASSIS_VY_SPEED 3.0f
-#define MAX_CHASSIS_VW_SPEED 3.0f
+#define MAX_CHASSIS_VX_SPEED 0.8f
+#define MAX_CHASSIS_VY_SPEED 0.8f
+#define MAX_CHASSIS_VW_SPEED 0.2f
 
 #define RC_TO_VX  (MAX_CHASSIS_VX_SPEED/MAX_RC_CH_VALUE)
 #define RC_TO_VY  (MAX_CHASSIS_VY_SPEED/-MAX_RC_CH_VALUE)
@@ -48,27 +48,26 @@
 
 #define ROTATE_RATIO 0.6f
 #define WHEEL_RPM_RATIO 2200.0f
-#define CHASSIS_FF_SPEED_COEF 0.005f
-#define CHASSIS_FF_ACCEL_COEF 120.0f
+#define CHASSIS_FF_SPEED_COEF 9.0f
 
-#define CHASSIS_OUTPUT_LIMIT 15000.0f
-#define CHASSIS_I_OUT_LIMIT 300.0f
-#define CHASSIS_KP 15.0f
-#define CHASSIS_KI 0.1f
-#define CHASSIS_KD 0.04f
-#define CHASSIS_Alpha 0.5f
-#define CHASSIS_Deadband 2.0f
-#define CHASSIS_LimitIntegral 2000.0f
-#define CHASSIS_LimitOutput 15000.0f
+#define CHASSIS_TARGET_VELOCITY_RAMP 16.0f
+
+#define CHASSIS_KP 11.0f
+#define CHASSIS_KI 0.2f
+#define CHASSIS_KD 70.0f
+#define CHASSIS_Alpha 0.6f
+#define CHASSIS_Deadband 0.0f
+#define CHASSIS_LimitIntegral 40000.0f
+#define CHASSIS_LimitOutput 11000.0f
 
 /* @brief Chassis Direction PID (Yaw Angle Loop) parameters */
-#define CHASSIS_DIRECTION_KP 0.02f
-#define CHASSIS_DIRECTION_KI 0.007f
-#define CHASSIS_DIRECTION_KD 0.03f
+#define CHASSIS_DIRECTION_KP 0.05f
+#define CHASSIS_DIRECTION_KI 0.0001f
+#define CHASSIS_DIRECTION_KD 10.0f
 #define CHASSIS_DIRECTION_Alpha 0.2f
-#define CHASSIS_DIRECTION_Deadband 2.0f
-#define CHASSIS_DIRECTION_LimitIntegral 1.0f
-#define CHASSIS_DIRECTION_LimitOutput 2.0f
+#define CHASSIS_DIRECTION_Deadband 0.0f
+#define CHASSIS_DIRECTION_LimitIntegral 1000.0f
+#define CHASSIS_DIRECTION_LimitOutput 1.2f
 /* ----------------------- RC Switch Definition----------------------------- */
 #define RC_SW_UP                ((uint16_t)1)
 #define RC_SW_MID               ((uint16_t)3)
@@ -102,8 +101,6 @@ typedef enum
     LIFT_STAGE_2,
     LIFT_STAGE_3,
     LIFT_STAGE_4,
-    LIFT_STAGE_5,
-    LIFT_STAGE_6,
 } Chassis_LIFT_Mode_e;
 
 typedef struct
@@ -130,8 +127,8 @@ typedef struct
 #define MIT_NO_USE 0u
 #define LIFTING_TIME 1000u //ms
 #define ELEVATOR_KP 2.f
-#define ELEVATOR_FEEDFORWARD_FOR_LB_RF 1.37f
-#define ELEVATOR_FEEDFORWARD_FOR_LF_RB -1.37f
+#define ELEVATOR_FEEDFORWARD_FOR_LB_RF 1.67f
+#define ELEVATOR_FEEDFORWARD_FOR_LF_RB -1.67f
 
 #define ELEVATOR_USUAL_POS 0.f
 

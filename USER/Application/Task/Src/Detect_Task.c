@@ -50,8 +50,6 @@ PID_Info_TypeDef Chassis_Direction_PID;
 
 extern Referee_System_Info_TypeDef Referee_System_Info;
 
-#define KEYBOARD_CTL 0
-
 Hand_State_e hand_state = HAND_OPEN;
 TickType_t Detect_Task_SysTick = 0;
 /**
@@ -79,14 +77,13 @@ void Detect_Task(void)
         arm_ctrl_info_get();
 
         float key_debug_data[6] = {
-            MiniPC_Data.key_q,
-            MiniPC_Data.joint_data[1],
-            MiniPC_Data.joint_data[2],
-            MiniPC_Data.joint_data[3],
-            MiniPC_Data.joint_data[4],
-            MiniPC_Data.joint_data[5]
+            Chassis_Motor[LF].Data.Velocity,
+            Chassis_Motor[LF].Data.Ramped_Target_Velocity,
+            chassis_info.target_direction,
+            INS_Info.Yaw_Angle,
+            chassis_info.target_vw,
         };
-        USART_Vofa_SendFloat(key_debug_data, 6);
+        USART_Vofa_SendFloat(key_debug_data, 5);
         /* ========================================================= */
 
         MiniPC_Data_Update_Last();
@@ -95,20 +92,37 @@ void Detect_Task(void)
     /* USER CODE END Detect_Task */
 }
 
+#define KEYBOARD_CTL 0
 static void chassis_set_mode(Chassis_Info_Typedef* chassis)
 {
     if(chassis == NULL)
         return;
+
 #if KEYBOARD_CTL
     if(MiniPC_Data.key_r) HAL_NVIC_SystemReset();
-    if(MINIPC_KEY_RISING_EDGE(key_q))
-    {
+    chassis->last_mode = chassis->mode;
+    chassis->last_lift_mode = chassis->lift_mode;
+    if(MINIPC_KEY_RISING_EDGE(key_q)) {
         if (chassis->mode == CHASSIS_LIFT) {
-            chassis->last_mode = chassis->mode;
             chassis->mode = CHASSIS_DISABLE;
         } else {
-            chassis->last_mode = chassis->mode;
             chassis->mode = CHASSIS_LIFT;
+        }
+    }
+    if(MINIPC_KEY_RISING_EDGE(key_z)) {
+        if (chassis->lift_mode == LIFT_STAGE_3) {
+            chassis->lift_mode = LIFT_STAGE_1;
+        } else if (chassis->lift_mode == LIFT_STAGE_1) {
+            chassis->lift_mode = LIFT_STAGE_2;
+        } else if (chassis->lift_mode == LIFT_STAGE_2) {
+            chassis->lift_mode = LIFT_STAGE_3;
+        }
+    }
+    if(MINIPC_KEY_RISING_EDGE(key_1)) {
+        if (hand_state == HAND_OPEN) {
+            hand_state = HAND_CLOSE;
+        } else {
+            hand_state = HAND_OPEN;
         }
     }
 #else
@@ -143,8 +157,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
         chassis->last_lift_mode = chassis->lift_mode;
         chassis->mode = CHASSIS_LIFT;
         chassis->lift_mode = LIFT_STAGE_4;
-    }
-    else if (switch_is_up(s1)) {
+    } else if (switch_is_up(s1)) {
         chassis->last_mode = chassis->mode;
         chassis->last_lift_mode = chassis->lift_mode;
         chassis->mode = CHASSIS_LIFT;
@@ -168,27 +181,43 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
 static void chassis_ctrl_info_get(void)
 {
 #if KEYBOARD_CTL
-    chassis_info.target_vx = (float)MiniPC_Data.key_w * 3 - (float)MiniPC_Data.key_s * 3;
-    chassis_info.target_vy = (float)MiniPC_Data.key_a * 3 - (float)MiniPC_Data.key_d * 3;
-    chassis_info.target_vw = (float)MiniPC_Data.mouse_x * 0.1f;
-    Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
-    chassis_info.target_vw += Chassis_Direction_PID.Output;
+    chassis_info.target_vx = (float)MiniPC_Data.key_w * 2 - (float)MiniPC_Data.key_s * 2;
+    chassis_info.target_vy = (float)MiniPC_Data.key_a * 2 - (float)MiniPC_Data.key_d * 2;
+    if(chassis_info.mode == CHASSIS_LIFT){
+        chassis_info.target_vw = (float)MiniPC_Data.mouse_x * -1.04f;
 
-    chassis_info.target_direction += (float)MiniPC_Data.mouse_x * 0.1f * 0.058f;
-    chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
-#else
+        /* 用户主动旋转时禁用方向锁定, 让目标方向跟随当前 yaw, 避免松杆瞬间残留误差爆发 */
+        if (MiniPC_Data.mouse_x != 0) {
+            chassis_info.target_direction = INS_Info.Yaw_Angle;
+            Chassis_Direction_PID.PID_Calc_Clear(&Chassis_Direction_PID);
+        } else {
+            Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
+            chassis_info.target_vw += Chassis_Direction_PID.Output;
+        }
+
+        chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
+    }
+    #else
     RC_CH_APPLY_DEADBAND(remote_ctrl.rc.ch[0]);
     RC_CH_APPLY_DEADBAND(remote_ctrl.rc.ch[2]);
     RC_CH_APPLY_DEADBAND(remote_ctrl.rc.ch[3]);
 
-    chassis_info.target_vx = (float)remote_ctrl.rc.ch[3] * RC_TO_VX;
-    chassis_info.target_vy = (float)remote_ctrl.rc.ch[2] * RC_TO_VY;
-    chassis_info.target_vw = (float)remote_ctrl.rc.ch[0] * RC_TO_VW * 0.8f;
-    Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
-    chassis_info.target_vw += Chassis_Direction_PID.Output;
+    if(chassis_info.mode == CHASSIS_LIFT){
+        chassis_info.target_vx = (float)remote_ctrl.rc.ch[3] * RC_TO_VX;
+        chassis_info.target_vy = (float)remote_ctrl.rc.ch[2] * RC_TO_VY;
+        chassis_info.target_vw = (float)remote_ctrl.rc.ch[0] * RC_TO_VW;
 
-    chassis_info.target_direction += remote_ctrl.rc.ch[0] * RC_TO_VW * 0.058f; //integrate to get direction
-    chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
+        /* 用户主动旋转时禁用方向锁定, 让目标方向跟随当前 yaw, 避免松杆瞬间残留误差爆发 */
+        if (remote_ctrl.rc.ch[0] != 0) {
+            chassis_info.target_direction = INS_Info.Yaw_Angle;
+            Chassis_Direction_PID.PID_Calc_Clear(&Chassis_Direction_PID);
+        } else {
+            Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
+            chassis_info.target_vw += Chassis_Direction_PID.Output;
+        }
+
+        chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
+    }
 #endif
 }
 
@@ -233,96 +262,3 @@ static void arm_ctrl_info_get(void)
     Robotic_Arm_Motor[J5].Data.Target_Position = MiniPC_Data.joint_data[J5];
     Robotic_Arm_Motor[J6].Data.Target_Position = -MiniPC_Data.joint_data[J6];
 }
-
-/**
-  * @brief  获取裁判系统数据示例（从全局 Referee_System_Info 读取）
-  * @note   裁判系统数据由 UART 中断自动解析更新，此处直接读取即可
-  * @retval None
-  */
-__attribute__((unused)) static void referee_data_usage_example(void)
-{
-    /* 获取机器人状态 (0x0201) */
-    uint8_t robot_id = Referee_System_Info.robot_status.robot_id;
-    uint16_t current_hp = Referee_System_Info.robot_status.current_HP;
-    uint16_t max_hp = Referee_System_Info.robot_status.maximum_HP;
-    uint16_t chassis_power_limit = Referee_System_Info.robot_status.chassis_power_limit;
-
-    /* 获取功率热量数据 (0x0202) - 用于功率控制 */
-    uint16_t buffer_energy = Referee_System_Info.power_heat_data.buffer_energy;
-    uint16_t shooter_heat = Referee_System_Info.power_heat_data.shooter_17mm_1_barrel_heat;
-
-    /* 获取增益数据 (0x0204) - V1.3.0 协议已修正解析 */
-    uint16_t cooling_buff = Referee_System_Info.buff.cooling_buff;  /* 热量冷却增益 (直接值) */
-    uint16_t attack_buff = Referee_System_Info.buff.attack_buff;      /* 攻击增益 (百分比) */
-    uint8_t remaining_energy = Referee_System_Info.buff.remaining_energy; /* 能量状态位 */
-
-    /* 获取弹丸剩余量 (0x0208) - V1.3.0 协议已新增 fortress 字段 */
-    uint16_t allowance_17mm = Referee_System_Info.projectile_allowance.projectile_allowance_17mm;
-    uint16_t fortress_allowance = Referee_System_Info.projectile_allowance.projectile_allowance_fortress; /* NEW V1.3.0 */
-
-    /* 获取比赛状态 (0x0001) */
-    uint8_t game_progress = Referee_System_Info.game_status.game_progress;
-    uint16_t stage_remain_time = Referee_System_Info.game_status.stage_remain_time;
-
-    /* 抑制未使用变量警告 */
-    (void)robot_id; (void)current_hp; (void)max_hp; (void)chassis_power_limit;
-    (void)buffer_energy; (void)shooter_heat;
-    (void)cooling_buff; (void)attack_buff; (void)remaining_energy;
-    (void)allowance_17mm; (void)fortress_allowance;
-    (void)game_progress; (void)stage_remain_time;
-
-    /* 示例：血量过低预警（可通过VOFA或LED提示）
-     * if (current_hp < max_hp * 0.2f) {
-     *     // 低血量警告
-     * }
-     */
-
-    /* 示例：功率限制计算
-     * float power_limit_ratio = chassis_power_limit / 150.0f; // 归一化到最大值
-     */
-
-    /* 示例：发送裁判系统数据到VOFA调试（可选）
-     * float debug_data[3] = {(float)current_hp, (float)buffer_energy, (float)shooter_heat};
-     * USART_Vofa_SendFloat(debug_data, 3);
-     */
-}
-
-/**
-  * @brief  扩展裁判系统VOFA调试函数 - 可自定义发送更多数据
-  * @note   调用此函数发送扩展的裁判系统信息到VOFA
-  *         使用 JustFloat 协议，帧尾自动添加 (0x00 0x00 0x80 0x7F)
-  * @retval None
-  */
-__attribute__((unused)) static void referee_data_vofa_debug_extended(void)
-{
-    /* 方案1: 发送比赛状态 + 机器人状态 (5个float) */
-    float debug_packet_1[5] = {
-        (float)Referee_System_Info.game_status.game_progress,     /* 比赛阶段 0-5 */
-        (float)Referee_System_Info.game_status.stage_remain_time, /* 剩余时间(秒) */
-        (float)Referee_System_Info.robot_status.robot_id,         /* 机器人ID */
-        (float)Referee_System_Info.robot_status.current_HP,       /* 当前血量 */
-        (float)Referee_System_Info.robot_status.maximum_HP        /* 最大血量 */
-    };
-    USART_Vofa_SendFloat_Block(debug_packet_1, 5);
-
-    /* 方案2: 发送功率系统详细数据 (6个float) */
-    float debug_packet_2[6] = {
-        (float)Referee_System_Info.robot_status.chassis_power_limit,           /* 功率限制 */
-        (float)Referee_System_Info.power_heat_data.buffer_energy,              /* 缓冲能量 */
-        (float)Referee_System_Info.power_heat_data.shooter_17mm_1_barrel_heat, /* 17mm热量1 */
-        (float)Referee_System_Info.power_heat_data.shooter_17mm_2_barrel_heat, /* 17mm热量2 */
-        (float)Referee_System_Info.power_heat_data.shooter_42mm_barrel_heat,   /* 42mm热量 */
-        (float)Referee_System_Info.buff.cooling_buff                            /* 冷却增益 */
-    };
-    USART_Vofa_SendFloat_Block(debug_packet_2, 6);
-
-    /* 方案3: 发送弹丸信息 - V1.3.0新增堡垒储备弹量 (4个float) */
-    float debug_packet_3[4] = {
-        (float)Referee_System_Info.projectile_allowance.projectile_allowance_17mm,     /* 17mm允许发弹量 */
-        (float)Referee_System_Info.projectile_allowance.projectile_allowance_42mm,     /* 42mm允许发弹量 */
-        (float)Referee_System_Info.projectile_allowance.remaining_gold_coin,             /* 剩余金币 */
-        (float)Referee_System_Info.projectile_allowance.projectile_allowance_fortress   /* 堡垒储备弹量 - NEW V1.3.0 */
-    };
-    USART_Vofa_SendFloat_Block(debug_packet_3, 4);
-}
-

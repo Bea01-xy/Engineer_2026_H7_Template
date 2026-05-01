@@ -177,12 +177,6 @@ void MiniPC_Receive_Info(void)
     MiniPC_Data.key_2       = pbuf[idx++];
 }
 
-/**
-  * @brief  将当前 MiniPC_Data 拷贝到 MiniPC_Data_Last
-  * @note   应在每个任务循环末尾调用一次，配合 MINIPC_KEY_RISING_EDGE /
-  *         MINIPC_KEY_FALLING_EDGE / MINIPC_KEY_CHANGED 等宏完成边沿检测
-  * @retval None
-  */
 void MiniPC_Data_Update_Last(void)
 {
     MiniPC_Data_Last = MiniPC_Data;

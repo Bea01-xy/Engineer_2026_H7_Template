@@ -19,6 +19,7 @@
 #include "Remote_Control.h"
 #include "PID.h"
 #include "Motor.h"
+#include "Ramp.h"
 #include "arm_math.h"
 #include "Chassis_Config.h"
 #include "INS_Task.h"
@@ -35,7 +36,7 @@ static void chassis_lifting_handler(void);
 static void chassis_auto_lifting_handler(void);
 static void chassis_disabled_handler(void);
 
-static void Chassis_Motor_cal(bool acticated);
+static void Chassis_Motor_cal(bool activated);
 static void Elevator_Motor_cal(void);
 static void Robotic_Arm_Motor_cal(void);
 
@@ -150,8 +151,8 @@ static void Control_Init(void)
     chassis_info.activated_flag = false;
     chassis_info.mode = CHASSIS_DISABLE;
     chassis_info.last_mode = CHASSIS_DISABLE;
-    chassis_info.lift_mode = LIFT_STAGE_1;
-    chassis_info.last_lift_mode = LIFT_STAGE_1;
+    chassis_info.lift_mode = LIFT_STAGE_3;
+    chassis_info.last_lift_mode = LIFT_STAGE_3;
     chassis_info.target_direction = 0;
 
     Elevator_Motor[LF].Data.Feedforward = 0;
@@ -222,6 +223,12 @@ static void chassis_disabled_handler(void)
     Chassis_Motor[RB].Data.Final_Output = 0u;
     Chassis_Motor[RF].Data.Final_Output = 0u;
 
+    /* 失能时复位斜坡状态, 防止重新使能瞬间从历史值跳出 */
+    Chassis_Motor[LF].Data.Ramped_Target_Velocity = 0.0f;
+    Chassis_Motor[LB].Data.Ramped_Target_Velocity = 0.0f;
+    Chassis_Motor[RB].Data.Ramped_Target_Velocity = 0.0f;
+    Chassis_Motor[RF].Data.Ramped_Target_Velocity = 0.0f;
+
     /* 关节失能时清空前馈 PID, 防止积分饱和与残留前馈输出 */
     for (uint8_t i = 0; i < ROBOTIC_ARM_DOF; i++) {
         Robotic_Arm_FF_PID[i].PID_Calc_Clear(&Robotic_Arm_FF_PID[i]);
@@ -268,28 +275,47 @@ static void chassis_auto_lifting_handler(void)
     chassis_lifting_handler();
 }
 
-#define POWER_CONTROL 1
-static void Chassis_Motor_cal(const bool acticated)
+#define POWER_CONTROL 0
+static void Chassis_Motor_cal(const bool activated)
 {
-    if (acticated) {
-        // ========== Step 1: PID计算 ==========
-        PID_Calculate(&Chassis_PID[LF], Chassis_Motor[LF].Data.Target_Velocity, Chassis_Motor[LF].Data.Velocity);
-        PID_Calculate(&Chassis_PID[LB], Chassis_Motor[LB].Data.Target_Velocity, Chassis_Motor[LB].Data.Velocity);
-        PID_Calculate(&Chassis_PID[RB], Chassis_Motor[RB].Data.Target_Velocity, Chassis_Motor[RB].Data.Velocity);
-        PID_Calculate(&Chassis_PID[RF], Chassis_Motor[RF].Data.Target_Velocity, Chassis_Motor[RF].Data.Velocity);
+    if (activated) {
+        // ========== Step 0: 目标速度斜坡限幅 ==========
+        /* 每个 1ms 周期, 让 Ramped_Target_Velocity 朝原始 Target_Velocity 走至多
+         * CHASSIS_TARGET_VELOCITY_RAMP rpm, 避免目标
+        float key_debug_data[6] = {
+            Robotic_Arm_Motor[J1].Data.Position,
+            Robotic_Arm_Motor[J2].Data.Position,
+            Robotic_Arm_Motor[J3].Data.Position,
+            Robotic_Arm_Motor[J4].Data.Position,
+            Robotic_Arm_Motor[J5].Data.Position,
+            Robotic_Arm_Motor[J6].Data.Position,
+        };
+        USART_Vofa_SendFloat(key_debug_data, 6);值阶跃造成大电流冲击 */
+        for (uint8_t i = 0; i < 4; i++) {
+            Chassis_Motor[i].Data.Ramped_Target_Velocity = f_Ramp_Calc(
+                Chassis_Motor[i].Data.Ramped_Target_Velocity,
+                Chassis_Motor[i].Data.Target_Velocity,
+                CHASSIS_TARGET_VELOCITY_RAMP);
+        }
+
+        // ========== Step 1: PID计算 (使用斜坡后的目标速度) ==========
+        PID_Calculate(&Chassis_PID[LF], Chassis_Motor[LF].Data.Ramped_Target_Velocity, Chassis_Motor[LF].Data.Velocity);
+        PID_Calculate(&Chassis_PID[LB], Chassis_Motor[LB].Data.Ramped_Target_Velocity, Chassis_Motor[LB].Data.Velocity);
+        PID_Calculate(&Chassis_PID[RB], Chassis_Motor[RB].Data.Ramped_Target_Velocity, Chassis_Motor[RB].Data.Velocity);
+        PID_Calculate(&Chassis_PID[RF], Chassis_Motor[RF].Data.Ramped_Target_Velocity, Chassis_Motor[RF].Data.Velocity);
 
         // ========== Step 2: 计算原始输出（PID + 前馈） ==========
         int16_t raw_output[4];
-        raw_output[LF] = Chassis_PID[LF].Output + Chassis_Motor[LF].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
-        raw_output[LB] = Chassis_PID[LB].Output + Chassis_Motor[LB].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
-        raw_output[RB] = Chassis_PID[RB].Output + Chassis_Motor[RB].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
-        raw_output[RF] = Chassis_PID[RF].Output + Chassis_Motor[RF].Data.Target_Velocity * CHASSIS_FF_SPEED_COEF;
+        raw_output[LF] = Chassis_PID[LF].Output + Chassis_Motor[LF].Data.Ramped_Target_Velocity * CHASSIS_FF_SPEED_COEF;
+        raw_output[LB] = Chassis_PID[LB].Output + Chassis_Motor[LB].Data.Ramped_Target_Velocity * CHASSIS_FF_SPEED_COEF;
+        raw_output[RB] = Chassis_PID[RB].Output + Chassis_Motor[RB].Data.Ramped_Target_Velocity * CHASSIS_FF_SPEED_COEF;
+        raw_output[RF] = Chassis_PID[RF].Output + Chassis_Motor[RF].Data.Ramped_Target_Velocity * CHASSIS_FF_SPEED_COEF;
 
         // ========== Step 3: 功率控制 ==========
 
         // 3.1 更新每个电机的功率限制器数据
         for(int i = 0; i < 4; i++) {
-            fp32 speed_error = Chassis_Motor[i].Data.Target_Velocity - Chassis_Motor[i].Data.Velocity;
+            fp32 speed_error = Chassis_Motor[i].Data.Ramped_Target_Velocity - Chassis_Motor[i].Data.Velocity;
             powerLimiterUpdate(&chassis_power_limiter[i],
                               Chassis_Motor[i].Data.Velocity,
                               raw_output[i],
@@ -414,28 +440,6 @@ static void Elevator_set_feedforward_and_pos(void)
             Elevator_Motor[LB].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LB_RF;
             Elevator_Motor[RB].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LF_RB;
             Elevator_Motor[RF].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LB_RF;
-            break;
-        case LIFT_STAGE_5:
-            Elevator_Motor[LF].Data.Target_Position = ELEVATOR_USUAL_POS;
-            Elevator_Motor[LB].Data.Target_Position = ELEVATOR_LB_2nd_ACTIVATED_POS;
-            Elevator_Motor[RB].Data.Target_Position = ELEVATOR_RB_2nd_ACTIVATED_POS;
-            Elevator_Motor[RF].Data.Target_Position = ELEVATOR_USUAL_POS;
-
-            Elevator_Motor[LF].Data.Feedforward = 0.f;
-            Elevator_Motor[LB].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LB_RF;
-            Elevator_Motor[RB].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LF_RB;
-            Elevator_Motor[RF].Data.Feedforward = 0.f;
-            break;
-        case LIFT_STAGE_6:
-            Elevator_Motor[LF].Data.Target_Position = ELEVATOR_USUAL_POS;
-            Elevator_Motor[LB].Data.Target_Position = ELEVATOR_USUAL_POS;
-            Elevator_Motor[RB].Data.Target_Position = ELEVATOR_USUAL_POS;
-            Elevator_Motor[RF].Data.Target_Position = ELEVATOR_USUAL_POS;
-
-            Elevator_Motor[LF].Data.Feedforward = 0.f;
-            Elevator_Motor[LB].Data.Feedforward = 0.f;
-            Elevator_Motor[RB].Data.Feedforward = 0.f;
-            Elevator_Motor[RF].Data.Feedforward = 0.f;
             break;
         default:
             break;

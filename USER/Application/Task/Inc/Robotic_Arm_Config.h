@@ -20,7 +20,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stdint.h"
 #include "stdbool.h"
-#include "math.h"
 
 /* Exported constants --------------------------------------------------------*/
 #define ROBOTIC_ARM_DOF 6u
@@ -94,12 +93,12 @@ typedef enum
 #define ROBOTIC_ARM_FF_A_LimitOutput     9.0f       /* N·m */
 
 /* ---------- Group B: J4 / J5 / J6 ---------- */
-#define ROBOTIC_ARM_FF_B_KP              0.15f
-#define ROBOTIC_ARM_FF_B_KI              0.01f
-#define ROBOTIC_ARM_FF_B_KD              0.0f
+#define ROBOTIC_ARM_FF_B_KP              0.4f
+#define ROBOTIC_ARM_FF_B_KI              0.02f
+#define ROBOTIC_ARM_FF_B_KD              0.3f
 #define ROBOTIC_ARM_FF_B_Alpha           0.5f
 #define ROBOTIC_ARM_FF_B_Deadband        0.02f      /* rad, 约 1.15° */
-#define ROBOTIC_ARM_FF_B_LimitIntegral   50.0f      /* 单位: rad·tick (累加误差) */
+#define ROBOTIC_ARM_FF_B_LimitIntegral   100.0f      /* 单位: rad·tick (累加误差) */
 #define ROBOTIC_ARM_FF_B_LimitOutput     1.5f       /* N·m */
 
 #endif /* ROBOTIC_ARM_CONFIG_H */
