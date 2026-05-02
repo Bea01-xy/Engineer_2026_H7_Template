@@ -84,7 +84,7 @@ typedef enum
  * -------------------------------------------------------------------------- */
 
 /* ---------- Group A: J1 / J2 / J3 ---------- */
-#define ROBOTIC_ARM_FF_A_KP              0.15f
+#define ROBOTIC_ARM_FF_A_KP              0.25f
 #define ROBOTIC_ARM_FF_A_KI              0.01f
 #define ROBOTIC_ARM_FF_A_KD              1.7f
 #define ROBOTIC_ARM_FF_A_Alpha           0.5f
@@ -93,13 +93,13 @@ typedef enum
 #define ROBOTIC_ARM_FF_A_LimitOutput     9.0f       /* N·m */
 
 /* ---------- Group B: J4 / J5 / J6 ---------- */
-#define ROBOTIC_ARM_FF_B_KP              0.4f
-#define ROBOTIC_ARM_FF_B_KI              0.02f
-#define ROBOTIC_ARM_FF_B_KD              0.3f
+#define ROBOTIC_ARM_FF_B_KP              1.4f
+#define ROBOTIC_ARM_FF_B_KI              0.04f
+#define ROBOTIC_ARM_FF_B_KD              1.3f
 #define ROBOTIC_ARM_FF_B_Alpha           0.5f
 #define ROBOTIC_ARM_FF_B_Deadband        0.02f      /* rad, 约 1.15° */
 #define ROBOTIC_ARM_FF_B_LimitIntegral   100.0f      /* 单位: rad·tick (累加误差) */
-#define ROBOTIC_ARM_FF_B_LimitOutput     1.5f       /* N·m */
+#define ROBOTIC_ARM_FF_B_LimitOutput     2.5f       /* N·m */
 
 #endif /* ROBOTIC_ARM_CONFIG_H */
 

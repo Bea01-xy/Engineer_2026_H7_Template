@@ -77,13 +77,19 @@ void Detect_Task(void)
         arm_ctrl_info_get();
 
         float key_debug_data[6] = {
-            Chassis_Motor[LF].Data.Velocity,
-            Chassis_Motor[LF].Data.Ramped_Target_Velocity,
-            chassis_info.target_direction,
-            INS_Info.Yaw_Angle,
-            chassis_info.target_vw,
+            //Chassis_Motor[LF].Data.Velocity,
+            //Chassis_Motor[LF].Data.Ramped_Target_Velocity,
+            //chassis_info.target_direction,
+            //INS_Info.Yaw_Angle,
+            //chassis_info.target_vw,
+            Robotic_Arm_Motor[J1].Data.Position,
+            Robotic_Arm_Motor[J2].Data.Position,
+            Robotic_Arm_Motor[J3].Data.Position,
+            Robotic_Arm_Motor[J4].Data.Position,
+            Robotic_Arm_Motor[J5].Data.Position,
+            Robotic_Arm_Motor[J6].Data.Position,
         };
-        //USART_Vofa_SendFloat(key_debug_data, 5);
+        USART_Vofa_SendFloat(key_debug_data, 6);
         /* ========================================================= */
 
         MiniPC_Data_Update_Last();
@@ -92,7 +98,7 @@ void Detect_Task(void)
     /* USER CODE END Detect_Task */
 }
 
-#define KEYBOARD_CTL 0
+#define KEYBOARD_CTL 1
 static void chassis_set_mode(Chassis_Info_Typedef* chassis)
 {
     if(chassis == NULL)
@@ -111,10 +117,10 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
     }
     if(MINIPC_KEY_RISING_EDGE(key_z)) {
         if (chassis->lift_mode == LIFT_STAGE_3) {
+            chassis->lift_mode = LIFT_STAGE_5;
+        } else if (chassis->lift_mode == LIFT_STAGE_5) {
             chassis->lift_mode = LIFT_STAGE_1;
         } else if (chassis->lift_mode == LIFT_STAGE_1) {
-            chassis->lift_mode = LIFT_STAGE_2;
-        } else if (chassis->lift_mode == LIFT_STAGE_2) {
             chassis->lift_mode = LIFT_STAGE_3;
         }
     }
@@ -180,11 +186,11 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
 
 static void chassis_ctrl_info_get(void)
 {
-#if KEYBOARD_CTL
-    chassis_info.target_vx = (float)MiniPC_Data.key_w * 2 - (float)MiniPC_Data.key_s * 2;
-    chassis_info.target_vy = (float)MiniPC_Data.key_a * 2 - (float)MiniPC_Data.key_d * 2;
+    #if KEYBOARD_CTL
     if(chassis_info.mode == CHASSIS_LIFT){
-        chassis_info.target_vw = (float)MiniPC_Data.mouse_x * -1.04f;
+        chassis_info.target_vx = (float)MiniPC_Data.key_w * 1.6f - (float)MiniPC_Data.key_s * 1.6f;
+        chassis_info.target_vy = (float)MiniPC_Data.key_a * 1.6f - (float)MiniPC_Data.key_d * 1.6f;
+        chassis_info.target_vw = (float)MiniPC_Data.mouse_x * -0.01f;
 
         /* 用户主动旋转时禁用方向锁定, 让目标方向跟随当前 yaw, 避免松杆瞬间残留误差爆发 */
         if (MiniPC_Data.mouse_x != 0) {

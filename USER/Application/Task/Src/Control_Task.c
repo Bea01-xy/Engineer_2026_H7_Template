@@ -352,17 +352,6 @@ static void Chassis_Motor_cal(const bool activated)
         Chassis_Motor[LB].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[1], raw_output[LB]);
         Chassis_Motor[RB].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[2], raw_output[RB]);
         Chassis_Motor[RF].Data.Final_Output = powerGetLimiterUpdate(&chassis_power_limiter[3], raw_output[RF]);
-        float output_data[8] = {
-            Chassis_Motor[LF].Data.Final_Output,
-            raw_output[LF],
-            Chassis_Motor[LB].Data.Final_Output,
-            raw_output[LB],
-            Chassis_Motor[RB].Data.Final_Output,
-            raw_output[RB],
-            Chassis_Motor[RF].Data.Final_Output,
-            raw_output[RF],
-        };
-        USART_Vofa_SendFloat(output_data, 8);
 #else
         Chassis_Motor[LF].Data.Final_Output = raw_output[LF];
         Chassis_Motor[LB].Data.Final_Output = raw_output[LB];
@@ -463,6 +452,17 @@ static void Elevator_set_feedforward_and_pos(void)
             Elevator_Motor[LB].Data.Target_Position = ELEVATOR_LB_2nd_ACTIVATED_POS;
             Elevator_Motor[RB].Data.Target_Position = ELEVATOR_RB_2nd_ACTIVATED_POS;
             Elevator_Motor[RF].Data.Target_Position = ELEVATOR_RF_2nd_ACTIVATED_POS;
+
+            Elevator_Motor[LF].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LF_RB;
+            Elevator_Motor[LB].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LB_RF;
+            Elevator_Motor[RB].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LF_RB;
+            Elevator_Motor[RF].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LB_RF;
+            break;
+        case LIFT_STAGE_5:
+            Elevator_Motor[LF].Data.Target_Position = ELEVATOR_LF_3rd_ACTIVATED_POS;
+            Elevator_Motor[LB].Data.Target_Position = ELEVATOR_LB_3rd_ACTIVATED_POS;
+            Elevator_Motor[RB].Data.Target_Position = ELEVATOR_RB_3rd_ACTIVATED_POS;
+            Elevator_Motor[RF].Data.Target_Position = ELEVATOR_RF_3rd_ACTIVATED_POS;
 
             Elevator_Motor[LF].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LF_RB;
             Elevator_Motor[LB].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LB_RF;
