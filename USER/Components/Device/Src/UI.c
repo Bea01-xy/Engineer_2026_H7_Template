@@ -3,12 +3,12 @@
   ******************************************************************************
   * @file           : UI.c
   * @brief          : 选手端图传画面 UI 绘制 (RoboMaster 2026 协议 V1.3.0)
-  *                   通过 USART1 向裁判系统发送一个矩形, 走 0x0301/0x0101 链路
+  *                   矩形 + 两条横线 (0x0103) + 居中字符串 (0x0110)
   * @author         : sanyue (适配: Engineer_2026_H7_Template)
   * @date           : 2026/04/26
   * @version        : v1.0
   ******************************************************************************
-  * @attention      : 仅保留绘制单个矩形的最简功能
+  * @attention      : 后两个图形槽位填「空操作」以满足 0x0103 五槽位长度
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -31,9 +31,8 @@ extern Referee_System_Info_TypeDef Referee_System_Info;
 /*********************************************************************************************************
 *                                              内部变量
 *********************************************************************************************************/
-/* DMA 发送缓存 (放到 AXI_SRAM, 与项目其它 DMA 缓存保持一致) */
-__attribute__((section(".AXI_SRAM"))) static uint8_t ClientTxBuffer[sizeof(ext_graphic_one_data_t)];
-static uint8_t ui_seq = 0;  /* 包序号 */
+__attribute__((section(".AXI_SRAM"))) static uint8_t ClientTxBuffer[sizeof(ext_graphic_five_data_t)];
+static uint8_t ui_seq = 0;
 
 /*********************************************************************************************************
 *                                              内部函数声明
@@ -47,51 +46,55 @@ static void     EncodeGraphic15(uint8_t g[15],
                                 Graphic_Color_e   color,
                                 uint16_t width,
                                 uint16_t start_x, uint16_t start_y,
+                                uint16_t details_a,
+                                uint16_t details_b,
                                 uint16_t details_c,
                                 uint16_t details_d, uint16_t details_e);
-static void     UI_Pack_And_Send(Graphic_Operate_e op);
+static void     UI_Pack_And_Send_Shapes(Graphic_Operate_e op);
+static void     UI_Pack_And_Send_Char(Graphic_Operate_e op);
 
 /*********************************************************************************************************
 *                                              对外调用入口
 *********************************************************************************************************/
 
 /**
-  * @brief  挂在 1ms 周期任务里 (如 Detect_Task), 内部自动节流 + 自动首发
-  *         约每 100ms 发一帧, 开机前 5 帧用 UI_ADD 创建图形, 之后用 UI_MODIFY 刷新
+  * @brief  1ms 任务中调用；约 100ms 一发。前 5 帧 ADD 几何，再 5 帧 ADD 字符，之后交替 MODIFY。
   */
 void UI_Tick(void)
 {
     static uint16_t tick_cnt = 0;
     static uint8_t  init_cnt = 0;
+    static uint8_t  tx_sel    = 0;
 
-    /* 100ms 节流 (假定每 1ms 调用一次) */
     if (++tick_cnt < 100) {
         return;
     }
     tick_cnt = 0;
 
-    /* 未收到 0x0201 机器人状态前 robot_id 为 0，此时发 UI 会落到默认客户端 ID，应等裁判机上报 */
     if (Referee_System_Info.robot_status.robot_id == 0) {
         return;
     }
 
     if (init_cnt < 5) {
-        UI_Pack_And_Send(UI_ADD);
+        UI_Pack_And_Send_Shapes(UI_ADD);
+        init_cnt++;
+    } else if (init_cnt < 10) {
+        UI_Pack_And_Send_Char(UI_ADD);
         init_cnt++;
     } else {
-        UI_Pack_And_Send(UI_MODIFY);
+        if ((tx_sel & 1U) != 0U) {
+            UI_Pack_And_Send_Char(UI_MODIFY);
+        } else {
+            UI_Pack_And_Send_Shapes(UI_MODIFY);
+        }
+        tx_sel ^= 1U;
     }
 }
 
 /*********************************************************************************************************
-*                                              ui绘制 / 发送函数
+*                                              ui绘制 / 发送
 *********************************************************************************************************/
 
-/**
-  * @brief 根据本机器人 ID 推算对应选手端 ID (协议附录二)
-  *        红方: 1~6 -> 0x0101~0x0106
-  *        蓝方: 101~106 -> 0x0165~0x016A
-  */
 static uint16_t Get_Self_Client_ID(uint8_t robot_id)
 {
     if (robot_id >= 1 && robot_id <= 6) {
@@ -99,26 +102,24 @@ static uint16_t Get_Self_Client_ID(uint8_t robot_id)
     } else if (robot_id >= 101 && robot_id <= 106) {
         return (uint16_t)(0x0164 + (robot_id - 100));
     }
-    /* 未知 ID 缺省按 红方工程 (engineer = 2 -> 0x0102) */
     return 0x0102;
 }
 
-/**
-  * @brief 表 2-23：15 字节图形数据，按小端 uint32 三词手工打包（与协议 interaction_figure_t 一致）
-  */
 static void EncodeGraphic15(uint8_t g[15],
-                              const uint8_t  name[3],
-                              Graphic_Operate_e op,
-                              Graphic_Type_e    type,
-                              Graphic_Layer_e   layer,
-                              Graphic_Color_e   color,
-                              uint16_t width,
-                              uint16_t start_x, uint16_t start_y,
-                              uint16_t details_c,
-                              uint16_t details_d, uint16_t details_e)
+                            const uint8_t  name[3],
+                            Graphic_Operate_e op,
+                            Graphic_Type_e    type,
+                            Graphic_Layer_e   layer,
+                            Graphic_Color_e   color,
+                            uint16_t width,
+                            uint16_t start_x, uint16_t start_y,
+                            uint16_t details_a,
+                            uint16_t details_b,
+                            uint16_t details_c,
+                            uint16_t details_d, uint16_t details_e)
 {
-    const uint32_t da = 0U;
-    const uint32_t db = 0U;
+    const uint32_t da = (uint32_t)(details_a & 0x1FFU);
+    const uint32_t db = (uint32_t)(details_b & 0x1FFU);
     memcpy(g, name, 3);
 
     const uint32_t w0 = ((uint32_t)(op & 7U))
@@ -141,52 +142,103 @@ static void EncodeGraphic15(uint8_t g[15],
     memcpy(&g[11], &w2, sizeof(w2));
 }
 
-/**
-  * @brief 组装一帧 0x0301/0x0101 数据并通过 USART1 DMA 发送
-  *        op = UI_ADD 用于首次创建, UI_MODIFY 用于后续刷新
-  */
-static void UI_Pack_And_Send(Graphic_Operate_e op)
+/** 空槽位：操作类型为「空操作」，占满 0x0103 后两格 */
+static void EncodeGraphic15_Nop(uint8_t g[15], const uint8_t name[3])
 {
-    ext_graphic_one_data_t pkt;
+    EncodeGraphic15(g, name, UI_NONE, UI_LINE, UI_LAYER_0, UI_SELF_COLOR,
+                    0, 0, 0, 0, 0, 0, 0, 0);
+}
 
-    /* 上一帧 USART1 TX DMA 未完成则跳过，避免 HAL_BUSY / 冲缓存 */
+static void UI_Pack_And_Send_Shapes(Graphic_Operate_e op)
+{
+    ext_graphic_five_data_t pkt;
+
     if (HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX) {
         return;
     }
 
-    /* 1) 帧头 */
     pkt.frame_header.SOF         = REFEREE_HEADER_SOF;
-    pkt.frame_header.data_length = UI_LEN_REFEREE_DATA_AFTER_CMD_ID;
+    pkt.frame_header.data_length = UI_LEN_REFEREE_DATA_FIVE;
     pkt.frame_header.seq         = ui_seq++;
-    pkt.frame_header.CRC8        = 0;     /* 占位, 后面统一计算 */
+    pkt.frame_header.CRC8        = 0;
 
-    /* 2) cmd_id = 0x0301 */
     pkt.cmd_id = REFEREE_CMD_ID_INTERACT;
-
-    /* 3) 数据段头 */
-    pkt.interact_header.data_cmd_id = UI_INTERACT_ID_DRAW_ONE;
+    pkt.interact_header.data_cmd_id = UI_INTERACT_ID_DRAW_FIVE;
     pkt.interact_header.sender_id   = Referee_System_Info.robot_status.robot_id;
     pkt.interact_header.receiver_id = Get_Self_Client_ID(Referee_System_Info.robot_status.robot_id);
 
-    /* 4) 图形内容: 矩形 ("RC1")，对角顶点见表 2-23「矩形」行 */
-    const uint8_t name[3] = {'R', 'C', '1'};
-    EncodeGraphic15(pkt.graphic, name, op, UI_RECTANGLE, UI_LAYER_0, UI_SELF_COLOR,
-                    AIM_RECTANGLE_LINE_WIDTH,
-                    AIM_RECTANGLE_START_X,
-                    AIM_RECTANGLE_START_Y,
-                    0,
-                    (uint16_t)(AIM_RECTANGLE_START_X + AIM_RECTANGLE_WIDTH),
-                    (uint16_t)(AIM_RECTANGLE_START_Y + AIM_RECTANGLE_HEIGHT));
+    {
+        const uint8_t nm[3] = {'R', 'C', '1'};
+        EncodeGraphic15(pkt.graphic, nm, op, UI_RECTANGLE, UI_LAYER_0, UI_SELF_COLOR,
+                        AIM_RECTANGLE_LINE_WIDTH,
+                        AIM_RECTANGLE_START_X, AIM_RECTANGLE_START_Y,
+                        0, 0, 0,
+                        (uint16_t)(AIM_RECTANGLE_START_X + AIM_RECTANGLE_WIDTH),
+                        (uint16_t)(AIM_RECTANGLE_START_Y + AIM_RECTANGLE_HEIGHT));
+    }
+    {
+        const uint8_t nm[3] = {'L', 'N', '1'};
+        EncodeGraphic15(&pkt.graphic[15], nm, op, UI_LINE, UI_LAYER_0, UI_SELF_COLOR,
+                        AIM_LINE1_WIDTH,
+                        AIM_LINE1_START_X, AIM_LINE1_START_Y,
+                        0, 0, 0,
+                        AIM_LINE1_END_X, AIM_LINE1_END_Y);
+    }
+    {
+        const uint8_t nm[3] = {'L', 'N', '2'};
+        EncodeGraphic15(&pkt.graphic[30], nm, op, UI_LINE, UI_LAYER_0, UI_SELF_COLOR,
+                        AIM_LINE2_WIDTH,
+                        AIM_LINE2_START_X, AIM_LINE2_START_Y,
+                        0, 0, 0,
+                        AIM_LINE2_END_X, AIM_LINE2_END_Y);
+    }
+    /* 0x0103 固定 5 个图形槽；仅用到前 3 个，后 2 个用「空操作」占位，图名随意唯一即可 (PD = padding) */
+    {
+        const uint8_t nm[3] = {'P', 'D', '1'};
+        EncodeGraphic15_Nop(&pkt.graphic[45], nm);
+    }
+    {
+        const uint8_t nm[3] = {'P', 'D', '2'};
+        EncodeGraphic15_Nop(&pkt.graphic[60], nm);
+    }
 
-    /* 5) 拷贝到发送缓冲区 */
     memcpy(ClientTxBuffer, &pkt, sizeof(pkt));
-
-    /* 6) 帧头 CRC8 */
     Append_CRC8_Check_Sum(ClientTxBuffer, REFEREE_LEN_FRAME_HEAD);
-
-    /* 7) 整包 CRC16 (放在最后两字节) */
     Append_CRC16_Check_Sum(ClientTxBuffer, sizeof(pkt));
+    HAL_UART_Transmit_DMA(&huart1, ClientTxBuffer, sizeof(pkt));
+}
 
-    /* 8) USART1 DMA 发送 */
+static void UI_Pack_And_Send_Char(Graphic_Operate_e op)
+{
+    ext_graphic_char_data_t pkt;
+
+    if (HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX) {
+        return;
+    }
+
+    pkt.frame_header.SOF         = REFEREE_HEADER_SOF;
+    pkt.frame_header.data_length = UI_LEN_REFEREE_DATA_CHAR;
+    pkt.frame_header.seq         = ui_seq++;
+    pkt.frame_header.CRC8        = 0;
+
+    pkt.cmd_id = REFEREE_CMD_ID_INTERACT;
+    pkt.interact_header.data_cmd_id = UI_INTERACT_ID_DRAW_CHAR;
+    pkt.interact_header.sender_id   = Referee_System_Info.robot_status.robot_id;
+    pkt.interact_header.receiver_id = Get_Self_Client_ID(Referee_System_Info.robot_status.robot_id);
+
+    {
+        const uint8_t nm[3] = {'E', 'G', 'R'};
+        EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
+                        AIM_TEXT_LINE_WIDTH,
+                        (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
+                        (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN,
+                        0, 0, 0);
+    }
+    memset(pkt.char_data, 0, sizeof(pkt.char_data));
+    memcpy(pkt.char_data, AIM_TEXT_STRING, AIM_TEXT_LEN);
+
+    memcpy(ClientTxBuffer, &pkt, sizeof(pkt));
+    Append_CRC8_Check_Sum(ClientTxBuffer, REFEREE_LEN_FRAME_HEAD);
+    Append_CRC16_Check_Sum(ClientTxBuffer, sizeof(pkt));
     HAL_UART_Transmit_DMA(&huart1, ClientTxBuffer, sizeof(pkt));
 }

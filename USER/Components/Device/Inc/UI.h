@@ -8,7 +8,7 @@
   * @date           : 2026/04/26
   * @version        : v1.0
   ******************************************************************************
-  * @attention      : 仅实现绘制单个矩形, 走 0x0301/0x0101 子内容
+  * @attention      : 矩形 + 两条横线 (0x0103) + 居中字符 (0x0110)
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -20,47 +20,75 @@
 #include "stdbool.h"
 
 /*********************************************************************************************************
-*                                              ui绘制参数 (单个矩形)
+*                                              ui绘制参数
 *  屏幕坐标: (0,0) 为屏幕左下角, (1920,1080) 为屏幕右上角
 *********************************************************************************************************/
-#define AIM_RECTANGLE_START_X       508     /* 矩形左下角 x 坐标 */
-#define AIM_RECTANGLE_START_Y       262     /* 矩形左下角 y 坐标 */
-#define AIM_RECTANGLE_WIDTH         800     /* 矩形宽度 */
-#define AIM_RECTANGLE_HEIGHT        600     /* 矩形高度 */
-#define AIM_RECTANGLE_LINE_WIDTH    3       /* 矩形线宽 */
+#define SCREEN_RES_WIDTH            1920U
+#define SCREEN_RES_HEIGHT           1080U
+
+#define AIM_RECTANGLE_START_X       508
+#define AIM_RECTANGLE_START_Y       262
+#define AIM_RECTANGLE_WIDTH         800
+#define AIM_RECTANGLE_HEIGHT        600
+#define AIM_RECTANGLE_LINE_WIDTH    3
+
+/* 横线 1：矩形垂直方向正中 */
+#define AIM_LINE1_START_X           AIM_RECTANGLE_START_X
+#define AIM_LINE1_START_Y           (AIM_RECTANGLE_START_Y + (AIM_RECTANGLE_HEIGHT / 2))
+#define AIM_LINE1_END_X            (AIM_RECTANGLE_START_X + AIM_RECTANGLE_WIDTH)
+#define AIM_LINE1_END_Y             AIM_LINE1_START_Y
+#define AIM_LINE1_WIDTH             AIM_RECTANGLE_LINE_WIDTH
+
+/* 横线 2：矩形靠上约 1/4 高度处 */
+#define AIM_LINE2_START_X           AIM_RECTANGLE_START_X
+#define AIM_LINE2_START_Y           (AIM_RECTANGLE_START_Y + (AIM_RECTANGLE_HEIGHT * 3 / 4))
+#define AIM_LINE2_END_X             AIM_LINE1_END_X
+#define AIM_LINE2_END_Y             AIM_LINE2_START_Y
+#define AIM_LINE2_WIDTH             AIM_RECTANGLE_LINE_WIDTH
+
+/* 居中文字「Engineer」：表 2-27，左下角锚点 */
+#define AIM_TEXT_STRING             "Engineer_26"
+#define AIM_TEXT_LEN                (sizeof(AIM_TEXT_STRING) - 1U)
+#define AIM_TEXT_FONT_SIZE          28U
+#define AIM_TEXT_LINE_WIDTH         3U
+#define AIM_TEXT_START_X            (SCREEN_RES_WIDTH / 2U - 110U)
+#define AIM_TEXT_START_Y            (SCREEN_RES_HEIGHT / 2U - 14U)
 
 /*********************************************************************************************************
 *                                              裁判系统协议常量
 *********************************************************************************************************/
-#define REFEREE_HEADER_SOF          0xA5U                   /* 帧头起始字节 */
-#define REFEREE_LEN_FRAME_HEAD      5U                      /* 帧头长度 */
-#define REFEREE_CMD_ID_INTERACT     0x0301U                 /* 机器人交互数据 cmd_id */
-#define UI_INTERACT_ID_DRAW_ONE     0x0101U                 /* 选手端绘制一个图形 子内容 ID */
+#define REFEREE_HEADER_SOF          0xA5U
+#define REFEREE_LEN_FRAME_HEAD      5U
+#define REFEREE_CMD_ID_INTERACT     0x0301U
+#define UI_INTERACT_ID_DRAW_ONE     0x0101U
+#define UI_INTERACT_ID_DRAW_TWO     0x0102U
+#define UI_INTERACT_ID_DRAW_FIVE    0x0103U   /* 表 2-25：5 个 15B 图形 */
+#define UI_INTERACT_ID_DRAW_CHAR    0x0110U
 
-/* 表 1-1：data_length = cmd_id 之后 data 域长度（不含 cmd_id），0x0101 单图为 6+15=21 */
-#define UI_LEN_REFEREE_DATA_AFTER_CMD_ID   21U
+#define UI_LEN_REFEREE_DATA_FIVE    (6U + 15U * 5U)   /* 0x0103: 81 */
+#define UI_LEN_REFEREE_DATA_CHAR    (6U + 15U + 30U)  /* 0x0110: 51 */
 
 /*********************************************************************************************************
 *                                              图形操作 / 类型 / 颜色枚举 (协议表 1-27)
 *********************************************************************************************************/
 typedef enum
 {
-    UI_NONE     = 0,    /* 空操作 */
-    UI_ADD      = 1,    /* 增加 */
-    UI_MODIFY   = 2,    /* 修改 */
-    UI_DELETE   = 3,    /* 删除 */
+    UI_NONE     = 0,
+    UI_ADD      = 1,
+    UI_MODIFY   = 2,
+    UI_DELETE   = 3,
 } Graphic_Operate_e;
 
 typedef enum
 {
-    UI_LINE         = 0,    /* 直线 */
-    UI_RECTANGLE    = 1,    /* 矩形 */
-    UI_CIRCLE       = 2,    /* 正圆 */
-    UI_OVAL         = 3,    /* 椭圆 */
-    UI_ARC          = 4,    /* 圆弧 */
-    UI_FLOAT        = 5,    /* 浮点数 */
-    UI_INT          = 6,    /* 整型数 */
-    UI_CHAR         = 7,    /* 字符 */
+    UI_LINE         = 0,
+    UI_RECTANGLE    = 1,
+    UI_CIRCLE       = 2,
+    UI_OVAL         = 3,
+    UI_ARC          = 4,
+    UI_FLOAT        = 5,
+    UI_INT          = 6,
+    UI_CHAR         = 7,
 } Graphic_Type_e;
 
 typedef enum
@@ -71,56 +99,60 @@ typedef enum
 
 typedef enum
 {
-    UI_SELF_COLOR   = 0,    /* 红/蓝 (己方颜色) */
+    UI_SELF_COLOR   = 0,
     UI_YELLOW       = 1,
     UI_GREEN        = 2,
     UI_ORANGE       = 3,
-    UI_FUCHSIA      = 4,    /* 紫红色 */
+    UI_FUCHSIA      = 4,
     UI_PINK         = 5,
-    UI_CYAN_BLUE    = 6,    /* 青色 */
+    UI_CYAN_BLUE    = 6,
     UI_BLACK        = 7,
     UI_WHITE        = 8,
 } Graphic_Color_e;
 
 /*********************************************************************************************************
-*                                              数据结构 (协议表 1-3 / 1-25 / 1-27)
+*                                              数据结构
 *********************************************************************************************************/
 #pragma pack(1)
 
-/* 帧头: 5 字节 */
 typedef struct
 {
-    uint8_t  SOF;           /* 0xA5 */
-    uint16_t data_length;   /* data 段长度 */
-    uint8_t  seq;           /* 包序号 */
-    uint8_t  CRC8;          /* 帧头 CRC8 */
+    uint8_t  SOF;
+    uint16_t data_length;
+    uint8_t  seq;
+    uint8_t  CRC8;
 } frame_header_t;
 
-/* 数据段头 (机器人交互数据 0x0301 内): 6 字节 */
 typedef struct
 {
-    uint16_t data_cmd_id;   /* 子内容 ID, 这里为 0x0101 */
-    uint16_t sender_id;     /* 发送者 ID = 自身机器人 ID */
-    uint16_t receiver_id;   /* 接收者 ID, 选手端 ID */
+    uint16_t data_cmd_id;
+    uint16_t sender_id;
+    uint16_t receiver_id;
 } interaction_header_t;
 
-/* 整包: 帧头 + cmd_id + data(交互头6+图形15) + CRC16 = 5 + 2 + 21 + 2 = 30 字节 */
+/* 0x0103：5 + 2 + 81 + 2 = 90 */
 typedef struct
 {
     frame_header_t       frame_header;
     uint16_t             cmd_id;
     interaction_header_t interact_header;
-    uint8_t              graphic[15]; /* 表 2-23，按位打包在 UI.c 内手工编码 */
+    uint8_t              graphic[75];
     uint16_t             frame_tail_crc16;
-} ext_graphic_one_data_t;
+} ext_graphic_five_data_t;
+
+/* 0x0110：5 + 2 + 51 + 2 = 60 */
+typedef struct
+{
+    frame_header_t       frame_header;
+    uint16_t             cmd_id;
+    interaction_header_t interact_header;
+    uint8_t              char_config[15];
+    uint8_t              char_data[30];
+    uint16_t             frame_tail_crc16;
+} ext_graphic_char_data_t;
 
 #pragma pack()
 
-/*********************************************************************************************************
-*                                              对外接口
-*  在 Detect_Task 等 1ms 周期任务循环里调用 UI_Tick();
-*  内部已节流 (约每 100ms 发一帧), 开机前若干帧为 ADD, 之后为 MODIFY
-*********************************************************************************************************/
 extern void UI_Tick(void);
 
 #endif //UI_H
