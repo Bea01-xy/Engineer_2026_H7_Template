@@ -8,7 +8,7 @@
   * @date           : 2026/04/26
   * @version        : v1.0
   ******************************************************************************
-  * @attention      : 矩形 + 两条横线 (0x0103) + 居中字符 (0x0110)
+  * @attention      : 矩形 + 两横线 (0x0103)；两段 0x0110 字符（档位 + TEXT_MODE）
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -59,8 +59,18 @@
 #define AIM_TEXT_LEN_CLIMB           (sizeof(AIM_TEXT_STRING_CLIMB) - 1U)
 #define AIM_TEXT_FONT_SIZE          28U
 #define AIM_TEXT_LINE_WIDTH         3U
-#define AIM_TEXT_START_X            (SCREEN_RES_WIDTH / 2U + 820U)
-#define AIM_TEXT_START_Y            (SCREEN_RES_HEIGHT / 2U + 314U)
+#define AIM_TEXT_START_X            (SCREEN_RES_WIDTH / 2U + 750U)
+#define AIM_TEXT_START_Y            (SCREEN_RES_HEIGHT / 2U + 280U)
+
+/* 第二段字符：ENABLE / DISABLE；位置与 UI.c 中 chassis_info.mode 对应关系见注释 */
+#define TEXT_MODE_ENABLE             "ENABLE"
+#define TEXT_MODE_DISABLE            "DISABLE"
+#define TEXT_MODE_ENABLE_LEN         (sizeof(TEXT_MODE_ENABLE) - 1U)
+#define TEXT_MODE_DISABLE_LEN        (sizeof(TEXT_MODE_DISABLE) - 1U)
+#define TEXT_MODE_FONT_SIZE          28U
+#define TEXT_MODE_LINE_WIDTH         3U
+#define TEXT_MODE_START_X            (SCREEN_RES_WIDTH / 2U + 750U)
+#define TEXT_MODE_START_Y            (SCREEN_RES_HEIGHT / 2U + 314U)
 
 /*********************************************************************************************************
 *                                              裁判系统协议常量

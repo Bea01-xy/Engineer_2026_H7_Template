@@ -3,7 +3,7 @@
   ******************************************************************************
   * @file           : UI.c
   * @brief          : 选手端图传画面 UI 绘制 (RoboMaster 2026 协议 V1.3.0)
-  *                   矩形 + 两条横线 (0x0103) + 居中字符串 (0x0110)
+  *                   矩形 + 两横线 (0x0103) + 两段 0x0110 字符（档位 + ENABLE/DISABLE）
   * @author         : sanyue (适配: Engineer_2026_H7_Template)
   * @date           : 2026/04/26
   * @version        : v1.0
@@ -22,7 +22,6 @@
 #include "stm32h7xx_hal_uart.h"
 #include "CRC.h"
 #include "Referee_System.h"
-#include "Detect_Task.h"
 #include "Chassis_Config.h"
 
 /*********************************************************************************************************
@@ -55,13 +54,16 @@ static void     EncodeGraphic15(uint8_t g[15],
                                 uint16_t details_d, uint16_t details_e);
 static void     UI_Pack_And_Send_Shapes(Graphic_Operate_e op);
 static void     UI_Pack_And_Send_Char(Graphic_Operate_e op);
+static void     UI_Pack_And_Send_ModeChar(Graphic_Operate_e op);
 
 /*********************************************************************************************************
 *                                              对外调用入口
 *********************************************************************************************************/
 
 /**
-  * @brief  1ms 任务中调用；约 100ms 一发。前 5 帧 ADD 几何，再 5 帧 ADD 字符，之后交替 MODIFY。
+  * @brief  1ms 任务中调用；约 100ms 一发。
+  *         前 5 帧 ADD 几何，再 5 帧 ADD 升降档文字，再 5 帧 ADD 模式 ENABLE/DISABLE 文字，
+  *         之后按 几何 / 档字 / 模式字 轮流 MODIFY。
   */
 void UI_Tick(void)
 {
@@ -84,13 +86,22 @@ void UI_Tick(void)
     } else if (init_cnt < 10) {
         UI_Pack_And_Send_Char(UI_ADD);
         init_cnt++;
+    } else if (init_cnt < 15) {
+        UI_Pack_And_Send_ModeChar(UI_ADD);
+        init_cnt++;
     } else {
-        if ((tx_sel & 1U) != 0U) {
-            UI_Pack_And_Send_Char(UI_MODIFY);
-        } else {
+        switch (tx_sel % 3U) {
+        case 0U:
             UI_Pack_And_Send_Shapes(UI_MODIFY);
+            break;
+        case 1U:
+            UI_Pack_And_Send_Char(UI_MODIFY);
+            break;
+        default:
+            UI_Pack_And_Send_ModeChar(UI_MODIFY);
+            break;
         }
-        tx_sel ^= 1U;
+        tx_sel++;
     }
 }
 
@@ -255,11 +266,17 @@ static void UI_Pack_And_Send_Char(Graphic_Operate_e op)
                             (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
                             (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_BRACE,
                             0, 0, 0);
-        }else if (chassis_info.lift_mode == LIFT_STAGE_2) {
+        } else if (chassis_info.lift_mode == LIFT_STAGE_2) {
             EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
                             AIM_TEXT_LINE_WIDTH,
                             (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
                             (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_CLIMB,
+                            0, 0, 0);
+        } else {
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
+                            AIM_TEXT_LINE_WIDTH,
+                            (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
+                            (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_UP,
                             0, 0, 0);
         }
     }
@@ -274,7 +291,55 @@ static void UI_Pack_And_Send_Char(Graphic_Operate_e op)
         memcpy(pkt.char_data, AIM_TEXT_STRING_BRACE, AIM_TEXT_LEN_BRACE);
     } else if (chassis_info.lift_mode == LIFT_STAGE_2) {
         memcpy(pkt.char_data, AIM_TEXT_STRING_CLIMB, AIM_TEXT_LEN_CLIMB);
+    } else {
+        memcpy(pkt.char_data, AIM_TEXT_STRING_UP, AIM_TEXT_LEN_UP);
     }
+
+    memcpy(ClientTxBuffer, &pkt, sizeof(pkt));
+    Append_CRC8_Check_Sum(ClientTxBuffer, REFEREE_LEN_FRAME_HEAD);
+    Append_CRC16_Check_Sum(ClientTxBuffer, sizeof(pkt));
+    HAL_UART_Transmit_DMA(&huart1, ClientTxBuffer, sizeof(pkt));
+}
+
+/** 第二段字符：TEXT_MODE_ENABLE / DISABLE（宏在 UI.h），图名 MO1 与 EGR 区分 */
+static void UI_Pack_And_Send_ModeChar(Graphic_Operate_e op)
+{
+    ext_graphic_char_data_t pkt;
+    const char *mode_str;
+    uint16_t    mode_len;
+
+    if (HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX) {
+        return;
+    }
+
+    if (chassis_info.mode != CHASSIS_DISABLE) {
+        mode_str = TEXT_MODE_ENABLE;
+        mode_len = (uint16_t)TEXT_MODE_ENABLE_LEN;
+    } else {
+        mode_str = TEXT_MODE_DISABLE;
+        mode_len = (uint16_t)TEXT_MODE_DISABLE_LEN;
+    }
+
+    pkt.frame_header.SOF         = REFEREE_HEADER_SOF;
+    pkt.frame_header.data_length = UI_LEN_REFEREE_DATA_CHAR;
+    pkt.frame_header.seq         = ui_seq++;
+    pkt.frame_header.CRC8        = 0;
+
+    pkt.cmd_id = REFEREE_CMD_ID_INTERACT;
+    pkt.interact_header.data_cmd_id = UI_INTERACT_ID_DRAW_CHAR;
+    pkt.interact_header.sender_id   = Referee_System_Info.robot_status.robot_id;
+    pkt.interact_header.receiver_id = Get_Self_Client_ID(Referee_System_Info.robot_status.robot_id);
+
+    {
+        const uint8_t nm[3] = {'M', 'O', '1'};
+        EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_2, UI_PINK,
+                        TEXT_MODE_LINE_WIDTH,
+                        (uint16_t)TEXT_MODE_START_X, (uint16_t)TEXT_MODE_START_Y,
+                        (uint16_t)TEXT_MODE_FONT_SIZE, mode_len,
+                        0, 0, 0);
+    }
+    memset(pkt.char_data, 0, sizeof(pkt.char_data));
+    memcpy(pkt.char_data, mode_str, mode_len);
 
     memcpy(ClientTxBuffer, &pkt, sizeof(pkt));
     Append_CRC8_Check_Sum(ClientTxBuffer, REFEREE_LEN_FRAME_HEAD);
