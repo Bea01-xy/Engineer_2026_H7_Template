@@ -206,14 +206,21 @@ static void UI_Pack_And_Send_Shapes(Graphic_Operate_e op)
                         0, 0, 0,
                         LINE2_END_X, LINE2_END_Y);
     }
-    /* 0x0103 固定 5 个图形槽；仅用到前 3 个，后 2 个用「空操作」占位，图名随意唯一即可 (PD = padding) */
-    {
-        const uint8_t nm[3] = {'P', 'D', '1'};
-        EncodeGraphic15_Nop(&pkt.graphic[45], nm);
+    {    
+        const uint8_t nm[3] = {'L', 'N', '3'};
+        EncodeGraphic15(&pkt.graphic[45], nm, op, UI_LINE, UI_LAYER_0, UI_SELF_COLOR,
+                        LINE3_WIDTH,
+                        LINE3_START_X, LINE3_START_Y,
+                        0, 0, 0,
+                        LINE3_END_X, LINE3_END_Y);
     }
     {
-        const uint8_t nm[3] = {'P', 'D', '2'};
-        EncodeGraphic15_Nop(&pkt.graphic[60], nm);
+        const uint8_t nm[3] = {'L', 'N', '4'};
+        EncodeGraphic15(&pkt.graphic[60], nm, op, UI_LINE, UI_LAYER_0, UI_SELF_COLOR,
+                        LINE4_WIDTH,
+                        LINE4_START_X, LINE4_START_Y,
+                        0, 0, 0,
+                        LINE4_END_X, LINE4_END_Y);
     }
 
     memcpy(ClientTxBuffer, &pkt, sizeof(pkt));

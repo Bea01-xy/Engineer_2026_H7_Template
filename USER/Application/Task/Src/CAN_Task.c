@@ -52,7 +52,7 @@ void CAN_Task(void)
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RB],Motor_Save_Zero_Position);
 	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RF],Motor_Save_Zero_Position);
 
-	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J4],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J1],Motor_Save_Zero_Position);
 	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J5],Motor_Save_Zero_Position);
 	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J6],Motor_Save_Zero_Position);
 	static int robotic_arm_part = 0;

@@ -90,7 +90,7 @@ void Detect_Task(void)
             Robotic_Arm_Motor[J3].Data.Position,
             Robotic_Arm_Motor[J4].Data.Position,
             Robotic_Arm_Motor[J5].Data.Position,
-            Referee_System_Info.robot_status.robot_id,
+            Robotic_Arm_Motor[J3].Data.Target_Position,
         };
         USART_Vofa_SendFloat(key_debug_data, 6);
         /* ========================================================= */
@@ -127,7 +127,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
             chassis->lift_mode = LIFT_STAGE_3;
         }
     }
-    if(MINIPC_KEY_RISING_EDGE(key_1)) {
+    if(MINIPC_KEY_RISING_EDGE(key_1) || MINIPC_KEY_RISING_EDGE(key_2)) {
         if (hand_state == HAND_OPEN) {
             hand_state = HAND_CLOSE;
         } else {
@@ -191,8 +191,8 @@ static void chassis_ctrl_info_get(void)
 {
     #if KEYBOARD_CTL
     if(chassis_info.mode == CHASSIS_LIFT){
-        chassis_info.target_vx = (float)MiniPC_Data.key_w * 1.6f - (float)MiniPC_Data.key_s * 1.6f;
-        chassis_info.target_vy = (float)MiniPC_Data.key_a * 1.6f - (float)MiniPC_Data.key_d * 1.6f;
+        chassis_info.target_vx = (float)MiniPC_Data.key_w * 1.0f - (float)MiniPC_Data.key_s * 1.0f;
+        chassis_info.target_vy = (float)MiniPC_Data.key_a * 1.0f - (float)MiniPC_Data.key_d * 1.0f;
         chassis_info.target_vw = (float)MiniPC_Data.mouse_x * -0.01f;
 
         /* 用户主动旋转时禁用方向锁定, 让目标方向跟随当前 yaw, 避免松杆瞬间残留误差爆发 */

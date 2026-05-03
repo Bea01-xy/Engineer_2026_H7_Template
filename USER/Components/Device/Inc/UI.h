@@ -33,19 +33,30 @@
 #define RECTANGLE_LINE_WIDTH         3
 
 /* 横线 1：矩形垂直方向正中 */
-#define LINE1_START_X               0
-#define LINE1_START_Y               SCREEN_RES_HEIGHT
-#define LINE1_END_X                 (SCREEN_RES_WIDTH / 2U)
+#define LINE1_START_X               (SCREEN_RES_WIDTH / 2U + 480)
+#define LINE1_START_Y               0
+#define LINE1_END_X                 (SCREEN_RES_WIDTH / 2U + 55)
 #define LINE1_END_Y                 (SCREEN_RES_HEIGHT / 2U)
 #define LINE1_WIDTH                 RECTANGLE_LINE_WIDTH
 
 /* 横线 2：矩形靠上约 1/4 高度处 */
 #define LINE2_START_X               0
-#define LINE2_START_Y               0
+#define LINE2_START_Y               (SCREEN_RES_HEIGHT / 2U - 400)
 #define LINE2_END_X                 (SCREEN_RES_WIDTH / 2U)
 #define LINE2_END_Y                 (SCREEN_RES_HEIGHT / 2U)
 #define LINE2_WIDTH                 RECTANGLE_LINE_WIDTH
 
+#define LINE3_START_X               (SCREEN_RES_WIDTH / 2U + 140)
+#define LINE3_START_Y               0
+#define LINE3_END_X                 (SCREEN_RES_WIDTH / 2U + 24)
+#define LINE3_END_Y                 (SCREEN_RES_HEIGHT / 2U)
+#define LINE3_WIDTH                 RECTANGLE_LINE_WIDTH
+
+#define LINE4_START_X               (SCREEN_RES_WIDTH / 2U - 258)
+#define LINE4_START_Y               0
+#define LINE4_END_X                 (SCREEN_RES_WIDTH / 2U + 15)
+#define LINE4_END_Y                 (SCREEN_RES_HEIGHT / 2U)
+#define LINE4_WIDTH                 RECTANGLE_LINE_WIDTH
 /* 档位文字：表 2-27，左下角锚点 */
 #define TEXT_STRING_UP              "UP"
 #define TEXT_STRING_MID             "MID"
