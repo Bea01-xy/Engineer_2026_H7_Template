@@ -47,12 +47,20 @@
 #define AIM_LINE2_WIDTH             AIM_RECTANGLE_LINE_WIDTH
 
 /* 居中文字「Engineer」：表 2-27，左下角锚点 */
-#define AIM_TEXT_STRING             "Engineer_26"
-#define AIM_TEXT_LEN                (sizeof(AIM_TEXT_STRING) - 1U)
+#define AIM_TEXT_STRING_UP           "UP"
+#define AIM_TEXT_STRING_MID          "MID"
+#define AIM_TEXT_STRING_DOWN         "DOWN"
+#define AIM_TEXT_STRING_BRACE        "BRACE"
+#define AIM_TEXT_STRING_CLIMB        "CLIMB"
+#define AIM_TEXT_LEN_UP              (sizeof(AIM_TEXT_STRING_UP) - 1U)
+#define AIM_TEXT_LEN_MID             (sizeof(AIM_TEXT_STRING_MID) - 1U)
+#define AIM_TEXT_LEN_DOWN            (sizeof(AIM_TEXT_STRING_DOWN) - 1U)
+#define AIM_TEXT_LEN_BRACE           (sizeof(AIM_TEXT_STRING_BRACE) - 1U)
+#define AIM_TEXT_LEN_CLIMB           (sizeof(AIM_TEXT_STRING_CLIMB) - 1U)
 #define AIM_TEXT_FONT_SIZE          28U
 #define AIM_TEXT_LINE_WIDTH         3U
-#define AIM_TEXT_START_X            (SCREEN_RES_WIDTH / 2U - 110U)
-#define AIM_TEXT_START_Y            (SCREEN_RES_HEIGHT / 2U - 14U)
+#define AIM_TEXT_START_X            (SCREEN_RES_WIDTH / 2U + 820U)
+#define AIM_TEXT_START_Y            (SCREEN_RES_HEIGHT / 2U + 314U)
 
 /*********************************************************************************************************
 *                                              裁判系统协议常量

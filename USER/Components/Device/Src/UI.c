@@ -22,11 +22,14 @@
 #include "stm32h7xx_hal_uart.h"
 #include "CRC.h"
 #include "Referee_System.h"
+#include "Detect_Task.h"
+#include "Chassis_Config.h"
 
 /*********************************************************************************************************
 *                                              外部变量声明
 *********************************************************************************************************/
 extern Referee_System_Info_TypeDef Referee_System_Info;
+extern Chassis_Info_Typedef chassis_info;
 
 /*********************************************************************************************************
 *                                              内部变量
@@ -228,14 +231,50 @@ static void UI_Pack_And_Send_Char(Graphic_Operate_e op)
 
     {
         const uint8_t nm[3] = {'E', 'G', 'R'};
+        if (chassis_info.lift_mode == LIFT_STAGE_1) {
         EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
                         AIM_TEXT_LINE_WIDTH,
                         (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
-                        (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN,
+                        (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_UP,
                         0, 0, 0);
+        }else if (chassis_info.lift_mode == LIFT_STAGE_5) {
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
+                            AIM_TEXT_LINE_WIDTH,
+                            (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
+                            (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_MID,
+                            0, 0, 0);
+        }else if (chassis_info.lift_mode == LIFT_STAGE_3) {
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
+                            AIM_TEXT_LINE_WIDTH,
+                            (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
+                            (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_DOWN,
+                            0, 0, 0);
+        }else if (chassis_info.lift_mode == LIFT_STAGE_4) {
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
+                            AIM_TEXT_LINE_WIDTH,
+                            (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
+                            (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_BRACE,
+                            0, 0, 0);
+        }else if (chassis_info.lift_mode == LIFT_STAGE_2) {
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
+                            AIM_TEXT_LINE_WIDTH,
+                            (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
+                            (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_CLIMB,
+                            0, 0, 0);
+        }
     }
     memset(pkt.char_data, 0, sizeof(pkt.char_data));
-    memcpy(pkt.char_data, AIM_TEXT_STRING, AIM_TEXT_LEN);
+    if (chassis_info.lift_mode == LIFT_STAGE_1) {
+        memcpy(pkt.char_data, AIM_TEXT_STRING_UP, AIM_TEXT_LEN_UP);
+    } else if (chassis_info.lift_mode == LIFT_STAGE_5) {
+        memcpy(pkt.char_data, AIM_TEXT_STRING_MID, AIM_TEXT_LEN_MID);
+    } else if (chassis_info.lift_mode == LIFT_STAGE_3) {
+        memcpy(pkt.char_data, AIM_TEXT_STRING_DOWN, AIM_TEXT_LEN_DOWN);
+    } else if (chassis_info.lift_mode == LIFT_STAGE_4) {
+        memcpy(pkt.char_data, AIM_TEXT_STRING_BRACE, AIM_TEXT_LEN_BRACE);
+    } else if (chassis_info.lift_mode == LIFT_STAGE_2) {
+        memcpy(pkt.char_data, AIM_TEXT_STRING_CLIMB, AIM_TEXT_LEN_CLIMB);
+    }
 
     memcpy(ClientTxBuffer, &pkt, sizeof(pkt));
     Append_CRC8_Check_Sum(ClientTxBuffer, REFEREE_LEN_FRAME_HEAD);

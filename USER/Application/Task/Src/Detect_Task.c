@@ -171,7 +171,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
         chassis->last_lift_mode = chassis->lift_mode;
         chassis->mode = CHASSIS_LIFT;
         switch (s0) {
-            case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_5; break;
+            case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_1; break;
             case RC_SW_MID:  chassis->lift_mode = LIFT_STAGE_2; break;
             case RC_SW_UP:   chassis->lift_mode = LIFT_STAGE_3; break;
             default: break;
