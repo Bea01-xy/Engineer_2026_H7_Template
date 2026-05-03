@@ -28,6 +28,7 @@
 #include "Robotic_Arm_Config.h"
 #include <stdint.h>
 #include "Referee_System.h"
+#include "UI.h"
 /* USER CODE BEGIN Header_Detect_Task */
 static void chassis_set_mode(Chassis_Info_Typedef* chassis);
 static void chassis_ctrl_info_get(void);
@@ -76,6 +77,8 @@ void Detect_Task(void)
 
         arm_ctrl_info_get();
 
+        UI_Tick();
+
         float key_debug_data[6] = {
             //Chassis_Motor[LF].Data.Velocity,
             //Chassis_Motor[LF].Data.Ramped_Target_Velocity,
@@ -87,7 +90,7 @@ void Detect_Task(void)
             Robotic_Arm_Motor[J3].Data.Position,
             Robotic_Arm_Motor[J4].Data.Position,
             Robotic_Arm_Motor[J5].Data.Position,
-            Robotic_Arm_Motor[J6].Data.Position,
+            Referee_System_Info.robot_status.robot_id,
         };
         USART_Vofa_SendFloat(key_debug_data, 6);
         /* ========================================================= */
@@ -98,7 +101,7 @@ void Detect_Task(void)
     /* USER CODE END Detect_Task */
 }
 
-#define KEYBOARD_CTL 1
+#define KEYBOARD_CTL 0
 static void chassis_set_mode(Chassis_Info_Typedef* chassis)
 {
     if(chassis == NULL)
@@ -168,7 +171,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
         chassis->last_lift_mode = chassis->lift_mode;
         chassis->mode = CHASSIS_LIFT;
         switch (s0) {
-            case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_1; break;
+            case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_5; break;
             case RC_SW_MID:  chassis->lift_mode = LIFT_STAGE_2; break;
             case RC_SW_UP:   chassis->lift_mode = LIFT_STAGE_3; break;
             default: break;

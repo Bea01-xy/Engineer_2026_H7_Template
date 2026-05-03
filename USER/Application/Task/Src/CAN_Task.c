@@ -100,7 +100,7 @@ void Robotic_Arm_set(const int part, const bool activated)
 		if (part == 0) {
 	    	DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J1],Motor_Enable);
 	    	DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J2],Motor_Enable);
-			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], Robotic_Arm_Motor[J1].Data.Temp_Target_Position, MIT_NO_USE, 28.0f, 4.2f, Robotic_Arm_Motor[J1].Data.Feedforward);
+			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], Robotic_Arm_Motor[J1].Data.Temp_Target_Position, MIT_NO_USE, 38.0f, 4.2f, Robotic_Arm_Motor[J1].Data.Feedforward);
 			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], Robotic_Arm_Motor[J2].Data.Temp_Target_Position, MIT_NO_USE, 45.0f, 12.2f, Robotic_Arm_Motor[J2].Data.Feedforward);
 		} else if (part == 1) {
 	    	DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J3],Motor_Enable);

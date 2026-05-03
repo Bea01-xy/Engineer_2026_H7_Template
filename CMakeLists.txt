@@ -58,9 +58,11 @@ file(GLOB_RECURSE SOURCES
 
 
 # Add sources to executable
+# UI.c：GLOB 在首次 cmake 配置时固定，新增文件后需显式加入或重新配置；此处显式加入以免漏链
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
         ${SOURCES}
+        USER/Components/Device/Src/UI.c
 )
 
 
