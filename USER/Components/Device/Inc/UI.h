@@ -26,41 +26,41 @@
 #define SCREEN_RES_WIDTH            1920U
 #define SCREEN_RES_HEIGHT           1080U
 
-#define AIM_RECTANGLE_START_X       508
-#define AIM_RECTANGLE_START_Y       262
-#define AIM_RECTANGLE_WIDTH         800
-#define AIM_RECTANGLE_HEIGHT        600
-#define AIM_RECTANGLE_LINE_WIDTH    3
+#define RECTANGLE_START_X           (SCREEN_RES_WIDTH / 2U + 740U)
+#define RECTANGLE_START_Y           (SCREEN_RES_HEIGHT / 2U + 240U)
+#define RECTANGLE_WIDTH              210
+#define RECTANGLE_HEIGHT             90
+#define RECTANGLE_LINE_WIDTH         3
 
 /* 横线 1：矩形垂直方向正中 */
-#define AIM_LINE1_START_X           AIM_RECTANGLE_START_X
-#define AIM_LINE1_START_Y           (AIM_RECTANGLE_START_Y + (AIM_RECTANGLE_HEIGHT / 2))
-#define AIM_LINE1_END_X            (AIM_RECTANGLE_START_X + AIM_RECTANGLE_WIDTH)
-#define AIM_LINE1_END_Y             AIM_LINE1_START_Y
-#define AIM_LINE1_WIDTH             AIM_RECTANGLE_LINE_WIDTH
+#define LINE1_START_X               0
+#define LINE1_START_Y               SCREEN_RES_HEIGHT
+#define LINE1_END_X                 (SCREEN_RES_WIDTH / 2U)
+#define LINE1_END_Y                 (SCREEN_RES_HEIGHT / 2U)
+#define LINE1_WIDTH                 RECTANGLE_LINE_WIDTH
 
 /* 横线 2：矩形靠上约 1/4 高度处 */
-#define AIM_LINE2_START_X           AIM_RECTANGLE_START_X
-#define AIM_LINE2_START_Y           (AIM_RECTANGLE_START_Y + (AIM_RECTANGLE_HEIGHT * 3 / 4))
-#define AIM_LINE2_END_X             AIM_LINE1_END_X
-#define AIM_LINE2_END_Y             AIM_LINE2_START_Y
-#define AIM_LINE2_WIDTH             AIM_RECTANGLE_LINE_WIDTH
+#define LINE2_START_X               0
+#define LINE2_START_Y               0
+#define LINE2_END_X                 (SCREEN_RES_WIDTH / 2U)
+#define LINE2_END_Y                 (SCREEN_RES_HEIGHT / 2U)
+#define LINE2_WIDTH                 RECTANGLE_LINE_WIDTH
 
-/* 居中文字「Engineer」：表 2-27，左下角锚点 */
-#define AIM_TEXT_STRING_UP           "UP"
-#define AIM_TEXT_STRING_MID          "MID"
-#define AIM_TEXT_STRING_DOWN         "DOWN"
-#define AIM_TEXT_STRING_BRACE        "BRACE"
-#define AIM_TEXT_STRING_CLIMB        "CLIMB"
-#define AIM_TEXT_LEN_UP              (sizeof(AIM_TEXT_STRING_UP) - 1U)
-#define AIM_TEXT_LEN_MID             (sizeof(AIM_TEXT_STRING_MID) - 1U)
-#define AIM_TEXT_LEN_DOWN            (sizeof(AIM_TEXT_STRING_DOWN) - 1U)
-#define AIM_TEXT_LEN_BRACE           (sizeof(AIM_TEXT_STRING_BRACE) - 1U)
-#define AIM_TEXT_LEN_CLIMB           (sizeof(AIM_TEXT_STRING_CLIMB) - 1U)
-#define AIM_TEXT_FONT_SIZE          28U
-#define AIM_TEXT_LINE_WIDTH         3U
-#define AIM_TEXT_START_X            (SCREEN_RES_WIDTH / 2U + 750U)
-#define AIM_TEXT_START_Y            (SCREEN_RES_HEIGHT / 2U + 280U)
+/* 档位文字：表 2-27，左下角锚点 */
+#define TEXT_STRING_UP              "UP"
+#define TEXT_STRING_MID             "MID"
+#define TEXT_STRING_DOWN            "DOWN"
+#define TEXT_STRING_BRACE           "BRACE"
+#define TEXT_STRING_CLIMB           "CLIMB"
+#define TEXT_LEN_UP                 (sizeof(TEXT_STRING_UP) - 1U)
+#define TEXT_LEN_MID                (sizeof(TEXT_STRING_MID) - 1U)
+#define TEXT_LEN_DOWN               (sizeof(TEXT_STRING_DOWN) - 1U)
+#define TEXT_LEN_BRACE              (sizeof(TEXT_STRING_BRACE) - 1U)
+#define TEXT_LEN_CLIMB              (sizeof(TEXT_STRING_CLIMB) - 1U)
+#define TEXT_FONT_SIZE              28U
+#define TEXT_LINE_WIDTH             3U
+#define TEXT_START_X                (SCREEN_RES_WIDTH / 2U + 750U)
+#define TEXT_START_Y                (SCREEN_RES_HEIGHT / 2U + 280U)
 
 /* 第二段字符：ENABLE / DISABLE；位置与 UI.c 中 chassis_info.mode 对应关系见注释 */
 #define TEXT_MODE_ENABLE             "ENABLE"

@@ -101,7 +101,7 @@ void Detect_Task(void)
     /* USER CODE END Detect_Task */
 }
 
-#define KEYBOARD_CTL 0
+#define KEYBOARD_CTL 1
 static void chassis_set_mode(Chassis_Info_Typedef* chassis)
 {
     if(chassis == NULL)

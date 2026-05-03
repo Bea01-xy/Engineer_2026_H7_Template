@@ -184,27 +184,27 @@ static void UI_Pack_And_Send_Shapes(Graphic_Operate_e op)
     {
         const uint8_t nm[3] = {'R', 'C', '1'};
         EncodeGraphic15(pkt.graphic, nm, op, UI_RECTANGLE, UI_LAYER_0, UI_SELF_COLOR,
-                        AIM_RECTANGLE_LINE_WIDTH,
-                        AIM_RECTANGLE_START_X, AIM_RECTANGLE_START_Y,
+                        RECTANGLE_LINE_WIDTH,
+                        RECTANGLE_START_X, RECTANGLE_START_Y,
                         0, 0, 0,
-                        (uint16_t)(AIM_RECTANGLE_START_X + AIM_RECTANGLE_WIDTH),
-                        (uint16_t)(AIM_RECTANGLE_START_Y + AIM_RECTANGLE_HEIGHT));
+                        (uint16_t)(RECTANGLE_START_X + RECTANGLE_WIDTH),
+                        (uint16_t)(RECTANGLE_START_Y + RECTANGLE_HEIGHT));
     }
     {
         const uint8_t nm[3] = {'L', 'N', '1'};
         EncodeGraphic15(&pkt.graphic[15], nm, op, UI_LINE, UI_LAYER_0, UI_SELF_COLOR,
-                        AIM_LINE1_WIDTH,
-                        AIM_LINE1_START_X, AIM_LINE1_START_Y,
+                        LINE1_WIDTH,
+                        LINE1_START_X, LINE1_START_Y,
                         0, 0, 0,
-                        AIM_LINE1_END_X, AIM_LINE1_END_Y);
+                        LINE1_END_X, LINE1_END_Y);
     }
     {
         const uint8_t nm[3] = {'L', 'N', '2'};
         EncodeGraphic15(&pkt.graphic[30], nm, op, UI_LINE, UI_LAYER_0, UI_SELF_COLOR,
-                        AIM_LINE2_WIDTH,
-                        AIM_LINE2_START_X, AIM_LINE2_START_Y,
+                        LINE2_WIDTH,
+                        LINE2_START_X, LINE2_START_Y,
                         0, 0, 0,
-                        AIM_LINE2_END_X, AIM_LINE2_END_Y);
+                        LINE2_END_X, LINE2_END_Y);
     }
     /* 0x0103 固定 5 个图形槽；仅用到前 3 个，后 2 个用「空操作」占位，图名随意唯一即可 (PD = padding) */
     {
@@ -244,55 +244,55 @@ static void UI_Pack_And_Send_Char(Graphic_Operate_e op)
         const uint8_t nm[3] = {'E', 'G', 'R'};
         if (chassis_info.lift_mode == LIFT_STAGE_1) {
         EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
-                        AIM_TEXT_LINE_WIDTH,
-                        (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
-                        (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_UP,
+                        TEXT_LINE_WIDTH,
+                        (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
+                        (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_UP,
                         0, 0, 0);
         }else if (chassis_info.lift_mode == LIFT_STAGE_5) {
             EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
-                            AIM_TEXT_LINE_WIDTH,
-                            (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
-                            (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_MID,
+                            TEXT_LINE_WIDTH,
+                            (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
+                            (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_MID,
                             0, 0, 0);
         }else if (chassis_info.lift_mode == LIFT_STAGE_3) {
             EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
-                            AIM_TEXT_LINE_WIDTH,
-                            (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
-                            (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_DOWN,
+                            TEXT_LINE_WIDTH,
+                            (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
+                            (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_DOWN,
                             0, 0, 0);
         }else if (chassis_info.lift_mode == LIFT_STAGE_4) {
             EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
-                            AIM_TEXT_LINE_WIDTH,
-                            (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
-                            (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_BRACE,
+                            TEXT_LINE_WIDTH,
+                            (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
+                            (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_BRACE,
                             0, 0, 0);
         } else if (chassis_info.lift_mode == LIFT_STAGE_2) {
             EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
-                            AIM_TEXT_LINE_WIDTH,
-                            (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
-                            (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_CLIMB,
+                            TEXT_LINE_WIDTH,
+                            (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
+                            (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_CLIMB,
                             0, 0, 0);
         } else {
             EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
-                            AIM_TEXT_LINE_WIDTH,
-                            (uint16_t)AIM_TEXT_START_X, (uint16_t)AIM_TEXT_START_Y,
-                            (uint16_t)AIM_TEXT_FONT_SIZE, (uint16_t)AIM_TEXT_LEN_UP,
+                            TEXT_LINE_WIDTH,
+                            (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
+                            (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_UP,
                             0, 0, 0);
         }
     }
     memset(pkt.char_data, 0, sizeof(pkt.char_data));
     if (chassis_info.lift_mode == LIFT_STAGE_1) {
-        memcpy(pkt.char_data, AIM_TEXT_STRING_UP, AIM_TEXT_LEN_UP);
+        memcpy(pkt.char_data, TEXT_STRING_UP, TEXT_LEN_UP);
     } else if (chassis_info.lift_mode == LIFT_STAGE_5) {
-        memcpy(pkt.char_data, AIM_TEXT_STRING_MID, AIM_TEXT_LEN_MID);
+        memcpy(pkt.char_data, TEXT_STRING_MID, TEXT_LEN_MID);
     } else if (chassis_info.lift_mode == LIFT_STAGE_3) {
-        memcpy(pkt.char_data, AIM_TEXT_STRING_DOWN, AIM_TEXT_LEN_DOWN);
+        memcpy(pkt.char_data, TEXT_STRING_DOWN, TEXT_LEN_DOWN);
     } else if (chassis_info.lift_mode == LIFT_STAGE_4) {
-        memcpy(pkt.char_data, AIM_TEXT_STRING_BRACE, AIM_TEXT_LEN_BRACE);
+        memcpy(pkt.char_data, TEXT_STRING_BRACE, TEXT_LEN_BRACE);
     } else if (chassis_info.lift_mode == LIFT_STAGE_2) {
-        memcpy(pkt.char_data, AIM_TEXT_STRING_CLIMB, AIM_TEXT_LEN_CLIMB);
+        memcpy(pkt.char_data, TEXT_STRING_CLIMB, TEXT_LEN_CLIMB);
     } else {
-        memcpy(pkt.char_data, AIM_TEXT_STRING_UP, AIM_TEXT_LEN_UP);
+        memcpy(pkt.char_data, TEXT_STRING_UP, TEXT_LEN_UP);
     }
 
     memcpy(ClientTxBuffer, &pkt, sizeof(pkt));
