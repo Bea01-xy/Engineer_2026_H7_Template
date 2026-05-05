@@ -250,37 +250,37 @@ static void UI_Pack_And_Send_Char(Graphic_Operate_e op)
     {
         const uint8_t nm[3] = {'E', 'G', 'R'};
         if (chassis_info.lift_mode == LIFT_STAGE_1) {
-        EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
+        EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_YELLOW,
                         TEXT_LINE_WIDTH,
                         (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
                         (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_UP,
                         0, 0, 0);
         }else if (chassis_info.lift_mode == LIFT_STAGE_5) {
-            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_YELLOW,
                             TEXT_LINE_WIDTH,
                             (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
                             (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_MID,
                             0, 0, 0);
         }else if (chassis_info.lift_mode == LIFT_STAGE_3) {
-            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_YELLOW,
                             TEXT_LINE_WIDTH,
                             (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
                             (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_DOWN,
                             0, 0, 0);
         }else if (chassis_info.lift_mode == LIFT_STAGE_4) {
-            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_YELLOW,
                             TEXT_LINE_WIDTH,
                             (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
                             (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_BRACE,
                             0, 0, 0);
         } else if (chassis_info.lift_mode == LIFT_STAGE_2) {
-            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_YELLOW,
                             TEXT_LINE_WIDTH,
                             (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
                             (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_CLIMB,
                             0, 0, 0);
         } else {
-            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_PINK,
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_YELLOW,
                             TEXT_LINE_WIDTH,
                             (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
                             (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_UP,
@@ -339,7 +339,7 @@ static void UI_Pack_And_Send_ModeChar(Graphic_Operate_e op)
 
     {
         const uint8_t nm[3] = {'M', 'O', '1'};
-        EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_2, UI_PINK,
+        EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_2, UI_YELLOW,
                         TEXT_MODE_LINE_WIDTH,
                         (uint16_t)TEXT_MODE_START_X, (uint16_t)TEXT_MODE_START_Y,
                         (uint16_t)TEXT_MODE_FONT_SIZE, mode_len,

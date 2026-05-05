@@ -30,31 +30,31 @@
 #define RECTANGLE_START_Y           (SCREEN_RES_HEIGHT / 2U + 240U)
 #define RECTANGLE_WIDTH              210
 #define RECTANGLE_HEIGHT             90
-#define RECTANGLE_LINE_WIDTH         3
+#define RECTANGLE_LINE_WIDTH         6
 
 /* 横线 1：矩形垂直方向正中 */
-#define LINE1_START_X               (SCREEN_RES_WIDTH / 2U + 480)
+#define LINE1_START_X               0
 #define LINE1_START_Y               0
-#define LINE1_END_X                 (SCREEN_RES_WIDTH / 2U + 55)
-#define LINE1_END_Y                 (SCREEN_RES_HEIGHT / 2U)
-#define LINE1_WIDTH                 RECTANGLE_LINE_WIDTH
+#define LINE1_END_X                 0
+#define LINE1_END_Y                 0
+#define LINE1_WIDTH                 3
 
 /* 横线 2：矩形靠上约 1/4 高度处 */
 #define LINE2_START_X               0
-#define LINE2_START_Y               (SCREEN_RES_HEIGHT / 2U - 400)
-#define LINE2_END_X                 (SCREEN_RES_WIDTH / 2U)
-#define LINE2_END_Y                 (SCREEN_RES_HEIGHT / 2U)
-#define LINE2_WIDTH                 RECTANGLE_LINE_WIDTH
+#define LINE2_START_Y               0
+#define LINE2_END_X                 0
+#define LINE2_END_Y                 0
+#define LINE2_WIDTH                 3
 
-#define LINE3_START_X               (SCREEN_RES_WIDTH / 2U + 140)
+#define LINE3_START_X               (SCREEN_RES_WIDTH / 2U + 166)
 #define LINE3_START_Y               0
-#define LINE3_END_X                 (SCREEN_RES_WIDTH / 2U + 24)
+#define LINE3_END_X                 (SCREEN_RES_WIDTH / 2U + 32)
 #define LINE3_END_Y                 (SCREEN_RES_HEIGHT / 2U)
 #define LINE3_WIDTH                 RECTANGLE_LINE_WIDTH
 
-#define LINE4_START_X               (SCREEN_RES_WIDTH / 2U - 258)
+#define LINE4_START_X               (SCREEN_RES_WIDTH / 2U - 339)
 #define LINE4_START_Y               0
-#define LINE4_END_X                 (SCREEN_RES_WIDTH / 2U + 15)
+#define LINE4_END_X                 (SCREEN_RES_WIDTH / 2U - 133)
 #define LINE4_END_Y                 (SCREEN_RES_HEIGHT / 2U)
 #define LINE4_WIDTH                 RECTANGLE_LINE_WIDTH
 /* 档位文字：表 2-27，左下角锚点 */
@@ -69,7 +69,7 @@
 #define TEXT_LEN_BRACE              (sizeof(TEXT_STRING_BRACE) - 1U)
 #define TEXT_LEN_CLIMB              (sizeof(TEXT_STRING_CLIMB) - 1U)
 #define TEXT_FONT_SIZE              28U
-#define TEXT_LINE_WIDTH             3U
+#define TEXT_LINE_WIDTH             4U
 #define TEXT_START_X                (SCREEN_RES_WIDTH / 2U + 750U)
 #define TEXT_START_Y                (SCREEN_RES_HEIGHT / 2U + 280U)
 
@@ -79,7 +79,7 @@
 #define TEXT_MODE_ENABLE_LEN         (sizeof(TEXT_MODE_ENABLE) - 1U)
 #define TEXT_MODE_DISABLE_LEN        (sizeof(TEXT_MODE_DISABLE) - 1U)
 #define TEXT_MODE_FONT_SIZE          28U
-#define TEXT_MODE_LINE_WIDTH         3U
+#define TEXT_MODE_LINE_WIDTH         4U
 #define TEXT_MODE_START_X            (SCREEN_RES_WIDTH / 2U + 750U)
 #define TEXT_MODE_START_Y            (SCREEN_RES_HEIGHT / 2U + 314U)
 

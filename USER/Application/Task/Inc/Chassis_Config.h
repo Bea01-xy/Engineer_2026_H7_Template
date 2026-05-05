@@ -122,6 +122,9 @@ typedef struct
     bool countering_1;
     uint16_t lift_counter_2;
     bool countering_2;
+
+    uint8_t gear;
+    uint8_t last_gear;
 } Chassis_Info_Typedef;
 
 /* @brief Elevator (DM6006) parameters*/

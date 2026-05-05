@@ -178,6 +178,8 @@ static void Control_Init(void)
     chassis_info.countering_1 = true;
     chassis_info.countering_2 = false;
     Referee_System_Info.power_heat_data.buffer_energy = 60u;
+
+    chassis_info.gear = 0;
 }
 
 static float SmootherStep(float NowTime,float UseTime)
