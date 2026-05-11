@@ -107,7 +107,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
     if(chassis == NULL)
         return;
 
-#if KEYBOARD_CTL
+    #if KEYBOARD_CTL
     if(MiniPC_Data.key_r) HAL_NVIC_SystemReset();
     chassis->last_mode = chassis->mode;
     chassis->last_lift_mode = chassis->lift_mode;
@@ -149,7 +149,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
             chassis->gear = 0;
         }
     }
-#else
+    #else
     // if(remote_ctrl.rc_lost)
     // {
     //     chassis->last_mode = chassis->mode;
@@ -199,18 +199,18 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
             chassis->lift_mode = LIFT_STAGE_1;
         }
     }
-#endif
+    #endif
 }
 
 static void chassis_ctrl_info_get(void)
 {
     #if KEYBOARD_CTL
     if(chassis_info.mode == CHASSIS_LIFT){
-        chassis_info.target_vx = ((MiniPC_Data.key_w-MiniPC_Data.key_s) * 0.1f) * (1+MiniPC_Data.key_shift) * (1+4*chassis_info.gear);
-        chassis_info.target_vy = ((MiniPC_Data.key_a-MiniPC_Data.key_d) * 0.1f) * (1+MiniPC_Data.key_shift) * (1+4*chassis_info.gear);
+        chassis_info.target_vx = ((MiniPC_Data.key_w-MiniPC_Data.key_s) * 0.15f) * (1+MiniPC_Data.key_shift) * (1+3*chassis_info.gear);
+        chassis_info.target_vy = ((MiniPC_Data.key_a-MiniPC_Data.key_d) * 0.15f) * (1+MiniPC_Data.key_shift) * (1+3*chassis_info.gear);
         chassis_info.target_vw = (float)MiniPC_Data.mouse_x * -0.015f;
 
-        /* 用户主动旋转时禁用方向锁定, 让目标方向跟随当前 yaw, 避免松杆瞬间残留误差爆发 */
+        /* 主动旋转时禁用方向锁定, 让目标方向跟随当前 yaw, 避免松杆瞬间残留误差爆发 */
         if (MiniPC_Data.mouse_x != 0) {
             chassis_info.target_direction = INS_Info.Yaw_Angle;
             Chassis_Direction_PID.PID_Calc_Clear(&Chassis_Direction_PID);
@@ -242,7 +242,7 @@ static void chassis_ctrl_info_get(void)
 
         chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
     }
-#endif
+    #endif
 }
 
 static void chassis_wheel_cal(void)
@@ -264,17 +264,10 @@ static void MiniPC_Transmit_Robotic_Arm_Info(void)
     float J3_Pos = Robotic_Arm_Motor[J3].Data.Position;
     float J4_Pos = Robotic_Arm_Motor[J4].Data.Position;
     float J5_Pos = Robotic_Arm_Motor[J5].Data.Position;
-    float J6_Pos = -Robotic_Arm_Motor[J6].Data.Position;
+    float J6_Pos = Robotic_Arm_Motor[J6].Data.Position;
 
-    float J1_Vel = Robotic_Arm_Motor[J1].Data.Velocity;
-    float J2_Vel = Robotic_Arm_Motor[J2].Data.Velocity;
-    float J3_Vel = Robotic_Arm_Motor[J3].Data.Velocity;
-    float J4_Vel = Robotic_Arm_Motor[J4].Data.Velocity;
-    float J5_Vel = Robotic_Arm_Motor[J5].Data.Velocity;
-    float J6_Vel = -Robotic_Arm_Motor[J6].Data.Velocity;
-
-    float Robotic_Arm_Info[12] = {J1_Pos, J2_Pos, J3_Pos, J4_Pos, J5_Pos, J6_Pos, J1_Vel, J2_Vel, J3_Vel, J4_Vel, J5_Vel, J6_Vel};
-    MiniPC_Transmit_Info(Robotic_Arm_Info, 12);
+    float Robotic_Arm_Info[6] = {J1_Pos, J2_Pos, J3_Pos, J4_Pos, J5_Pos, J6_Pos};
+    MiniPC_Transmit_Info(Robotic_Arm_Info, 6);
 }
 
 static void arm_ctrl_info_get(void)

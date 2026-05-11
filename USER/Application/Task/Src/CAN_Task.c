@@ -137,9 +137,9 @@ void Chassis_set(const bool activated)
 							 Chassis_Motor[RB].Data.Final_Output,
 							 Chassis_Motor[RF].Data.Final_Output);
 		if (hand_state == HAND_OPEN) {
-			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 1000, 0, 0, 0);
+			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 2500, 0, 0, 0);
 		} else {
-			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -2500, 0, 0, 0);
+			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -3000, 0, 0, 0);
 		}
 	} else {
 		M3508_motor_crt_ctrl(&hfdcan2, 0x200, 0, 0, 0, 0);

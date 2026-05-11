@@ -8,7 +8,7 @@
   * @date           : 2026/04/26
   * @version        : v1.0
   ******************************************************************************
-  * @attention      : 后两个图形槽位填「空操作」以满足 0x0103 五槽位长度
+  * @attention      : 0x0103 五图形；多段 0x0110；浮点测试 0x0101(UI_FLOAT)
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -55,6 +55,8 @@ static void     EncodeGraphic15(uint8_t g[15],
 static void     UI_Pack_And_Send_Shapes(Graphic_Operate_e op);
 static void     UI_Pack_And_Send_Char(Graphic_Operate_e op);
 static void     UI_Pack_And_Send_ModeChar(Graphic_Operate_e op);
+static void     UI_Pack_And_Send_GearChar(Graphic_Operate_e op);
+static void     UI_Pack_And_Send_FloatTest(Graphic_Operate_e op);
 
 /*********************************************************************************************************
 *                                              对外调用入口
@@ -62,8 +64,8 @@ static void     UI_Pack_And_Send_ModeChar(Graphic_Operate_e op);
 
 /**
   * @brief  1ms 任务中调用；约 100ms 一发。
-  *         前 5 帧 ADD 几何，再 5 帧 ADD 升降档文字，再 5 帧 ADD 模式 ENABLE/DISABLE 文字，
-  *         之后按 几何 / 档字 / 模式字 轮流 MODIFY。
+  *         前 5 帧 ADD 几何，再依次 ADD 各段 0x0110 字符，再 5 帧 ADD 浮点测试(0x0101)，
+  *         之后按 几何 / 升降档字 / 模式字 / 档位字 / 浮点 轮流 MODIFY。
   */
 void UI_Tick(void)
 {
@@ -89,16 +91,28 @@ void UI_Tick(void)
     } else if (init_cnt < 15) {
         UI_Pack_And_Send_ModeChar(UI_ADD);
         init_cnt++;
+    } else if (init_cnt < 20) {
+        UI_Pack_And_Send_GearChar(UI_ADD);
+        init_cnt++;
+    } else if (init_cnt < 25) {
+        UI_Pack_And_Send_FloatTest(UI_ADD);
+        init_cnt++;
     } else {
-        switch (tx_sel % 3U) {
+        switch (tx_sel % 5U) {
         case 0U:
             UI_Pack_And_Send_Shapes(UI_MODIFY);
             break;
         case 1U:
             UI_Pack_And_Send_Char(UI_MODIFY);
             break;
-        default:
+        case 2U:
             UI_Pack_And_Send_ModeChar(UI_MODIFY);
+            break;
+        case 3U:
+            UI_Pack_And_Send_GearChar(UI_MODIFY);
+            break;
+        default:
+            UI_Pack_And_Send_FloatTest(UI_MODIFY);
             break;
         }
         tx_sel++;
@@ -156,6 +170,17 @@ static void EncodeGraphic15(uint8_t g[15],
     memcpy(&g[11], &w2, sizeof(w2));
 }
 
+/**
+  * @brief 表 2-23：整型/浮点数在图形配置 3 中占 32 位，按 c(低10)+d(11)+e(高11) 与 EncodeGraphic15 的 w2 一致
+  */
+static void PackInt32ToGraphicDetails(int32_t v, uint16_t *c, uint16_t *d, uint16_t *e)
+{
+    uint32_t u = (uint32_t)v;
+    *c = (uint16_t)(u & 0x3FFU);
+    *d = (uint16_t)((u >> 10) & 0x7FFU);
+    *e = (uint16_t)((u >> 21) & 0x7FFU);
+}
+
 /** 空槽位：操作类型为「空操作」，占满 0x0103 后两格 */
 static void EncodeGraphic15_Nop(uint8_t g[15], const uint8_t name[3])
 {
@@ -183,7 +208,7 @@ static void UI_Pack_And_Send_Shapes(Graphic_Operate_e op)
 
     {
         const uint8_t nm[3] = {'R', 'C', '1'};
-        EncodeGraphic15(pkt.graphic, nm, op, UI_RECTANGLE, UI_LAYER_0, UI_SELF_COLOR,
+        EncodeGraphic15(pkt.graphic, nm, op, UI_RECTANGLE, UI_LAYER_0, UI_ORANGE,
                         RECTANGLE_LINE_WIDTH,
                         RECTANGLE_START_X, RECTANGLE_START_Y,
                         0, 0, 0,
@@ -208,7 +233,7 @@ static void UI_Pack_And_Send_Shapes(Graphic_Operate_e op)
     }
     {    
         const uint8_t nm[3] = {'L', 'N', '3'};
-        EncodeGraphic15(&pkt.graphic[45], nm, op, UI_LINE, UI_LAYER_0, UI_SELF_COLOR,
+        EncodeGraphic15(&pkt.graphic[45], nm, op, UI_LINE, UI_LAYER_0, UI_FUCHSIA,
                         LINE3_WIDTH,
                         LINE3_START_X, LINE3_START_Y,
                         0, 0, 0,
@@ -216,7 +241,7 @@ static void UI_Pack_And_Send_Shapes(Graphic_Operate_e op)
     }
     {
         const uint8_t nm[3] = {'L', 'N', '4'};
-        EncodeGraphic15(&pkt.graphic[60], nm, op, UI_LINE, UI_LAYER_0, UI_SELF_COLOR,
+        EncodeGraphic15(&pkt.graphic[60], nm, op, UI_LINE, UI_LAYER_0, UI_FUCHSIA,
                         LINE4_WIDTH,
                         LINE4_START_X, LINE4_START_Y,
                         0, 0, 0,
@@ -256,31 +281,31 @@ static void UI_Pack_And_Send_Char(Graphic_Operate_e op)
                         (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_UP,
                         0, 0, 0);
         }else if (chassis_info.lift_mode == LIFT_STAGE_5) {
-            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_YELLOW,
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_CYAN_BLUE,
                             TEXT_LINE_WIDTH,
                             (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
                             (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_MID,
                             0, 0, 0);
         }else if (chassis_info.lift_mode == LIFT_STAGE_3) {
-            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_YELLOW,
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_CYAN_BLUE,
                             TEXT_LINE_WIDTH,
                             (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
                             (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_DOWN,
                             0, 0, 0);
         }else if (chassis_info.lift_mode == LIFT_STAGE_4) {
-            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_YELLOW,
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_CYAN_BLUE,
                             TEXT_LINE_WIDTH,
                             (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
                             (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_BRACE,
                             0, 0, 0);
         } else if (chassis_info.lift_mode == LIFT_STAGE_2) {
-            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_YELLOW,
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_CYAN_BLUE,
                             TEXT_LINE_WIDTH,
                             (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
                             (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_CLIMB,
                             0, 0, 0);
         } else {
-            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_YELLOW,
+            EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_1, UI_CYAN_BLUE,
                             TEXT_LINE_WIDTH,
                             (uint16_t)TEXT_START_X, (uint16_t)TEXT_START_Y,
                             (uint16_t)TEXT_FONT_SIZE, (uint16_t)TEXT_LEN_UP,
@@ -339,7 +364,7 @@ static void UI_Pack_And_Send_ModeChar(Graphic_Operate_e op)
 
     {
         const uint8_t nm[3] = {'M', 'O', '1'};
-        EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_2, UI_YELLOW,
+        EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_2, UI_CYAN_BLUE,
                         TEXT_MODE_LINE_WIDTH,
                         (uint16_t)TEXT_MODE_START_X, (uint16_t)TEXT_MODE_START_Y,
                         (uint16_t)TEXT_MODE_FONT_SIZE, mode_len,
@@ -347,6 +372,92 @@ static void UI_Pack_And_Send_ModeChar(Graphic_Operate_e op)
     }
     memset(pkt.char_data, 0, sizeof(pkt.char_data));
     memcpy(pkt.char_data, mode_str, mode_len);
+
+    memcpy(ClientTxBuffer, &pkt, sizeof(pkt));
+    Append_CRC8_Check_Sum(ClientTxBuffer, REFEREE_LEN_FRAME_HEAD);
+    Append_CRC16_Check_Sum(ClientTxBuffer, sizeof(pkt));
+    HAL_UART_Transmit_DMA(&huart1, ClientTxBuffer, sizeof(pkt));
+}
+
+static void UI_Pack_And_Send_GearChar(Graphic_Operate_e op)
+{
+    ext_graphic_char_data_t pkt;
+    const char *gear_str;
+    uint16_t    gear_len;
+
+    if (HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX) {
+        return;
+    }
+
+    if (chassis_info.gear == 1) {
+        gear_str = TEXT_GEAR_FAST;
+        gear_len = (uint16_t)TEXT_GEAR_FAST_LEN;
+    } else {
+        gear_str = TEXT_GEAR_SLOW;
+        gear_len = (uint16_t)TEXT_GEAR_SLOW_LEN;
+    }
+
+    pkt.frame_header.SOF         = REFEREE_HEADER_SOF;
+    pkt.frame_header.data_length = UI_LEN_REFEREE_DATA_CHAR;
+    pkt.frame_header.seq         = ui_seq++;
+    pkt.frame_header.CRC8        = 0;
+
+    pkt.cmd_id = REFEREE_CMD_ID_INTERACT;
+    pkt.interact_header.data_cmd_id = UI_INTERACT_ID_DRAW_CHAR;
+    pkt.interact_header.sender_id   = Referee_System_Info.robot_status.robot_id;
+    pkt.interact_header.receiver_id = Get_Self_Client_ID(Referee_System_Info.robot_status.robot_id);
+
+    {
+        const uint8_t nm[3] = {'G', 'E', 'R'};
+        EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_2, UI_CYAN_BLUE,
+                        TEXT_GEAR_LINE_WIDTH,
+                        (uint16_t)TEXT_GEAR_START_X, (uint16_t)TEXT_GEAR_START_Y,
+                        (uint16_t)TEXT_GEAR_FONT_SIZE, gear_len,
+                        0, 0, 0);
+    }
+    memset(pkt.char_data, 0, sizeof(pkt.char_data));
+    memcpy(pkt.char_data, gear_str, gear_len);
+
+    memcpy(ClientTxBuffer, &pkt, sizeof(pkt));
+    Append_CRC8_Check_Sum(ClientTxBuffer, REFEREE_LEN_FRAME_HEAD);
+    Append_CRC16_Check_Sum(ClientTxBuffer, sizeof(pkt));
+    HAL_UART_Transmit_DMA(&huart1, ClientTxBuffer, sizeof(pkt));
+}
+
+/**
+  * @brief 表 2-23 浮点数：类型 UI_FLOAT(5)，details_a=字体大小，details_b 无作用；
+  *        details_c~e 为 32 位整型，选手端显示 = 整型/1000（例 3140 -> 3.14）。子内容 0x0101 单图。
+  */
+static void UI_Pack_And_Send_FloatTest(Graphic_Operate_e op)
+{
+    ext_graphic_one_data_t pkt;
+    uint16_t                dc, dd, de;
+
+    if (HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX) {
+        return;
+    }
+
+    float test_value = Referee_System_Info.power_heat_data.buffer_energy;
+    PackInt32ToGraphicDetails((int32_t)(test_value * 1000.0f), &dc, &dd, &de);
+
+    pkt.frame_header.SOF         = REFEREE_HEADER_SOF;
+    pkt.frame_header.data_length = UI_LEN_REFEREE_DATA_ONE;
+    pkt.frame_header.seq         = ui_seq++;
+    pkt.frame_header.CRC8        = 0;
+
+    pkt.cmd_id = REFEREE_CMD_ID_INTERACT;
+    pkt.interact_header.data_cmd_id = UI_INTERACT_ID_DRAW_ONE;
+    pkt.interact_header.sender_id   = Referee_System_Info.robot_status.robot_id;
+    pkt.interact_header.receiver_id = Get_Self_Client_ID(Referee_System_Info.robot_status.robot_id);
+
+    {
+        const uint8_t nm[3] = {'F', 'L', '1'};
+        EncodeGraphic15(pkt.graphic, nm, op, UI_FLOAT, UI_LAYER_3, UI_CYAN_BLUE,
+                        FLOAT_TEST_LINE_WIDTH,
+                        (uint16_t)FLOAT_TEST_START_X, (uint16_t)FLOAT_TEST_START_Y,
+                        (uint16_t)FLOAT_TEST_FONT_SIZE, 0U,
+                        dc, dd, de);
+    }
 
     memcpy(ClientTxBuffer, &pkt, sizeof(pkt));
     Append_CRC8_Check_Sum(ClientTxBuffer, REFEREE_LEN_FRAME_HEAD);

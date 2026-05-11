@@ -8,7 +8,7 @@
   * @date           : 2026/04/26
   * @version        : v1.0
   ******************************************************************************
-  * @attention      : 矩形 + 两横线 (0x0103)；两段 0x0110 字符（档位 + TEXT_MODE）
+  * @attention      : 0x0103 几何 + 多段 0x0110 + 0x0101 浮点数(UI_FLOAT)
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -27,9 +27,9 @@
 #define SCREEN_RES_HEIGHT           1080U
 
 #define RECTANGLE_START_X           (SCREEN_RES_WIDTH / 2U + 740U)
-#define RECTANGLE_START_Y           (SCREEN_RES_HEIGHT / 2U + 240U)
+#define RECTANGLE_START_Y           (SCREEN_RES_HEIGHT / 2U + 210U)
 #define RECTANGLE_WIDTH              210
-#define RECTANGLE_HEIGHT             90
+#define RECTANGLE_HEIGHT             120
 #define RECTANGLE_LINE_WIDTH         6
 
 /* 横线 1：矩形垂直方向正中 */
@@ -83,6 +83,22 @@
 #define TEXT_MODE_START_X            (SCREEN_RES_WIDTH / 2U + 750U)
 #define TEXT_MODE_START_Y            (SCREEN_RES_HEIGHT / 2U + 314U)
 
+/* 档位文字 */
+#define TEXT_GEAR_FAST               "FAST"
+#define TEXT_GEAR_SLOW               "SLOW"
+#define TEXT_GEAR_FAST_LEN           (sizeof(TEXT_GEAR_FAST) - 1U)
+#define TEXT_GEAR_SLOW_LEN           (sizeof(TEXT_GEAR_SLOW) - 1U)
+#define TEXT_GEAR_FONT_SIZE          28U
+#define TEXT_GEAR_LINE_WIDTH         4U
+#define TEXT_GEAR_START_X            (SCREEN_RES_WIDTH / 2U + 750U)
+#define TEXT_GEAR_START_Y            (SCREEN_RES_HEIGHT / 2U + 246U)
+
+/* 表 2-23 浮点数：details_a=字体大小，details_b 无作用；details_c~e 共 32 位整型，显示值=整型/1000 */
+#define FLOAT_TEST_FONT_SIZE        40U
+#define FLOAT_TEST_LINE_WIDTH       4U       /* 建议 字体:线宽 ≈ 10:1 */
+#define FLOAT_TEST_START_X          (SCREEN_RES_WIDTH / 2U - 900U)
+#define FLOAT_TEST_START_Y          (SCREEN_RES_HEIGHT / 2U + 314U)
+
 /*********************************************************************************************************
 *                                              裁判系统协议常量
 *********************************************************************************************************/
@@ -94,6 +110,7 @@
 #define UI_INTERACT_ID_DRAW_FIVE    0x0103U   /* 表 2-25：5 个 15B 图形 */
 #define UI_INTERACT_ID_DRAW_CHAR    0x0110U
 
+#define UI_LEN_REFEREE_DATA_ONE     (6U + 15U)        /* 0x0101: 21 */
 #define UI_LEN_REFEREE_DATA_FIVE    (6U + 15U * 5U)   /* 0x0103: 81 */
 #define UI_LEN_REFEREE_DATA_CHAR    (6U + 15U + 30U)  /* 0x0110: 51 */
 
@@ -158,6 +175,16 @@ typedef struct
     uint16_t sender_id;
     uint16_t receiver_id;
 } interaction_header_t;
+
+/* 0x0101：5 + 2 + 21 + 2 = 30 */
+typedef struct
+{
+    frame_header_t       frame_header;
+    uint16_t             cmd_id;
+    interaction_header_t interact_header;
+    uint8_t              graphic[15];
+    uint16_t             frame_tail_crc16;
+} ext_graphic_one_data_t;
 
 /* 0x0103：5 + 2 + 81 + 2 = 90 */
 typedef struct
