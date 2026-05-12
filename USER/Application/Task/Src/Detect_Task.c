@@ -113,6 +113,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
     chassis->last_lift_mode = chassis->lift_mode;
     if(MINIPC_KEY_RISING_EDGE(key_f)) {
         if (chassis->last_mode == CHASSIS_LIFT) {
+            chassis->lift_mode = LIFT_STAGE_1;
             chassis->mode = CHASSIS_AUTO_LIFT;
         } else if(chassis->last_mode == CHASSIS_AUTO_LIFT) {
             chassis->mode = CHASSIS_LIFT;
