@@ -286,16 +286,7 @@ static void Chassis_Motor_cal(const bool activated)
     if (activated) {
         // ========== Step 0: 目标速度斜坡限幅 ==========
         /* 每个 1ms 周期, 让 Ramped_Target_Velocity 朝原始 Target_Velocity 走至多
-         * CHASSIS_TARGET_VELOCITY_RAMP rpm, 避免目标
-        float key_debug_data[6] = {
-            Robotic_Arm_Motor[J1].Data.Position,
-            Robotic_Arm_Motor[J2].Data.Position,
-            Robotic_Arm_Motor[J3].Data.Position,
-            Robotic_Arm_Motor[J4].Data.Position,
-            Robotic_Arm_Motor[J5].Data.Position,
-            Robotic_Arm_Motor[J6].Data.Position,
-        };
-        USART_Vofa_SendFloat(key_debug_data, 6);值阶跃造成大电流冲击 */
+         * CHASSIS_TARGET_VELOCITY_RAMP rpm, 避免目标值阶跃造成大电流冲击 */
         for (uint8_t i = 0; i < 4; i++) {
             Chassis_Motor[i].Data.Ramped_Target_Velocity = f_Ramp_Calc(
                 Chassis_Motor[i].Data.Ramped_Target_Velocity,

@@ -66,7 +66,6 @@ void CAN_Task(void)
         Elevator_set(chassis_info.activated_flag);
 
         osDelay(1);
-        //USART_Vofa_Justfloat_Transmit(Robotic_Arm_Motor[J2].Data.Temp_Target_Position, Robotic_Arm_Motor[J3].Data.Temp_Target_Position, Robotic_Arm_Motor[J3].Data.Temp_Target_Position);
     }
 }
 
@@ -143,6 +142,10 @@ void Chassis_set(const bool activated)
 		}
 	} else {
 		M3508_motor_crt_ctrl(&hfdcan2, 0x200, 0, 0, 0, 0);
-		M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
+		if (hand_state == HAND_CLOSE) {
+			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -3000, 0, 0, 0);
+		} else {
+		    M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
+		}
 	}
 }

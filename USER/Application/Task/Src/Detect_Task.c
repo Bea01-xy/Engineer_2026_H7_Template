@@ -134,6 +134,12 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
         } else if (chassis->lift_mode == LIFT_STAGE_1) {
             chassis->lift_mode = LIFT_STAGE_3;
         }
+    }else if(MINIPC_KEY_RISING_EDGE(key_x)) {
+        if(chassis->lift_mode == LIFT_STAGE_4) {
+            chassis->lift_mode = LIFT_STAGE_3;
+        } else {
+            chassis->lift_mode = LIFT_STAGE_4;
+        }
     }
     if(MINIPC_KEY_RISING_EDGE(key_2)) {
         if (hand_state == HAND_OPEN) {
@@ -150,6 +156,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
         }
     }
     #else
+    // 还是别开遥控器离线检测了
     // if(remote_ctrl.rc_lost)
     // {
     //     chassis->last_mode = chassis->mode;
@@ -206,8 +213,8 @@ static void chassis_ctrl_info_get(void)
 {
     #if KEYBOARD_CTL
     if(chassis_info.mode == CHASSIS_LIFT){
-        chassis_info.target_vx = ((MiniPC_Data.key_w-MiniPC_Data.key_s) * 0.15f) * (1+MiniPC_Data.key_shift) * (1+3*chassis_info.gear);
-        chassis_info.target_vy = ((MiniPC_Data.key_a-MiniPC_Data.key_d) * 0.15f) * (1+MiniPC_Data.key_shift) * (1+3*chassis_info.gear);
+        chassis_info.target_vx = ((MiniPC_Data.key_w-MiniPC_Data.key_s) * 0.15f) * (1+MiniPC_Data.key_shift) * (1+1.5*chassis_info.gear);
+        chassis_info.target_vy = ((MiniPC_Data.key_a-MiniPC_Data.key_d) * 0.15f) * (1+MiniPC_Data.key_shift) * (1+1.5*chassis_info.gear);
         chassis_info.target_vw = (float)MiniPC_Data.mouse_x * -0.015f;
 
         /* 主动旋转时禁用方向锁定, 让目标方向跟随当前 yaw, 避免松杆瞬间残留误差爆发 */
