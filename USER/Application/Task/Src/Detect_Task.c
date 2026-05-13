@@ -85,12 +85,12 @@ void Detect_Task(void)
             //chassis_info.target_direction,
             //INS_Info.Yaw_Angle,
             //chassis_info.target_vw,
-            Robotic_Arm_Motor[J1].Data.Position,
-            Robotic_Arm_Motor[J2].Data.Position,
-            Robotic_Arm_Motor[J3].Data.Position,
-            Robotic_Arm_Motor[J4].Data.Position,
-            Robotic_Arm_Motor[J5].Data.Position,
-            Referee_System_Info.robot_status.robot_id,
+            Robotic_Arm_Motor[J1].Data.Temperature_Rotor,
+            Robotic_Arm_Motor[J2].Data.Temperature_Rotor,
+            Robotic_Arm_Motor[J3].Data.Temperature_Rotor,
+            Robotic_Arm_Motor[J4].Data.Temperature_Rotor,
+            Robotic_Arm_Motor[J5].Data.Temperature_Rotor,
+            Robotic_Arm_Motor[J6].Data.Temperature_Rotor,
         };
         USART_Vofa_SendFloat(key_debug_data, 6);
         /* ========================================================= */
@@ -216,10 +216,11 @@ static void chassis_ctrl_info_get(void)
     if(chassis_info.mode == CHASSIS_LIFT){
         chassis_info.target_vx = ((MiniPC_Data.key_w-MiniPC_Data.key_s) * 0.15f) * (1+MiniPC_Data.key_shift) * (1+1.5*chassis_info.gear);
         chassis_info.target_vy = ((MiniPC_Data.key_a-MiniPC_Data.key_d) * 0.15f) * (1+MiniPC_Data.key_shift) * (1+1.5*chassis_info.gear);
-        chassis_info.target_vw = (float)MiniPC_Data.mouse_x * -0.015f;
+        chassis_info.target_vw = (float)MiniPC_Data.mouse_x * -0.015f + (MiniPC_Data.key_c - MiniPC_Data.key_v) * 0.3f;
 
-        /* 主动旋转时禁用方向锁定, 让目标方向跟随当前 yaw, 避免松杆瞬间残留误差爆发 */
-        if (MiniPC_Data.mouse_x != 0) {
+        /* 主动旋转时禁用方向锁定, 让目标方向跟随当前 yaw, 避免松杆瞬间残留误差爆发。
+         * 仅用 C/V 时 mouse_x 为 0, 若仍走 else 会把 Chassis_Direction_PID 叠到 target_vw 上, 与按键角速度对冲。 */
+        if (MiniPC_Data.mouse_x != 0 || MiniPC_Data.key_c != MiniPC_Data.key_v) {
             chassis_info.target_direction = INS_Info.Yaw_Angle;
             Chassis_Direction_PID.PID_Calc_Clear(&Chassis_Direction_PID);
         } else {

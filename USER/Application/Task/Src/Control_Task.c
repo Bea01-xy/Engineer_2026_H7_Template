@@ -530,11 +530,17 @@ static void Robotic_Arm_set_feedfoward(void)
     float theta[6] = {Robotic_Arm_Motor[J1].Data.Position, Robotic_Arm_Motor[J2].Data.Position, -Robotic_Arm_Motor[J3].Data.Position, -Robotic_Arm_Motor[J4].Data.Position, Robotic_Arm_Motor[J5].Data.Position, -Robotic_Arm_Motor[J6].Data.Position};
     GravityComp_UpdateFeedforward(theta);
     Robotic_Arm_Motor[J1].Data.Feedforward =      gGravityComp.feedforward_torque[J1] + Robotic_Arm_FF_PID[J1].Output;
+    VAL_LIMIT(Robotic_Arm_Motor[J1].Data.Feedforward, -9.0f, 9.0f);
     Robotic_Arm_Motor[J2].Data.Feedforward =  0.6*gGravityComp.feedforward_torque[J2] + Robotic_Arm_FF_PID[J2].Output;
+    VAL_LIMIT(Robotic_Arm_Motor[J2].Data.Feedforward, -9.0f, 9.0f);
     Robotic_Arm_Motor[J3].Data.Feedforward =     -gGravityComp.feedforward_torque[J3] + Robotic_Arm_FF_PID[J3].Output;
+    VAL_LIMIT(Robotic_Arm_Motor[J3].Data.Feedforward, -9.0f, 9.0f);
     Robotic_Arm_Motor[J4].Data.Feedforward =     -gGravityComp.feedforward_torque[J4] + Robotic_Arm_FF_PID[J4].Output;
+    VAL_LIMIT(Robotic_Arm_Motor[J4].Data.Feedforward, -2.0f, 2.0f);
     Robotic_Arm_Motor[J5].Data.Feedforward =      gGravityComp.feedforward_torque[J5] + Robotic_Arm_FF_PID[J5].Output;
+    VAL_LIMIT(Robotic_Arm_Motor[J5].Data.Feedforward, -0.6f, 0.6f);
     Robotic_Arm_Motor[J6].Data.Feedforward =     -gGravityComp.feedforward_torque[J6] + Robotic_Arm_FF_PID[J6].Output;
+    VAL_LIMIT(Robotic_Arm_Motor[J6].Data.Feedforward, -1.0f, 1.0f);
 #endif
 }
 /* USER CODE END Control_Task */

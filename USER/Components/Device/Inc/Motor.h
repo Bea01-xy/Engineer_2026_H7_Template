@@ -20,6 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "Config.h"
+#include "stdbool.h"
 #include "stm32h723xx.h"
 #include "bsp_can.h"
 
@@ -108,6 +109,7 @@ typedef struct
   	float  Torque;     /*!< Motor Torque   */
   	float  Temperature_MOS;   /*!< Motor Temperature_MOS   */
   	float  Temperature_Rotor; /*!< Motor Temperature_Rotor */
+	bool   overheat;          /*!< 转子温度超软件阈值时为 true (机械臂关节使用) */
 	
 	float  Target_Position;   /*!< Target Motor Positon  */
 	float  Start_Position;

@@ -24,6 +24,9 @@
 /* Exported constants --------------------------------------------------------*/
 #define ROBOTIC_ARM_DOF 6u
 
+/** 机械臂关节电机软件过温保护阈值 (°C)，超过则失能对应电机 */
+#define ROBOTIC_ARM_OVERTEMP_C_DEG 100.0f
+
 #define J1 0u
 #define J2 1u
 #define J3 2u
@@ -93,13 +96,13 @@ typedef enum
 #define ROBOTIC_ARM_FF_A_LimitOutput     9.0f       /* N·m */
 
 /* ---------- Group B: J4 / J5 / J6 ---------- */
-#define ROBOTIC_ARM_FF_B_KP              1.4f
-#define ROBOTIC_ARM_FF_B_KI              0.04f
+#define ROBOTIC_ARM_FF_B_KP              0.7f
+#define ROBOTIC_ARM_FF_B_KI              0.02f
 #define ROBOTIC_ARM_FF_B_KD              1.3f
 #define ROBOTIC_ARM_FF_B_Alpha           0.5f
 #define ROBOTIC_ARM_FF_B_Deadband        0.02f      /* rad, 约 1.15° */
-#define ROBOTIC_ARM_FF_B_LimitIntegral   100.0f      /* 单位: rad·tick (累加误差) */
-#define ROBOTIC_ARM_FF_B_LimitOutput     2.5f       /* N·m */
+#define ROBOTIC_ARM_FF_B_LimitIntegral   50.0f      /* 单位: rad·tick (累加误差) */
+#define ROBOTIC_ARM_FF_B_LimitOutput     1.0f       /* N·m */
 
 #endif /* ROBOTIC_ARM_CONFIG_H */
 

@@ -41,6 +41,11 @@ void Elevator_set(bool activated);
 void Robotic_Arm_set(int part, bool activated);
 void Chassis_set(bool activated);
 
+static void Robotic_Arm_Update_Overheat(void);
+static void Robotic_Arm_Motor_MIT_Or_Disable(FDCAN_TxFrame_TypeDef *frame,
+                                            DM_Motor_Info_Typedef *m,
+                                            const float kp, const float kd);
+
 extern Chassis_Info_Typedef chassis_info;
 extern uint8_t hand_state;
 
@@ -58,6 +63,7 @@ void CAN_Task(void)
 	static int robotic_arm_part = 0;
 	for(;;)
     {
+		Robotic_Arm_Update_Overheat();
 		Robotic_Arm_set(robotic_arm_part, chassis_info.activated_flag);
 		robotic_arm_part = (robotic_arm_part + 1) % 3;
 
@@ -93,24 +99,40 @@ void Elevator_set(const bool activated)
     }
 }
 
+static void Robotic_Arm_Update_Overheat(void)
+{
+		Robotic_Arm_Motor[0].Data.overheat = (Robotic_Arm_Motor[0].Data.Temperature_Rotor > ROBOTIC_ARM_OVERTEMP_C_DEG);
+		Robotic_Arm_Motor[1].Data.overheat = (Robotic_Arm_Motor[1].Data.Temperature_Rotor > ROBOTIC_ARM_OVERTEMP_C_DEG);
+		Robotic_Arm_Motor[2].Data.overheat = (Robotic_Arm_Motor[2].Data.Temperature_Rotor > ROBOTIC_ARM_OVERTEMP_C_DEG);
+		Robotic_Arm_Motor[3].Data.overheat = (Robotic_Arm_Motor[3].Data.Temperature_Rotor > ROBOTIC_ARM_OVERTEMP_C_DEG);
+		Robotic_Arm_Motor[4].Data.overheat = (Robotic_Arm_Motor[4].Data.Temperature_Rotor > 90);
+		Robotic_Arm_Motor[5].Data.overheat = (Robotic_Arm_Motor[5].Data.Temperature_Rotor > ROBOTIC_ARM_OVERTEMP_C_DEG);
+}
+
+static void Robotic_Arm_Motor_MIT_Or_Disable(FDCAN_TxFrame_TypeDef *frame,
+                                            DM_Motor_Info_Typedef *m,
+                                            const float kp, const float kd)
+{
+	if (!m->Data.overheat) {
+		DM_Motor_Command(frame, m, Motor_Enable);
+		DM_Motor_CAN_TxMessage(frame, m, m->Data.Temp_Target_Position, MIT_NO_USE, kp, kd, m->Data.Feedforward);
+	} else {
+		DM_Motor_Command(frame, m, Motor_Disable);
+	}
+}
+
 void Robotic_Arm_set(const int part, const bool activated)
 {
 	if(activated){
 		if (part == 0) {
-	    	DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J1],Motor_Enable);
-	    	DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J2],Motor_Enable);
-			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], Robotic_Arm_Motor[J1].Data.Temp_Target_Position, MIT_NO_USE, 38.0f, 4.2f, Robotic_Arm_Motor[J1].Data.Feedforward);
-			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], Robotic_Arm_Motor[J2].Data.Temp_Target_Position, MIT_NO_USE, 45.0f, 12.2f, Robotic_Arm_Motor[J2].Data.Feedforward);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], 18.0f, 4.2f);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], 45.0f, 12.2f);
 		} else if (part == 1) {
-	    	DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J3],Motor_Enable);
-	    	DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J4],Motor_Enable);
-			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], Robotic_Arm_Motor[J3].Data.Temp_Target_Position, MIT_NO_USE, 45.0f, 12.2f, Robotic_Arm_Motor[J3].Data.Feedforward);
-			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], Robotic_Arm_Motor[J4].Data.Temp_Target_Position, MIT_NO_USE, 18.0f, 1.2f, Robotic_Arm_Motor[J4].Data.Feedforward);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], 45.0f, 12.2f);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], 18.0f, 12.2f);
 		} else if (part == 2) {
-	    	DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J5],Motor_Enable);
-	    	DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J6],Motor_Enable);
-			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], Robotic_Arm_Motor[J5].Data.Temp_Target_Position, MIT_NO_USE, 20.0f, 1.2f, Robotic_Arm_Motor[J5].Data.Feedforward);
-			DM_Motor_CAN_TxMessage(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], Robotic_Arm_Motor[J6].Data.Temp_Target_Position, MIT_NO_USE, 12.0f, 1.2f, Robotic_Arm_Motor[J6].Data.Feedforward);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], 5.5f, 0.8f);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], 12.0f, 1.2f);
 		}
 	}
 	else {	
