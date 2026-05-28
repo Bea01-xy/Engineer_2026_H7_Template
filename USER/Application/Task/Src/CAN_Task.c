@@ -51,11 +51,11 @@ extern uint8_t hand_state;
 
 void CAN_Task(void)
 {
-	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[LF],Motor_Save_Zero_Position);
-	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[LB],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[LF],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[LB],Motor_Save_Zero_Position);
     osDelay(1);
-	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RB],Motor_Save_Zero_Position);
-	DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RF],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RB],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RF],Motor_Save_Zero_Position);
 
 	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J4],Motor_Save_Zero_Position);
 	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J5],Motor_Save_Zero_Position);
@@ -129,7 +129,7 @@ void Robotic_Arm_set(const int part, const bool activated)
 			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], 45.0f, 12.2f);
 		} else if (part == 1) {
 			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], 45.0f, 12.2f);
-			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], 18.0f, 12.2f);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], 5.0f, 1.2f);
 		} else if (part == 2) {
 			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], 5.5f, 0.8f);
 			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], 12.0f, 1.2f);
@@ -158,14 +158,17 @@ void Chassis_set(const bool activated)
 							 Chassis_Motor[RB].Data.Final_Output,
 							 Chassis_Motor[RF].Data.Final_Output);
 		if (hand_state == HAND_OPEN) {
-			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 2500, 0, 0, 0);
+			//M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 2500, 0, 0, 0);
+			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
 		} else {
-			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -3000, 0, 0, 0);
+			//M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -3000, 0, 0, 0);
+			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
 		}
 	} else {
 		M3508_motor_crt_ctrl(&hfdcan2, 0x200, 0, 0, 0, 0);
 		if (hand_state == HAND_CLOSE) {
-			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -3000, 0, 0, 0);
+			//M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -3000, 0, 0, 0);
+			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
 		} else {
 		    M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
 		}

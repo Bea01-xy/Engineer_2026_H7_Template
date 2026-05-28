@@ -51,7 +51,7 @@ PID_Info_TypeDef Chassis_Direction_PID;
 
 extern Referee_System_Info_TypeDef Referee_System_Info;
 
-Hand_State_e hand_state = HAND_OPEN;
+Hand_State_e hand_state = HAND_CLOSE;
 TickType_t Detect_Task_SysTick = 0;
 /**
 * @brief Function implementing the StartDetectTask thread.
@@ -80,17 +80,18 @@ void Detect_Task(void)
         UI_Tick();
 
         float key_debug_data[6] = {
-            //Chassis_Motor[LF].Data.Velocity,
-            //Chassis_Motor[LF].Data.Ramped_Target_Velocity,
-            //chassis_info.target_direction,
-            //INS_Info.Yaw_Angle,
-            //chassis_info.target_vw,
-            Robotic_Arm_Motor[J1].Data.Temperature_Rotor,
-            Robotic_Arm_Motor[J2].Data.Temperature_Rotor,
-            Robotic_Arm_Motor[J3].Data.Temperature_Rotor,
-            Robotic_Arm_Motor[J4].Data.Temperature_Rotor,
-            Robotic_Arm_Motor[J5].Data.Temperature_Rotor,
-            Robotic_Arm_Motor[J6].Data.Temperature_Rotor,
+            //INS_Info.Gyro[2],
+            //Chassis_Motor[RB].Data.Velocity,
+            //chassis_info.lift_counter_2,
+            //chassis_info.countering_2,
+            //chassis_info.countering_1,
+            //chassis_info.lift_mode
+            Robotic_Arm_Motor[J1].Data.Position,
+            Robotic_Arm_Motor[J2].Data.Position,
+            Robotic_Arm_Motor[J3].Data.Position,
+            Robotic_Arm_Motor[J4].Data.Position,
+            Robotic_Arm_Motor[J5].Data.Position,
+            Robotic_Arm_Motor[J6].Data.Position,
         };
         USART_Vofa_SendFloat(key_debug_data, 6);
         /* ========================================================= */
@@ -101,7 +102,7 @@ void Detect_Task(void)
     /* USER CODE END Detect_Task */
 }
 
-#define KEYBOARD_CTL 1
+#define KEYBOARD_CTL 0
 static void chassis_set_mode(Chassis_Info_Typedef* chassis)
 {
     if(chassis == NULL)
@@ -114,8 +115,12 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
     if(MINIPC_KEY_RISING_EDGE(key_f)) {
         if (chassis->last_mode == CHASSIS_LIFT) {
             chassis->lift_mode = LIFT_STAGE_1;
-            chassis->mode = CHASSIS_AUTO_LIFT;
-        } else if(chassis->last_mode == CHASSIS_AUTO_LIFT) {
+            chassis->mode = CHASSIS_AUTO_LIFT_1;
+        } else if(chassis->last_mode == CHASSIS_AUTO_LIFT_1) {
+            chassis->lift_mode = LIFT_STAGE_1;
+            chassis->mode = CHASSIS_AUTO_LIFT_2;
+        } else if(chassis->last_mode == CHASSIS_AUTO_LIFT_2) {
+            chassis->lift_mode = LIFT_STAGE_3;
             chassis->mode = CHASSIS_LIFT;
         } else {
             chassis->mode = CHASSIS_DISABLE;
@@ -132,7 +137,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
             chassis->lift_mode = LIFT_STAGE_5;
         } else if (chassis->lift_mode == LIFT_STAGE_5) {
             chassis->lift_mode = LIFT_STAGE_1;
-        } else if (chassis->lift_mode == LIFT_STAGE_1) {
+        } else if (chassis->lift_mode == LIFT_STAGE_1 || chassis->lift_mode == LIFT_STAGE_6) {
             chassis->lift_mode = LIFT_STAGE_3;
         }
     }else if(MINIPC_KEY_RISING_EDGE(key_x)) {
@@ -173,6 +178,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
     const uint16_t sw0 = remote_ctrl.rc.sw[0];
     const uint16_t sw1 = remote_ctrl.rc.sw[1];
 
+    #if 0
     if (switch_is_up(sw1)) {
         hand_state = HAND_OPEN;
         M2006_Gripper_Motor.Data.Target_Angle = GRIPPER_OPEN_POS;
@@ -180,6 +186,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
         hand_state = HAND_CLOSE;
         M2006_Gripper_Motor.Data.Target_Angle = GRIPPER_CLOSE_POS;
     }
+    #endif
 
     if (switch_is_up(sw0)) {
         chassis->last_mode = chassis->mode;
@@ -189,20 +196,27 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
         chassis->last_lift_mode = chassis->lift_mode;
         chassis->mode = CHASSIS_LIFT;
         chassis->lift_mode = LIFT_STAGE_4;
-    } else if (switch_is_up(s1)) {
+    } else if (switch_is_up(s1) && switch_is_up(sw1)) {
         chassis->last_mode = chassis->mode;
         chassis->last_lift_mode = chassis->lift_mode;
         chassis->mode = CHASSIS_LIFT;
         switch (s0) {
             case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_1; break;
-            case RC_SW_MID:  chassis->lift_mode = LIFT_STAGE_2; break;
+            case RC_SW_MID:  chassis->lift_mode = LIFT_STAGE_5; break;
             case RC_SW_UP:   chassis->lift_mode = LIFT_STAGE_3; break;
             default: break;
         }
     } else if (switch_is_down(s1)) {
         chassis->last_mode = chassis->mode;
         chassis->last_lift_mode = chassis->lift_mode;
-        chassis->mode = CHASSIS_AUTO_LIFT;
+        chassis->mode = CHASSIS_AUTO_LIFT_1;
+        if(chassis->last_mode == CHASSIS_LIFT) {
+            chassis->lift_mode = LIFT_STAGE_1;
+        }
+    } else if (switch_is_down(sw1)) {
+        chassis->last_mode = chassis->mode;
+        chassis->last_lift_mode = chassis->lift_mode;
+        chassis->mode = CHASSIS_AUTO_LIFT_2;
         if(chassis->last_mode == CHASSIS_LIFT) {
             chassis->lift_mode = LIFT_STAGE_1;
         }

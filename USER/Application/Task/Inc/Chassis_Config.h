@@ -92,7 +92,8 @@ typedef enum
 {
     CHASSIS_DISABLE,
     CHASSIS_LIFT,
-    CHASSIS_AUTO_LIFT,
+    CHASSIS_AUTO_LIFT_1,
+    CHASSIS_AUTO_LIFT_2,
 } Chassis_Mode_e;
 
 typedef enum
@@ -102,6 +103,8 @@ typedef enum
     LIFT_STAGE_3,
     LIFT_STAGE_4, //prepare to land
     LIFT_STAGE_5, //to get the prop
+    LIFT_STAGE_6,
+    LIFT_STAGE_7,
 } Chassis_LIFT_Mode_e;
 
 typedef struct
@@ -150,6 +153,11 @@ typedef struct
 #define ELEVATOR_LB_3rd_ACTIVATED_POS (ELEVATOR_LB_1st_ACTIVATED_POS*0.65f)
 #define ELEVATOR_RB_3rd_ACTIVATED_POS (ELEVATOR_RB_1st_ACTIVATED_POS*0.65f)
 #define ELEVATOR_RF_3rd_ACTIVATED_POS (ELEVATOR_RF_1st_ACTIVATED_POS*0.65f)
+
+#define ELEVATOR_LF_4th_ACTIVATED_POS (ELEVATOR_LF_1st_ACTIVATED_POS*0.2f)
+#define ELEVATOR_LB_4th_ACTIVATED_POS (ELEVATOR_USUAL_POS)
+#define ELEVATOR_RB_4th_ACTIVATED_POS (ELEVATOR_USUAL_POS)
+#define ELEVATOR_RF_4th_ACTIVATED_POS (ELEVATOR_RF_1st_ACTIVATED_POS*0.2f)
 /* @brief Chassis auto-lifting parameters */
 #define CHASSIS_AUTO_LIFT_TARGET_VELOCITY       650     // 自动抬升时底盘电机目标转速 (rpm)
 #define CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH     50      // 判定电机堵转的速度阈值 (rpm)

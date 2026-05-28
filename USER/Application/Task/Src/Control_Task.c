@@ -33,7 +33,8 @@ static void Control_Init(void);
 static float SmootherStep(float NowTime,float UseTime);
 
 static void chassis_lifting_handler(void);
-static void chassis_auto_lifting_handler(void);
+static void chassis_auto_lifting_handler_1(void);
+static void chassis_auto_lifting_handler_2(void);
 static void chassis_disabled_handler(void);
 
 static void Chassis_Motor_cal(bool activated);
@@ -102,8 +103,11 @@ void Control_Task(void)
             case CHASSIS_LIFT:
                 chassis_lifting_handler();
                 break;
-            case CHASSIS_AUTO_LIFT:
-                chassis_auto_lifting_handler();
+            case CHASSIS_AUTO_LIFT_1:
+                chassis_auto_lifting_handler_1();
+                break;
+            case CHASSIS_AUTO_LIFT_2:
+                chassis_auto_lifting_handler_2();
                 break;
             default: break;
         }
@@ -241,7 +245,45 @@ static void chassis_disabled_handler(void)
     }
 }
 
-static void chassis_auto_lifting_handler(void)
+static void chassis_auto_lifting_handler_2(void)
+{
+    Chassis_Motor[LF].Data.Target_Velocity =  CHASSIS_AUTO_LIFT_TARGET_VELOCITY;
+    Chassis_Motor[LB].Data.Target_Velocity =  CHASSIS_AUTO_LIFT_TARGET_VELOCITY;
+    Chassis_Motor[RB].Data.Target_Velocity = -CHASSIS_AUTO_LIFT_TARGET_VELOCITY;
+    Chassis_Motor[RF].Data.Target_Velocity = -CHASSIS_AUTO_LIFT_TARGET_VELOCITY;
+
+    if (abs(Chassis_Motor[LF].Data.Velocity) < CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH &&
+        abs(Chassis_Motor[LB].Data.Velocity) < CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH &&
+        abs(Chassis_Motor[RB].Data.Velocity) < CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH &&
+        abs(Chassis_Motor[RF].Data.Velocity) < CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH &&
+        chassis_info.countering_1 == true)
+    {
+        chassis_info.lift_counter_1++;
+    }
+    else if (abs(Chassis_Motor[RB].Data.Velocity) > 900 &&
+             chassis_info.countering_2 == true)
+    {
+        chassis_info.lift_counter_2++;
+    }
+
+    if (chassis_info.lift_counter_1 >= CHASSIS_AUTO_LIFT_STAGE1_COUNTER_TH && chassis_info.countering_1 == true)
+    {
+        chassis_info.lift_mode = LIFT_STAGE_7;
+        chassis_info.lift_counter_1 = 0;
+        chassis_info.countering_1 = false;
+        chassis_info.countering_2 = true;
+    }
+    else if (chassis_info.lift_counter_2 >= 500 && chassis_info.countering_2 == true)
+    {
+        chassis_info.lift_mode = LIFT_STAGE_6;
+        chassis_info.lift_counter_2 = 0;
+        chassis_info.countering_1 = true;
+        chassis_info.countering_2 = false;
+    }
+    chassis_lifting_handler();
+}
+
+static void chassis_auto_lifting_handler_1(void)
 {
     Chassis_Motor[LF].Data.Target_Velocity =  CHASSIS_AUTO_LIFT_TARGET_VELOCITY;
     Chassis_Motor[LB].Data.Target_Velocity =  CHASSIS_AUTO_LIFT_TARGET_VELOCITY;
@@ -279,7 +321,6 @@ static void chassis_auto_lifting_handler(void)
     }
     chassis_lifting_handler();
 }
-
 #define POWER_CONTROL 1
 static void Chassis_Motor_cal(const bool activated)
 {
@@ -462,6 +503,28 @@ static void Elevator_set_feedforward_and_pos(void)
             Elevator_Motor[RB].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LF_RB;
             Elevator_Motor[RF].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LB_RF;
             break;
+        case LIFT_STAGE_6:
+            Elevator_Motor[LF].Data.Target_Position = ELEVATOR_LF_4th_ACTIVATED_POS;
+            Elevator_Motor[LB].Data.Target_Position = ELEVATOR_LB_4th_ACTIVATED_POS;
+            Elevator_Motor[RB].Data.Target_Position = ELEVATOR_RB_4th_ACTIVATED_POS;
+            Elevator_Motor[RF].Data.Target_Position = ELEVATOR_RF_4th_ACTIVATED_POS;
+
+            Elevator_Motor[LF].Data.Feedforward = 0.f;
+            Elevator_Motor[LB].Data.Feedforward = 0.f;
+            Elevator_Motor[RB].Data.Feedforward = 0.f;
+            Elevator_Motor[RF].Data.Feedforward = 0.f;
+            break;
+        case LIFT_STAGE_7:
+            Elevator_Motor[LF].Data.Target_Position = ELEVATOR_LF_4th_ACTIVATED_POS;
+            Elevator_Motor[LB].Data.Target_Position = ELEVATOR_LB_1st_ACTIVATED_POS;
+            Elevator_Motor[RB].Data.Target_Position = ELEVATOR_RB_1st_ACTIVATED_POS;
+            Elevator_Motor[RF].Data.Target_Position = ELEVATOR_RF_4th_ACTIVATED_POS;
+
+            Elevator_Motor[LF].Data.Feedforward = 0.f;
+            Elevator_Motor[LB].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LB_RF;
+            Elevator_Motor[RB].Data.Feedforward = ELEVATOR_FEEDFORWARD_FOR_LF_RB;
+            Elevator_Motor[RF].Data.Feedforward = 0.f;
+            break;
         default:
             break;
     }
@@ -536,7 +599,6 @@ static void Robotic_Arm_set_feedfoward(void)
     Robotic_Arm_Motor[J3].Data.Feedforward =     -gGravityComp.feedforward_torque[J3] + Robotic_Arm_FF_PID[J3].Output;
     VAL_LIMIT(Robotic_Arm_Motor[J3].Data.Feedforward, -9.0f, 9.0f);
     Robotic_Arm_Motor[J4].Data.Feedforward =     -gGravityComp.feedforward_torque[J4] + Robotic_Arm_FF_PID[J4].Output;
-    VAL_LIMIT(Robotic_Arm_Motor[J4].Data.Feedforward, -2.0f, 2.0f);
     Robotic_Arm_Motor[J5].Data.Feedforward =      gGravityComp.feedforward_torque[J5] + Robotic_Arm_FF_PID[J5].Output;
     VAL_LIMIT(Robotic_Arm_Motor[J5].Data.Feedforward, -0.6f, 0.6f);
     Robotic_Arm_Motor[J6].Data.Feedforward =     -gGravityComp.feedforward_torque[J6] + Robotic_Arm_FF_PID[J6].Output;
