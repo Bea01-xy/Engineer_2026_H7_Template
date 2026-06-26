@@ -107,7 +107,7 @@ uint8_t MiniPC_Transmit_Info(float* Buf, uint16_t Len)
 void MiniPC_Receive_Info(void)
 {
     /* 数据部分大小：6*4 + 3*2 + 21*1 = 51字节 */
-    const uint32_t data_len = 51;
+    const uint32_t data_len = 24; 
     /* 完整数据包：帧头(1) + 数据(51) + 校验(1) + 帧尾(1) = 54字节 */
     const uint32_t packet_len = data_len + 3;
 

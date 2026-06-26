@@ -91,7 +91,7 @@ typedef enum
 #define ROBOTIC_ARM_FF_A_KI              0.02f
 #define ROBOTIC_ARM_FF_A_KD              1.7f
 #define ROBOTIC_ARM_FF_A_Alpha           0.5f
-#define ROBOTIC_ARM_FF_A_Deadband        0.02f      /* rad, 约 1.15° */
+#define ROBOTIC_ARM_FF_A_Deadband        0.00f      /* rad, 约 1.15° */
 #define ROBOTIC_ARM_FF_A_LimitIntegral   600.0f     /* 单位: rad·tick (累加误差) */
 #define ROBOTIC_ARM_FF_A_LimitOutput     9.0f       /* N·m */
 
@@ -100,9 +100,9 @@ typedef enum
 #define ROBOTIC_ARM_FF_B_KI              0.02f
 #define ROBOTIC_ARM_FF_B_KD              1.3f
 #define ROBOTIC_ARM_FF_B_Alpha           0.5f
-#define ROBOTIC_ARM_FF_B_Deadband        0.02f      /* rad, 约 1.15° */
-#define ROBOTIC_ARM_FF_B_LimitIntegral   50.0f      /* 单位: rad·tick (累加误差) */
-#define ROBOTIC_ARM_FF_B_LimitOutput     1.0f       /* N·m */
+#define ROBOTIC_ARM_FF_B_Deadband        0.00f      /* rad, 约 1.15° */
+#define ROBOTIC_ARM_FF_B_LimitIntegral   100.0f      /* 单位: rad·tick (累加误差) */
+#define ROBOTIC_ARM_FF_B_LimitOutput     2.0f       /* N·m */
 
 #endif /* ROBOTIC_ARM_CONFIG_H */
 

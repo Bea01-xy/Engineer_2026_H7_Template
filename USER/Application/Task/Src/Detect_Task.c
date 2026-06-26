@@ -82,18 +82,13 @@ void Detect_Task(void)
         float key_debug_data[6] = {
             //INS_Info.Gyro[2],
             //Chassis_Motor[RB].Data.Velocity,
-            //chassis_info.lift_counter_2,
-            //chassis_info.countering_2,
-            //chassis_info.countering_1,
             //chassis_info.lift_mode
-            Robotic_Arm_Motor[J1].Data.Position,
-            Robotic_Arm_Motor[J2].Data.Position,
-            Robotic_Arm_Motor[J3].Data.Position,
-            Robotic_Arm_Motor[J4].Data.Position,
-            Robotic_Arm_Motor[J5].Data.Position,
-            Robotic_Arm_Motor[J6].Data.Position,
+            //Robotic_Arm_Motor[J2].Data.Position,
+            Robotic_Arm_Motor[J2].Data.Target_Position,
+            Robotic_Arm_Motor[J3].Data.Target_Position,
+            Robotic_Arm_Motor[J5].Data.Target_Position,
         };
-        USART_Vofa_SendFloat(key_debug_data, 6);
+        USART_Vofa_SendFloat(key_debug_data, 3);
         /* ========================================================= */
 
         MiniPC_Data_Update_Last();
