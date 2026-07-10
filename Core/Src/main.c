@@ -32,7 +32,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bsp_mcu.h"
-#include "Motor.h"
+#include "Motor_DM.h"
 #include "bsp_can.h"
 /* USER CODE END Includes */
 

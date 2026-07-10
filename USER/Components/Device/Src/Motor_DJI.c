@@ -1,7 +1,7 @@
 //
 // Created by asus on 26-1-20.
 // From another project.
-#include "Motor_drv.h"
+#include "Motor_DJI.h"
 
 uint8_t fdcanx_send_data(FDCAN_HandleTypeDef *hfdcan, uint16_t id, uint8_t *data, uint32_t len)
 {
@@ -62,13 +62,4 @@ void M3508_motor_crt_ctrl(FDCAN_HandleTypeDef* hcan, uint16_t dji_motor_identifi
 void M2006_motor_crt_ctrl(FDCAN_HandleTypeDef* hcan, uint16_t dji_motor_identifier, int16_t id_1_crt, int16_t id_2_crt,int16_t id_3_crt, int16_t id_4_crt)
 {
     GM6020_motor_vol_ctrl(hcan,dji_motor_identifier,id_1_crt,id_2_crt,id_3_crt,id_4_crt);
-}
-
-void Slave_Board_J6_Gripper_Send(FDCAN_HandleTypeDef* hcan, uint16_t can_id, float j6_val, float gripper_val)
-{
-    uint8_t data[8];
-    const uint8_t *p1 = (const uint8_t *)&j6_val;
-    const uint8_t *p2 = (const uint8_t *)&gripper_val;
-    for (int i = 0; i < 4; i++) { data[i] = p1[i]; data[i + 4] = p2[i]; }
-    fdcanx_send_data(hcan, can_id, data, 8);
 }

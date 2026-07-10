@@ -23,12 +23,13 @@
 #include "Minipc.h"
 #include "Chassis_Config.h"
 #include "bsp_uart.h"
-#include "Motor.h"
+#include "Motor_DM.h"
 #include "PID.h"
 #include "Robotic_Arm_Config.h"
 #include <stdint.h>
 #include "Referee_System.h"
 #include "UI.h"
+#include "arm_math.h"
 /* USER CODE BEGIN Header_Detect_Task */
 static void chassis_set_mode(Chassis_Info_Typedef* chassis);
 static void chassis_ctrl_info_get(void);
@@ -83,12 +84,13 @@ void Detect_Task(void)
             //INS_Info.Gyro[2],
             //Chassis_Motor[RB].Data.Velocity,
             //chassis_info.lift_mode
-            //Robotic_Arm_Motor[J2].Data.Position,
             Robotic_Arm_Motor[J2].Data.Target_Position,
+            Robotic_Arm_Motor[J2].Data.Position,
             Robotic_Arm_Motor[J3].Data.Target_Position,
-            Robotic_Arm_Motor[J5].Data.Target_Position,
+            Robotic_Arm_Motor[J3].Data.Position,
+            //M2006_Gripper_Motor.Data.Current,
         };
-        USART_Vofa_SendFloat(key_debug_data, 3);
+        USART_Vofa_SendFloat(key_debug_data, 4);
         /* ========================================================= */
 
         MiniPC_Data_Update_Last();
@@ -291,8 +293,8 @@ static void MiniPC_Transmit_Robotic_Arm_Info(void)
 static void arm_ctrl_info_get(void)
 {
     Robotic_Arm_Motor[J1].Data.Target_Position = MiniPC_Data.joint_data[J1];
-    Robotic_Arm_Motor[J2].Data.Target_Position = MiniPC_Data.joint_data[J2];
-    Robotic_Arm_Motor[J3].Data.Target_Position = -MiniPC_Data.joint_data[J3];
+    Robotic_Arm_Motor[J2].Data.Target_Position = MiniPC_Data.joint_data[J2]-PI+0.07f;
+    Robotic_Arm_Motor[J3].Data.Target_Position = (PI+MiniPC_Data.joint_data[J3]+0.05f)*1.65f;
     Robotic_Arm_Motor[J4].Data.Target_Position = -MiniPC_Data.joint_data[J4];
     Robotic_Arm_Motor[J5].Data.Target_Position = MiniPC_Data.joint_data[J5];
     Robotic_Arm_Motor[J6].Data.Target_Position = -MiniPC_Data.joint_data[J6];

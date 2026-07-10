@@ -1,8 +1,8 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file           : Motor.h
-  * @brief          : The header file of Motor.h 
+  * @file           : Motor_DM.h
+  * @brief          : The header file of Motor_DM.h
   * @author         : GrassFan Wang
   * @date           : 2025/01/2
   * @version        : v1.0
@@ -14,8 +14,8 @@
 
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef DEVICE_MOTOR_H
-#define DEVICE_MOTOR_H
+#ifndef DEVICE_MOTOR_DM_H
+#define DEVICE_MOTOR_DM_H
 
 
 /* Includes ------------------------------------------------------------------*/
@@ -67,7 +67,7 @@ typedef struct
 /**
  * @brief typedef structure that contains the data for the Motor Device.
  */
-typedef struct 
+typedef struct
 {
 	bool Initlized;   /*!< init flag */
     int16_t  Current;   /*!< Motor electric current */
@@ -76,7 +76,7 @@ typedef struct
     int16_t  Last_Encoder;   /*!< previous Motor encoder angle */
     float    Angle;   /*!< Motor angle in degree */
     uint8_t  Temperature;   /*!< Motor Temperature */
-	
+
     float  Target_Velocity;    /*!< Target motor rotate velocity (RPM)*/
     float  Ramped_Target_Velocity;
     float  Target_Angle;
@@ -86,7 +86,7 @@ typedef struct
 /**
  * @brief typedef structure that contains the param range for the DM_Motor .
  */
-typedef struct 
+typedef struct
 {
   float  P_MAX;
   float  V_MAX;
@@ -96,9 +96,9 @@ typedef struct
 /**
  * @brief typedef structure that contains the data for the DJI Motor Device.
  */
-typedef struct 
+typedef struct
 {
-	
+
   	bool Initlized;    /*!< init flag */
   	uint8_t  State; 	 /*!< Motor Message */
   	uint16_t  P_int;   /*!< Motor Positon  uint16 */
@@ -110,7 +110,7 @@ typedef struct
   	float  Temperature_MOS;   /*!< Motor Temperature_MOS   */
   	float  Temperature_Rotor; /*!< Motor Temperature_Rotor */
 	bool   overheat;          /*!< 转子温度超软件阈值时为 true (机械臂关节使用) */
-	
+
 	float  Target_Position;   /*!< Target Motor Positon  */
 	float  Start_Position;
 	float  Temp_Target_Position;
@@ -133,11 +133,11 @@ typedef struct
  */
 typedef struct
 {
-  
+
 	DM_Motor_Control_Mode_Type_e	Control_Mode;
-    Motor_CANFrameInfo_typedef FDCANFrame;   
-	DM_Motor_Param_Range_Typedef Param_Range; 
-	DM_Motor_Data_Typedef Data;   
+    Motor_CANFrameInfo_typedef FDCANFrame;
+	DM_Motor_Param_Range_Typedef Param_Range;
+	DM_Motor_Data_Typedef Data;
 
 }DM_Motor_Info_Typedef;
 
@@ -172,4 +172,4 @@ extern void DM_Motor_CAN_TxMessage(FDCAN_TxFrame_TypeDef *FDCAN_TxFrame,DM_Motor
 
 float F_Loop_Constrain(float Input, float Min_Value, float Max_Value);
 
-#endif //DEVICE_MOTOR_H
+#endif //DEVICE_MOTOR_DM_H

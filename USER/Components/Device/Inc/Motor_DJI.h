@@ -2,14 +2,12 @@
 // Created by asus on 26-1-20.
 //
 
-#ifndef MOTOR_DRV_H
-#define MOTOR_DRV_H
+#ifndef MOTOR_DJI_H
+#define MOTOR_DJI_H
 #include "bsp_can.h"
-#endif //MOTOR_DRV_H
+#endif //MOTOR_DJI_H
 
 uint8_t fdcanx_send_data(FDCAN_HandleTypeDef *hfdcan, uint16_t id, uint8_t *data, uint32_t len);
 void GM6020_motor_vol_ctrl(FDCAN_HandleTypeDef* hcan, uint16_t dji_motor_identifier, int16_t id_1_vol, int16_t id_2_vol,int16_t id_3_vol, int16_t id_4_vol);
 void M3508_motor_crt_ctrl(FDCAN_HandleTypeDef* hcan, uint16_t dji_motor_identifier, int16_t id_1_crt, int16_t id_2_crt,int16_t id_3_crt, int16_t id_4_crt);
 void M2006_motor_crt_ctrl(FDCAN_HandleTypeDef* hcan, uint16_t dji_motor_identifier, int16_t id_1_crt, int16_t id_2_crt,int16_t id_3_crt, int16_t id_4_crt);
-/** 主控板->从板：发送两个 float（J6 与 gripper），8 字节：前 4 字节 float1，后 4 字节 float2 */
-void Slave_Board_J6_Gripper_Send(FDCAN_HandleTypeDef* hcan, uint16_t can_id, float j6_val, float gripper_val);

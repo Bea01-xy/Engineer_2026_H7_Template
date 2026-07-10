@@ -20,12 +20,13 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stdint.h"
 #include "stdbool.h"
+#include "arm_math.h"
 
 /* Exported constants --------------------------------------------------------*/
 #define ROBOTIC_ARM_DOF 6u
 
 /** 机械臂关节电机软件过温保护阈值 (°C)，超过则失能对应电机 */
-#define ROBOTIC_ARM_OVERTEMP_C_DEG 100.0f
+#define ROBOTIC_ARM_OVERTEMP_C_DEG 90.0f
 
 #define J1 0u
 #define J2 1u
@@ -87,18 +88,18 @@ typedef enum
  * -------------------------------------------------------------------------- */
 
 /* ---------- Group A: J1 / J2 / J3 ---------- */
-#define ROBOTIC_ARM_FF_A_KP              0.25f
-#define ROBOTIC_ARM_FF_A_KI              0.02f
-#define ROBOTIC_ARM_FF_A_KD              1.7f
+#define ROBOTIC_ARM_FF_A_KP              1.55f
+#define ROBOTIC_ARM_FF_A_KI              0.05f
+#define ROBOTIC_ARM_FF_A_KD              12.7f
 #define ROBOTIC_ARM_FF_A_Alpha           0.5f
-#define ROBOTIC_ARM_FF_A_Deadband        0.00f      /* rad, 约 1.15° */
-#define ROBOTIC_ARM_FF_A_LimitIntegral   600.0f     /* 单位: rad·tick (累加误差) */
-#define ROBOTIC_ARM_FF_A_LimitOutput     9.0f       /* N·m */
+#define ROBOTIC_ARM_FF_A_Deadband        0.00f
+#define ROBOTIC_ARM_FF_A_LimitIntegral   9400.0f     /* 单位: rad·tick (累加误差) */
+#define ROBOTIC_ARM_FF_A_LimitOutput     40.0f       /* N·m */
 
 /* ---------- Group B: J4 / J5 / J6 ---------- */
-#define ROBOTIC_ARM_FF_B_KP              0.7f
+#define ROBOTIC_ARM_FF_B_KP              0.14f
 #define ROBOTIC_ARM_FF_B_KI              0.02f
-#define ROBOTIC_ARM_FF_B_KD              1.3f
+#define ROBOTIC_ARM_FF_B_KD              3.3f
 #define ROBOTIC_ARM_FF_B_Alpha           0.5f
 #define ROBOTIC_ARM_FF_B_Deadband        0.00f      /* rad, 约 1.15° */
 #define ROBOTIC_ARM_FF_B_LimitIntegral   100.0f      /* 单位: rad·tick (累加误差) */

@@ -17,6 +17,7 @@
 #include "Remote_Control.h"
 #include "Referee_System.h"
 #include "Image_Transmission.h"
+#include "Servo.h"
 
 static void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size);
 
@@ -447,6 +448,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
     if (huart == &huart7) {
         Vofa_Handle.is_busy = false;
+        Servo_TxCpltCallback();
     }
     if (huart == &huart1) {
         USART1_Vofa_Handle.is_busy = false;

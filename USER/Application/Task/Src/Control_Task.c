@@ -18,7 +18,7 @@
 #include "bsp_uart.h"
 #include "Remote_Control.h"
 #include "PID.h"
-#include "Motor.h"
+#include "Motor_DM.h"
 #include "Ramp.h"
 #include "arm_math.h"
 #include "Chassis_Config.h"
@@ -123,7 +123,6 @@ void Control_Task(void)
             PowerMeter_Get_Power(),
         };
         //USART_Vofa_SendFloat(power_data, 9);
-        //USART_Vofa_SendFloat(gGravityComp.feedforward_torque, 6);
 		osDelayUntil(&Control_Task_SysTick, 1);
     }
 }
@@ -172,12 +171,12 @@ static void Control_Init(void)
     Elevator_Motor[RB].Data.Target_Position = ELEVATOR_USUAL_POS;
     Elevator_Motor[RF].Data.Target_Position = ELEVATOR_USUAL_POS;
 
-    Robotic_Arm_Motor[J1].Data.Temp_Target_Position = J1_INITIAL_POS;
-    Robotic_Arm_Motor[J2].Data.Temp_Target_Position = J2_INITIAL_POS;
-    Robotic_Arm_Motor[J3].Data.Temp_Target_Position = -J3_INITIAL_POS;
-    Robotic_Arm_Motor[J4].Data.Temp_Target_Position = -J4_INITIAL_POS;
-    Robotic_Arm_Motor[J5].Data.Temp_Target_Position = J5_INITIAL_POS;
-    Robotic_Arm_Motor[J6].Data.Temp_Target_Position = -J6_INITIAL_POS;
+    Robotic_Arm_Motor[J1].Data.Target_Position = J1_INITIAL_POS;
+    Robotic_Arm_Motor[J2].Data.Target_Position = J2_INITIAL_POS-PI;
+    Robotic_Arm_Motor[J3].Data.Target_Position = (PI+J3_INITIAL_POS)*1.65f;
+    Robotic_Arm_Motor[J4].Data.Target_Position = -J4_INITIAL_POS;
+    Robotic_Arm_Motor[J5].Data.Target_Position = J5_INITIAL_POS;
+    Robotic_Arm_Motor[J6].Data.Target_Position = -J6_INITIAL_POS;
 
     chassis_info.countering_1 = true;
     chassis_info.countering_2 = false;
@@ -232,7 +231,6 @@ static void chassis_disabled_handler(void)
     Chassis_Motor[RB].Data.Final_Output = 0u;
     Chassis_Motor[RF].Data.Final_Output = 0u;
 
-    /* 失能时复位斜坡状态, 防止重新使能瞬间从历史值跳出 */
     Chassis_Motor[LF].Data.Ramped_Target_Velocity = 0.0f;
     Chassis_Motor[LB].Data.Ramped_Target_Velocity = 0.0f;
     Chassis_Motor[RB].Data.Ramped_Target_Velocity = 0.0f;
@@ -565,13 +563,7 @@ static void Robotic_Arm_set_start_error_pos(void)
     Robotic_Arm_Motor[J6].Data.Error_Position = Robotic_Arm_Motor[J6].Data.Target_Position - Robotic_Arm_Motor[J6].Data.Start_Position;
 }
 
-/**
- * @brief 通过位置环 PID 计算各关节 MIT 模式下的前馈力矩, 用于消除稳态误差
- * @note  - 输入误差: Temp_Target_Position - Position (rad)
- *        - 输出: PID->Output (N·m), 直接写入 Motor.Data.Feedforward
- *        - J3/J4/J6 电机正转方向与关节正转方向相反, 前馈值需取反
- */
-#define GravityCompensation 1
+#define GravityCompensation 0
 static void Robotic_Arm_set_feedfoward(void)
 {
     PID_Calculate(&Robotic_Arm_FF_PID[J1], Robotic_Arm_Motor[J1].Data.Temp_Target_Position, Robotic_Arm_Motor[J1].Data.Position);
@@ -584,10 +576,10 @@ static void Robotic_Arm_set_feedfoward(void)
 #if !GravityCompensation
     Robotic_Arm_Motor[J1].Data.Feedforward =  Robotic_Arm_FF_PID[J1].Output;
     Robotic_Arm_Motor[J2].Data.Feedforward =  Robotic_Arm_FF_PID[J2].Output;
-    Robotic_Arm_Motor[J3].Data.Feedforward =  Robotic_Arm_FF_PID[J3].Output;  /* J3 电机方向与关节相反 */
-    Robotic_Arm_Motor[J4].Data.Feedforward =  Robotic_Arm_FF_PID[J4].Output;  /* J4 电机方向与关节相反 */
+    Robotic_Arm_Motor[J3].Data.Feedforward =  Robotic_Arm_FF_PID[J3].Output;
+    Robotic_Arm_Motor[J4].Data.Feedforward =  Robotic_Arm_FF_PID[J4].Output;
     Robotic_Arm_Motor[J5].Data.Feedforward =  Robotic_Arm_FF_PID[J5].Output;
-    Robotic_Arm_Motor[J6].Data.Feedforward =  Robotic_Arm_FF_PID[J6].Output;  /* J6 电机方向与关节相反 */
+    Robotic_Arm_Motor[J6].Data.Feedforward =  Robotic_Arm_FF_PID[J6].Output;
 
 #else
     float theta[6] = {Robotic_Arm_Motor[J1].Data.Position, Robotic_Arm_Motor[J2].Data.Position, -Robotic_Arm_Motor[J3].Data.Position, -Robotic_Arm_Motor[J4].Data.Position, Robotic_Arm_Motor[J5].Data.Position, -Robotic_Arm_Motor[J6].Data.Position};
