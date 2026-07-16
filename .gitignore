@@ -1,12 +1,28 @@
-cmake-build-debug
+# IDE / editor
 .idea
 .vscode
+cmake-build-debug
+
+# CMake build
 CMakeFiles
 CMakeCache.txt
 cmake_install.cmake
 build.ninja
-.DS_Store
 build
 .cache
+
+# OS
+.DS_Store
+
+# Misc
 *.deb
 Tutorial
+
+# MDK-ARM / uVision — keep project file & source, ignore build artifacts
+MDK-ARM/DebugConfig/
+MDK-ARM/*.uvguix.*
+MDK-ARM/*.uvoptx
+MDK-ARM/**/*.o
+MDK-ARM/**/*.d
+MDK-ARM/**/RTE_Components.h
+MDK-ARM/COD_H7_Template_CLion/
