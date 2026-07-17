@@ -30,6 +30,7 @@
 #include "Referee_System.h"
 #include "UI.h"
 #include "Buzzer.h"
+#include "lcd.h"
 #include "arm_math.h"
 /* USER CODE BEGIN Header_Detect_Task */
 static void chassis_set_mode(Chassis_Info_Typedef* chassis);
@@ -67,7 +68,12 @@ void Detect_Task(void)
     PID_Init(&Chassis_Direction_PID,PID_POSITION,Chassis_Direction_PID_Param);
 
     /* 开机蜂鸣器提示 */
-    Buzzer_Demo();
+    //Buzzer_Demo();
+
+    /* LCD 初始化与开机画面 */
+    LCD_Init();
+    LCD_Fill(0, 0, LCD_W, LCD_H, BLACK);
+    LCD_ShowString(20, 100, (const uint8_t *)"Hello World", BRRED, BLACK, 24, 0);
 
     /* Infinite loop */
     for(;;)

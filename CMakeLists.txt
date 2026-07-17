@@ -64,6 +64,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         ${SOURCES}
         USER/Components/Device/Src/UI.c
         USER/Components/Device/Src/Buzzer.c
+        USER/Components/Device/Src/lcd.c
 )
 
 
