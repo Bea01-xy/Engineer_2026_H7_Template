@@ -2,8 +2,8 @@
 // Created by Pazfic on 2025/3/12.
 //
 
-#include "../Inc/PowerLimiter.h"
-#include "../Inc/ModelConfig.h"
+#include "PowerLimiter.h"
+#include "ModelConfig.h"
 #include "stdlib.h"
 #include "math.h"
 

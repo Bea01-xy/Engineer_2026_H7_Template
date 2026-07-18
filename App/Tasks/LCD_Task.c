@@ -25,7 +25,7 @@ void LCD_Task(void)
 
     /* 开机画面 */
     LCD_Fill(0, 0, LCD_W, LCD_H, BLACK);
-    LCD_ShowString(20, 100, (const uint8_t *)"Hello World", BRRED, BLACK, 24, 0);
+    LCD_ShowString(20, 100, (const uint8_t *)"Hello World", BLUE, BLACK, 24, 0);
 
     /* 保持画面, 空闲等待 */
     for (;;)

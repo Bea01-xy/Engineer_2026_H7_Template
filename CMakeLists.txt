@@ -46,13 +46,12 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 )
 
 file(GLOB_RECURSE SOURCES
-        "USER/BSP/Src/*.c"
-        "USER/Components/Device/Src/*.c"
-        "USER/Components/Algorithm/Src/*.c"
-        "USER/Components/Controller/Src/*.c"
-        "USER/Components/PowerControl/Src/*.c"
-        "USER/Components/GravityCompensation/Src/*.c"
-        "USER/Application/Task/Src/*.c"
+        "App/BSP/Src/*.c"
+        "App/Drivers/*.c"
+        "App/Algorithm/*.c"
+        "App/Module/PowerControl/*.c"
+        "App/Module/GravityCompensation/*.c"
+        "App/Tasks/*.c"
         # 可按需添加其他目录
 )
 
@@ -62,23 +61,23 @@ file(GLOB_RECURSE SOURCES
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
         ${SOURCES}
-        USER/Components/Device/Src/UI.c
-        USER/Components/Device/Src/Buzzer.c
-        USER/Components/Device/Src/lcd.c
-        USER/Components/Device/Src/WS2812.c
+        App/Drivers/UI.c
+        App/Drivers/Buzzer.c
+        App/Drivers/lcd.c
+        App/Drivers/WS2812.c
 )
 
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
-        USER/Components/Device/Inc
-        USER/Components/Algorithm/Inc
-        USER/Components/Controller/Inc
-        USER/Components/PowerControl/Inc
-        USER/Components/GravityCompensation/Inc
-        USER/Application/Task/Inc
-        USER/BSP/Inc
+        App/Drivers
+        App/Algorithm
+        App/Module/PowerControl
+        App/Module/GravityCompensation
+        App/Tasks
+        App/Config
+        App/BSP/Inc
         Middlewares/ST/STM32_USB_Device_Library/Core/Inc
 )
 
