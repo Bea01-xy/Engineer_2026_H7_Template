@@ -66,6 +66,9 @@ void BSP_USART_Init(void){
 
 	/* 初始化VOFA通讯 (UART7用于调试输出) */
 	USART_Vofa_Init();
+
+	/* 初始化第二路VOFA输出 (USART10) */
+	USART10_Vofa_Init();
 }
 
 /**
@@ -330,6 +333,9 @@ __attribute__((section(".AXI_SRAM"))) static uint8_t Vofa_TxBuffer[VOFA_MAX_FLOA
 /* UART1 VOFA 发送缓冲区 (115200，用于裁判系统替代调试) */
 __attribute__((section(".AXI_SRAM"))) static uint8_t USART1_Vofa_TxBuffer[VOFA_MAX_FLOAT_COUNT * 4 + 4];
 
+/* USART10 VOFA 发送缓冲区 (115200，第二路调试输出，中断方式) */
+__attribute__((section(".AXI_SRAM"))) static uint8_t USART10_Vofa_TxBuffer[VOFA_MAX_FLOAT_COUNT * 4 + 4];
+
 /* VOFA 句柄 */
 static Vofa_HandleTypeDef Vofa_Handle = {
     .tx_buf = Vofa_TxBuffer,
@@ -343,6 +349,12 @@ static Vofa_HandleTypeDef USART1_Vofa_Handle = {
     .is_busy = false
 };
 
+static Vofa_HandleTypeDef USART10_Vofa_Handle = {
+    .tx_buf = USART10_Vofa_TxBuffer,
+    .buf_size = sizeof(USART10_Vofa_TxBuffer),
+    .is_busy = false
+};
+
 /**
   * @brief  初始化VOFA通讯 (UART7)
   * @param  None
@@ -352,6 +364,7 @@ void USART_Vofa_Init(void)
 {
     Vofa_Handle.is_busy = false;
     USART1_Vofa_Handle.is_busy = false;
+    USART10_Vofa_Handle.is_busy = false;
 }
 
 /**
@@ -453,6 +466,9 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
     if (huart == &huart1) {
         USART1_Vofa_Handle.is_busy = false;
     }
+    if (huart == &huart10) {
+        USART10_Vofa_Handle.is_busy = false;
+    }
 }
 
 /**
@@ -541,13 +557,100 @@ bool USART1_Vofa_SendFloat_Block(float *data, uint8_t count)
     return true;
 }
 
+/*============================ USART10 VOFA 支持 =============================*/
+
 /**
-  * @brief  检查UART1 VOFA DMA发送是否忙
+  * @brief  初始化 USART10 VOFA 通讯 (115200, IT中断发送, 无需 DMA)
+  * @param  None
+  * @retval None
+  */
+void USART10_Vofa_Init(void)
+{
+    USART10_Vofa_Handle.is_busy = false;
+}
+
+/**
+  * @brief  非阻塞方式发送 float 数组到 VOFA (USART10, 中断发送)
+  * @param  data: float数据指针
+  * @param  count: float数据数量 (最大VOFA_MAX_FLOAT_COUNT)
+  * @retval true: 发送成功启动, false: 发送忙或参数错误
+  */
+bool USART10_Vofa_SendFloat(float *data, uint8_t count)
+{
+    if (count == 0 || count > VOFA_MAX_FLOAT_COUNT) {
+        return false;
+    }
+
+    if (USART10_Vofa_Handle.is_busy) {
+        return false;  // 上次中断发送未完成
+    }
+
+    uint8_t *buf = USART10_Vofa_Handle.tx_buf;
+    uint8_t *float_ptr;
+
+    /* 拷贝float数据 (小端格式) */
+    for (uint8_t i = 0; i < count; i++) {
+        float_ptr = (uint8_t *)&data[i];
+        buf[i * 4 + 0] = float_ptr[0];
+        buf[i * 4 + 1] = float_ptr[1];
+        buf[i * 4 + 2] = float_ptr[2];
+        buf[i * 4 + 3] = float_ptr[3];
+    }
+
+    /* 添加帧尾 (0x00 0x00 0x80 0x7F = float +inf) */
+    buf[count * 4 + 0] = 0x00;
+    buf[count * 4 + 1] = 0x00;
+    buf[count * 4 + 2] = 0x80;
+    buf[count * 4 + 3] = 0x7F;
+
+    USART10_Vofa_Handle.is_busy = true;
+    HAL_UART_Transmit_IT(&huart10, buf, count * 4 + 4);
+
+    return true;
+}
+
+/**
+  * @brief  阻塞方式发送 float 数组到 VOFA (USART10)
+  * @param  data: float数据指针
+  * @param  count: float数据数量 (最大VOFA_MAX_FLOAT_COUNT)
+  * @retval true: 发送成功, false: 参数错误
+  */
+bool USART10_Vofa_SendFloat_Block(float *data, uint8_t count)
+{
+    if (count == 0 || count > VOFA_MAX_FLOAT_COUNT) {
+        return false;
+    }
+
+    uint8_t *buf = USART10_Vofa_Handle.tx_buf;
+    uint8_t *float_ptr;
+
+    /* 拷贝float数据 */
+    for (uint8_t i = 0; i < count; i++) {
+        float_ptr = (uint8_t *)&data[i];
+        buf[i * 4 + 0] = float_ptr[0];
+        buf[i * 4 + 1] = float_ptr[1];
+        buf[i * 4 + 2] = float_ptr[2];
+        buf[i * 4 + 3] = float_ptr[3];
+    }
+
+    /* 添加帧尾 */
+    buf[count * 4 + 0] = 0x00;
+    buf[count * 4 + 1] = 0x00;
+    buf[count * 4 + 2] = 0x80;
+    buf[count * 4 + 3] = 0x7F;
+
+    HAL_UART_Transmit(&huart10, buf, count * 4 + 4, 100);
+
+    return true;
+}
+
+/**
+  * @brief  检查 USART10 VOFA 中断发送是否忙
   * @param  None
   * @retval true: 正在发送, false: 空闲
   */
-bool USART1_Vofa_IsBusy(void)
+bool USART10_Vofa_IsBusy(void)
 {
-    return USART1_Vofa_Handle.is_busy;
+    return USART10_Vofa_Handle.is_busy;
 }
 

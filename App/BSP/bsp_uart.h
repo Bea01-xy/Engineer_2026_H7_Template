@@ -51,6 +51,12 @@ extern bool USART1_Vofa_SendFloat(float *data, uint8_t count);
 extern bool USART1_Vofa_SendFloat_Block(float *data, uint8_t count);
 extern bool USART1_Vofa_IsBusy(void);
 
+/* USART10 VOFA发送函数 (115200波特率，IT中断方式发送，无需DMA) */
+extern void USART10_Vofa_Init(void);
+extern bool USART10_Vofa_SendFloat(float *data, uint8_t count);
+extern bool USART10_Vofa_SendFloat_Block(float *data, uint8_t count);
+extern bool USART10_Vofa_IsBusy(void);
+
 #ifdef __cplusplus
 }
 #endif

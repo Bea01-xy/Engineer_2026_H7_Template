@@ -82,20 +82,23 @@ void Detect_Task(void)
         UI_Tick();
 
         float key_debug_data[6] = {
-            //MiniPC_Data.joint_feedforword_data[J1],
-            //MiniPC_Data.joint_feedforword_data[J2],
-            //MiniPC_Data.joint_feedforword_data[J3],
-            //MiniPC_Data.joint_feedforword_data[J4],
-            //MiniPC_Data.joint_feedforword_data[J5],
-            //MiniPC_Data.joint_feedforword_data[J6],
+            #if 0
             Robotic_Arm_Motor[J1].Data.Position,
             Robotic_Arm_Motor[J2].Data.Position,
             Robotic_Arm_Motor[J3].Data.Position,
             Robotic_Arm_Motor[J4].Data.Position,
             Robotic_Arm_Motor[J5].Data.Position,
             Robotic_Arm_Motor[J6].Data.Position,
+            #else
+            MiniPC_Data.joint_feedforword_data[J1],
+            MiniPC_Data.joint_feedforword_data[J2],
+            MiniPC_Data.joint_feedforword_data[J3],
+            MiniPC_Data.joint_feedforword_data[J4],
+            MiniPC_Data.joint_feedforword_data[J5],
+            MiniPC_Data.joint_feedforword_data[J6],
+            #endif
         };
-        USART_Vofa_SendFloat(key_debug_data, 6);
+        USART10_Vofa_SendFloat(key_debug_data, 6);
         /* ========================================================= */
 
         MiniPC_Data_Update_Last();
