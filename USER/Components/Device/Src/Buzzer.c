@@ -47,24 +47,191 @@ typedef struct {
     uint16_t ms;      /* 时长 (ms) */
 } buzzer_note_t;
 
-/* Creep (Radiohead) — G 大调 BPM≈92 */
-#define BPM 92
-static const uint16_t Q = TEMPO(BPM);
+/*
+ * ┌─ 时值系统 (S16 基准, 仅乘法, 零截断) ──────────────┐
+ *                                                    │
+ *   定义一个 BPM, 以十六分音符(S16)为最小单位:          │
+ *   S16 = 60000 / BPM / 4   (一拍的四分之一)            │
+ *   S8  = S16 * 2            (八分音符 = 半拍)          │
+ *   S4  = S16 * 4            (四分音符 = 一拍)          │
+ *   S2  = S16 * 8            (二分音符 = 两拍)          │
+ *   S1  = S16 * 16           (全音符 = 四拍)            │
+ *   SDOT(t) = t * 3 / 2      (附点, 唯一除法)          │
+ *                                                    │
+ *   所有时长都是 S16 的整数倍, 消除 Q/4 累积误差。      │
+ * └────────────────────────────────────────────────────┘
+ */
+#define YOU_BPM  75
+#define YOU_S16  (60000u / YOU_BPM / 4)     /* ~200ms */
+#define YOU_S8   (YOU_S16 * 2)                   /* ~326ms */
+#define YOU_S4   (YOU_S16 * 4)                   /* ~652ms (一拍) */
+#define YOU_S2   (YOU_S16 * 8)                   /* ~1304ms */
+#define YOU_S1   (YOU_S16 * 16)                  /* ~2608ms */
+#define YOU_SDOT(t)  ((t) * 3 / 2)           /* 附点 */
 
-static const buzzer_note_t demo_melody[] = {
-    //When you were here before
-    {  0, 0, Q/1 },
-    {  0, 0, Q/1 },
-    {  0, 2, Q/4 },
-    {  0, 2, Q/4 },
-    {  0, 1, Q/4 },
-    { -1, 7, Q/4 },
-    { -1, 7, Q/4 },
-    {  0, 1, Q/4 },
-    {  0, 1, Q/2 },
-    {  0, 1, Q/1 },
+
+static const buzzer_note_t you_melody[] = {
+    //1
+    {  1, 7, YOU_S16  },
+    {  1, 5, YOU_S16  },
+    {  1, 7, YOU_S8  },
+    {  1, 5, YOU_S16  },
+    {  1, 7, YOU_S8  },
+    {  1, 5, YOU_S16  },
+    {  2, 2, YOU_S8  },
+    {  1, 5, YOU_S16  },
+    {  2, 1, YOU_S16  },
+    {  2, 1, YOU_S16  },
+    {  1, 5, YOU_S16  },
+    {  1, 7, YOU_S16  },
+    {  2, 1, YOU_S16  },
+    //2
+    {  1, 7, YOU_S16  },
+    {  1, 5, YOU_S16  },
+    {  1, 7, YOU_S8  },
+    {  1, 5, YOU_S16  },
+    {  1, 7, YOU_S8  },
+    {  1, 5, YOU_S16  },
+    {  2, 2, YOU_S8  },
+    {  1, 5, YOU_S16  },
+    {  2, 1, YOU_S16  },
+    {  2, 1, YOU_S16  },
+    {  1, 5, YOU_S16  },
+    {  1, 7, YOU_S16  },
+    {  2, 1, YOU_S16  },
+    //3
+    {  1, 7, YOU_S16  },
+    {  1, 5, YOU_S16  },
+    {  1, 7, YOU_S8  },
+    {  1, 5, YOU_S16  },
+    {  1, 7, YOU_S8  },
+    {  1, 5, YOU_S16  },
+    {  2, 2, YOU_S8  },
+    {  1, 5, YOU_S16  },
+    {  2, 1, YOU_S16  },
+    {  2, 1, YOU_S16  },
+    {  1, 5, YOU_S16  },
+    {  1, 7, YOU_S16  },
+    {  2, 1, YOU_S16  },
+    //4
+    {  1, 7, YOU_S16  },
+    {  1, 5, YOU_S16  },
+    {  1, 7, YOU_S8  },
+    {  1, 5, YOU_S16  },
+    {  1, 7, YOU_S8  },
+    {  1, 5, YOU_S16  },
+    {  2, 2, YOU_S8  },
+    {  1, 5, YOU_S16  },
+    {  2, 1, YOU_S16  },
+    {  2, 1, YOU_S16  },
+    {  1, 5, YOU_S16  },
+    {  1, 2, YOU_S8  },
+    //5
+    {  1, 3, YOU_SDOT(YOU_S4)  },
+    {  1, 2, YOU_S8  },
+    {  1, 3, YOU_S8  },
+    {  1, 2, YOU_S8  },
+    {  1, 3, YOU_S8  },
+    {  1, 5, YOU_S8  },
+    //6
+    {  1, 5, YOU_S8  },
+    {  2, 1, YOU_S4  },
+    {  1, 7, YOU_S8  },
+    {  1, 7, YOU_S8  },
+    {  1, 3, YOU_S4  },
+    {  1, 2, YOU_S8  },
+    //7
+    {  1, 3, YOU_SDOT(YOU_S4)  },
+    {  1, 2, YOU_S8  },
+    {  1, 3, YOU_S8  },
+    {  1, 2, YOU_S8  },
+    {  1, 3, YOU_S8  },
+    {  2, 1, YOU_S8  },
+    //8
+    {  2, 1, YOU_SDOT(YOU_S4)  },
+    {  1, 7, YOU_S8  },
+    {  2, 2, YOU_S4  },
+    {  1, 3, YOU_S4  },
+    //9
+    {  1, 3, YOU_SDOT(YOU_S4)  },
+    {  1, 2, YOU_S8  },
+    {  1, 3, YOU_S8  },
+    {  1, 2, YOU_S8  },
+    {  1, 3, YOU_S8  },
+    {  1, 7, YOU_S8  },
+    //10
+    {  1, 7, YOU_S8  },
+    {  2, 1, YOU_S4  },
+    {  1, 7, YOU_S8  },
+    {  1, 7, YOU_S8  },
+    {  1, 3, YOU_S4  },
+    {  1, 2, YOU_S8  },
+    //11
+    {  1, 3, YOU_SDOT(YOU_S4)  },
+    {  1, 2, YOU_S8  },
+    {  1, 3, YOU_S8  },
+    {  1, 2, YOU_S8  },
+    {  1, 3, YOU_S8  },
+    {  1, 7, YOU_S8  },
+    //12
+    {  1, 7, YOU_S8  },
+    {  2, 1, YOU_S4  },
+    {  2, 2, YOU_S8  },
+    {  2, 2, YOU_S2  },
 
 };
+#undef YOU_BPM
+#undef YOU_S16
+#undef YOU_S8
+#undef YOU_S4
+#undef YOU_S2
+#undef YOU_S1
+#undef YOU_SDOT
+
+/* ======================== 旋律模板 (参考, 已注释) ======================== */
+#if 0
+/* Creep (Radiohead) intro — G 大调 BPM=92 */
+#define CREEP_BPM  92
+#define CREEP_S16  (60000u / CREEP_BPM / 4)
+#define CREEP_S8   (CREEP_S16 * 2)
+#define CREEP_S4   (CREEP_S16 * 4)
+#define CREEP_S2   (CREEP_S16 * 8)
+#define CREEP_S1   (CREEP_S16 * 16)
+#define CREEP_SDOT(t)  ((t) * 3 / 2)
+
+static const buzzer_note_t creep_melody[] = {
+    // "When you were here before"
+    {  0, 0, CREEP_S4  },
+    {  0, 0, CREEP_S4  },
+    {  0, 2, CREEP_S16 },
+    {  0, 2, CREEP_S16 },
+    {  0, 1, CREEP_S16 },
+    { -1, 7, CREEP_S16 },
+    { -1, 7, CREEP_S16 },
+    {  0, 1, CREEP_S16 },
+    {  0, 1, CREEP_S8  },
+    {  0, 1, CREEP_S1  },
+    // "Couldn't look you in the eye"
+    {  0, 0, CREEP_S4  },
+    {  0, 0, CREEP_S8  },
+    { -1, 5, CREEP_S16 },
+    { -1, 5, CREEP_S16 },
+    {  0, 2, CREEP_S16 },
+    {  0, 1, CREEP_S16 },
+    { -1, 7, CREEP_S16 },
+    { -1, 7, CREEP_S16 },
+    { -1, 7, CREEP_S4 },
+    { -1, 7, CREEP_S1 },
+};
+
+#undef CREEP_BPM
+#undef CREEP_S16
+#undef CREEP_S8
+#undef CREEP_S4
+#undef CREEP_S2
+#undef CREEP_S1
+#undef CREEP_SDOT
+#endif /* 0 */
 
 /* ======================== 私有函数 ======================== */
 
@@ -205,11 +372,11 @@ void Buzzer_Demo(void)
         Buzzer_Init();
     }
 
-    n = sizeof(demo_melody) / sizeof(demo_melody[0]);
+    n = sizeof(you_melody) / sizeof(you_melody[0]);
     for (i = 0; i < n; i++) {
-        int8_t  oct = demo_melody[i].oct;
-        uint8_t deg = demo_melody[i].deg;
-        uint16_t ms = demo_melody[i].ms;
+        int8_t  oct = you_melody[i].oct;
+        uint8_t deg = you_melody[i].deg;
+        uint16_t ms = you_melody[i].ms;
 
         if (deg == 0 || oct < -1 || oct > 2) {
             /* 休止符 */

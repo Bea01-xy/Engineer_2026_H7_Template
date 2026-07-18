@@ -23,6 +23,7 @@ void Buzzer_Task(void)
 {
     Buzzer_Init();
 
+    osDelay(100);  /* 等待 TIM12 稳定输出 */
     /* 播放开机旋律 (阻塞, 内部使用 osDelay — 让出 CPU) */
     Buzzer_Demo();
 
