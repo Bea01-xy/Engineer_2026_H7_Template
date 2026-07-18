@@ -59,6 +59,15 @@ osStaticThreadDef_t Start_CAN_TaskControlBlock;
 osThreadId Start_Detect_TaskHandle;
 uint32_t Start_Detect_TaskBuffer[ 1024 ];
 osStaticThreadDef_t Start_Detect_TaskControlBlock;
+osThreadId Start_Buzzer_TaskHandle;
+uint32_t Start_Buzzer_TaskBuffer[ 256 ];
+osStaticThreadDef_t Start_Buzzer_TaskControlBlock;
+osThreadId Start_LCD_TaskHandle;
+uint32_t Start_LCD_TaskBuffer[ 256 ];
+osStaticThreadDef_t Start_LCD_TaskControlBlock;
+osThreadId Start_WS2812_TaskHandle;
+uint32_t Start_WS2812_TaskBuffer[ 512 ];
+osStaticThreadDef_t Start_WS2812_TaskControlBlock;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -69,6 +78,9 @@ void INS_Task(void const * argument);
 void Control_Task(void const * argument);
 void CAN_Task(void const * argument);
 void Detect_Task(void const * argument);
+void Buzzer_Task(void const * argument);
+void LCD_Task(void const * argument);
+void WS2812_Task(void const * argument);
 
 extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -132,6 +144,18 @@ void MX_FREERTOS_Init(void) {
   osThreadStaticDef(Start_Detect_Task, Detect_Task, osPriorityBelowNormal, 0, 1024, Start_Detect_TaskBuffer, &Start_Detect_TaskControlBlock);
   Start_Detect_TaskHandle = osThreadCreate(osThread(Start_Detect_Task), NULL);
 
+  /* definition and creation of Start_Buzzer_Task */
+  osThreadStaticDef(Start_Buzzer_Task, Buzzer_Task, osPriorityLow, 0, 256, Start_Buzzer_TaskBuffer, &Start_Buzzer_TaskControlBlock);
+  Start_Buzzer_TaskHandle = osThreadCreate(osThread(Start_Buzzer_Task), NULL);
+
+  /* definition and creation of Start_LCD_Task */
+  osThreadStaticDef(Start_LCD_Task, LCD_Task, osPriorityLow, 0, 256, Start_LCD_TaskBuffer, &Start_LCD_TaskControlBlock);
+  Start_LCD_TaskHandle = osThreadCreate(osThread(Start_LCD_Task), NULL);
+
+  /* definition and creation of Start_WS2812_Task */
+  osThreadStaticDef(Start_WS2812_Task, WS2812_Task, osPriorityLow, 0, 512, Start_WS2812_TaskBuffer, &Start_WS2812_TaskControlBlock);
+  Start_WS2812_TaskHandle = osThreadCreate(osThread(Start_WS2812_Task), NULL);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -150,6 +174,7 @@ __weak void INS_Task(void const * argument)
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN INS_Task */
+  (void)argument;
   /* Infinite loop */
   for(;;)
   {
@@ -168,6 +193,7 @@ __weak void INS_Task(void const * argument)
 __weak void Control_Task(void const * argument)
 {
   /* USER CODE BEGIN Control_Task */
+  (void)argument;
   /* Infinite loop */
 
   for(;;)
@@ -187,6 +213,7 @@ __weak void Control_Task(void const * argument)
 __weak void CAN_Task(void const * argument)
 {
   /* USER CODE BEGIN CAN_Task */
+  (void)argument;
   /* Infinite loop */
   for(;;)
   {
@@ -205,12 +232,70 @@ __weak void CAN_Task(void const * argument)
 __weak void Detect_Task(void const * argument)
 {
   /* USER CODE BEGIN Detect_Task */
+  (void)argument;
   /* Infinite loop */
   for(;;)
   {
     osDelay(1);
   }
   /* USER CODE END Detect_Task */
+}
+
+/* USER CODE BEGIN Header_Buzzer_Task */
+/**
+* @brief Function implementing the Start_Buzzer_Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Buzzer_Task */
+__weak void Buzzer_Task(void const * argument)
+{
+  /* USER CODE BEGIN Buzzer_Task */
+  (void)argument;
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END Buzzer_Task */
+}
+
+/* USER CODE BEGIN Header_LCD_Task */
+/**
+* @brief Function implementing the Start_LCD_Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_LCD_Task */
+__weak void LCD_Task(void const * argument)
+{
+  /* USER CODE BEGIN LCD_Task */
+  (void)argument;
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END LCD_Task */
+}
+
+/* USER CODE BEGIN Header_WS2812_Task */
+/**
+* @brief Function implementing the Start_WS2812_Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_WS2812_Task */
+__weak void WS2812_Task(void const * argument)
+{
+  /* USER CODE BEGIN WS2812_Task */
+  (void)argument;
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END WS2812_Task */
 }
 
 /* Private application code --------------------------------------------------*/
