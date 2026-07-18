@@ -125,14 +125,20 @@ void Robotic_Arm_set(const int part, const bool activated)
 {
 	if(activated){
 		if (part == 0) {
-			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], 5.0f, 0.02f);
-			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], 2.5f, 1.2f);
+			//Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], 5.0f, 0.02f);
+			//Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], 2.5f, 1.2f);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], 0.0f, 0.0f);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], 0.0f, 0.0f);
 		} else if (part == 1) {
-			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], 3.4f, 0.2f);
-			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], 0.7f, 0.02f);
+			//Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], 3.4f, 0.2f);
+			//Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], 0.7f, 0.02f);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], 0.0f, 0.0f);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], 0.0f, 0.0f);
 		} else if (part == 2) {
-			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], 1.9f, 0.02f);
-			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], 0.4f, 0.02f);
+			//Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], 1.9f, 0.02f);
+			//Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], 0.4f, 0.02f);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J5], 0.0f, 0.0f);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J6], 0.0f, 0.0f);
 		}
 	}
 	else {	

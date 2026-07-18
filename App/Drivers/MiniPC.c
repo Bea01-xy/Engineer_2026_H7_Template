@@ -30,8 +30,9 @@ static void  float_to_bytes_union(float value, uint8_t *buffer);
 /* Public variables ----------------------------------------------------------*/
 /* MiniPC 数据全局实例 */
 MiniPC_DataTypeDef MiniPC_Data = {
-    .joint_data = {J1_INITIAL_POS, J2_INITIAL_POS, J3_INITIAL_POS,
+    .joint_pos_data = {J1_INITIAL_POS, J2_INITIAL_POS, J3_INITIAL_POS,
                    J4_INITIAL_POS, J5_INITIAL_POS, J6_INITIAL_POS},
+    .joint_feedforword_data = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
     .mouse_x = 0, .mouse_y = 0, .mouse_z = 0,
     .mouse_left = 0, .mouse_right = 0, .mouse_mid = 0,
     .key_w = 0, .key_s = 0, .key_a = 0, .key_d = 0,
@@ -42,8 +43,9 @@ MiniPC_DataTypeDef MiniPC_Data = {
 
 /* MiniPC 数据上一循环状态镜像 - 用于边沿/跳变检测 */
 MiniPC_DataTypeDef MiniPC_Data_Last = {
-    .joint_data = {J1_INITIAL_POS, J2_INITIAL_POS, J3_INITIAL_POS,
+    .joint_pos_data = {J1_INITIAL_POS, J2_INITIAL_POS, J3_INITIAL_POS,
                    J4_INITIAL_POS, J5_INITIAL_POS, J6_INITIAL_POS},
+    .joint_feedforword_data = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, 
     .mouse_x = 0, .mouse_y = 0, .mouse_z = 0,
     .mouse_left = 0, .mouse_right = 0, .mouse_mid = 0,
     .key_w = 0, .key_s = 0, .key_a = 0, .key_d = 0,
@@ -107,7 +109,7 @@ uint8_t MiniPC_Transmit_Info(float* Buf, uint16_t Len)
 void MiniPC_Receive_Info(void)
 {
     /* 数据部分大小：6*4 + 3*2 + 21*1 = 51字节 */
-    const uint32_t data_len = 24; 
+    const uint32_t data_len = 48; 
     /* 完整数据包：帧头(1) + 数据(51) + 校验(1) + 帧尾(1) = 54字节 */
     const uint32_t packet_len = data_len + 3;
 
@@ -141,7 +143,11 @@ void MiniPC_Receive_Info(void)
 
     /* 解析6个float - 关节数据 (偏移 0-23) */
     for (uint32_t i = 0; i < 6; i++) {
-        MiniPC_Data.joint_data[i] = bytes_to_float_union(&pbuf[idx]);
+        MiniPC_Data.joint_pos_data[i] = bytes_to_float_union(&pbuf[idx]);
+        idx += 4;
+    }
+    for (uint32_t i = 0; i < 6; i++) {
+        MiniPC_Data.joint_feedforword_data[i] = bytes_to_float_union(&pbuf[idx]);
         idx += 4;
     }
 

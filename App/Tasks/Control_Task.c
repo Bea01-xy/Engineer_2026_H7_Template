@@ -574,12 +574,12 @@ static void Robotic_Arm_set_feedfoward(void)
     PID_Calculate(&Robotic_Arm_FF_PID[J6], Robotic_Arm_Motor[J6].Data.Temp_Target_Position, Robotic_Arm_Motor[J6].Data.Position);
 
 #if !GravityCompensation
-    Robotic_Arm_Motor[J1].Data.Feedforward =  Robotic_Arm_FF_PID[J1].Output;
-    Robotic_Arm_Motor[J2].Data.Feedforward =  Robotic_Arm_FF_PID[J2].Output;
-    Robotic_Arm_Motor[J3].Data.Feedforward =  Robotic_Arm_FF_PID[J3].Output;
-    Robotic_Arm_Motor[J4].Data.Feedforward =  Robotic_Arm_FF_PID[J4].Output;
-    Robotic_Arm_Motor[J5].Data.Feedforward =  Robotic_Arm_FF_PID[J5].Output;
-    Robotic_Arm_Motor[J6].Data.Feedforward =  Robotic_Arm_FF_PID[J6].Output;
+    //Robotic_Arm_Motor[J1].Data.Feedforward =  Robotic_Arm_FF_PID[J1].Output;
+    //Robotic_Arm_Motor[J2].Data.Feedforward =  Robotic_Arm_FF_PID[J2].Output;
+    //Robotic_Arm_Motor[J3].Data.Feedforward =  Robotic_Arm_FF_PID[J3].Output;
+    //Robotic_Arm_Motor[J4].Data.Feedforward =  Robotic_Arm_FF_PID[J4].Output;
+    //Robotic_Arm_Motor[J5].Data.Feedforward =  Robotic_Arm_FF_PID[J5].Output;
+    //Robotic_Arm_Motor[J6].Data.Feedforward =  Robotic_Arm_FF_PID[J6].Output;
 
 #else
     float theta[6] = {Robotic_Arm_Motor[J1].Data.Position, Robotic_Arm_Motor[J2].Data.Position, -Robotic_Arm_Motor[J3].Data.Position, -Robotic_Arm_Motor[J4].Data.Position, Robotic_Arm_Motor[J5].Data.Position, -Robotic_Arm_Motor[J6].Data.Position};

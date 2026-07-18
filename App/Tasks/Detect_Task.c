@@ -82,16 +82,20 @@ void Detect_Task(void)
         UI_Tick();
 
         float key_debug_data[6] = {
-            //INS_Info.Gyro[2],
-            //Chassis_Motor[RB].Data.Velocity,
-            //chassis_info.lift_mode
-            Robotic_Arm_Motor[J2].Data.Target_Position,
+            //MiniPC_Data.joint_feedforword_data[J1],
+            //MiniPC_Data.joint_feedforword_data[J2],
+            //MiniPC_Data.joint_feedforword_data[J3],
+            //MiniPC_Data.joint_feedforword_data[J4],
+            //MiniPC_Data.joint_feedforword_data[J5],
+            //MiniPC_Data.joint_feedforword_data[J6],
+            Robotic_Arm_Motor[J1].Data.Position,
             Robotic_Arm_Motor[J2].Data.Position,
-            Robotic_Arm_Motor[J3].Data.Target_Position,
             Robotic_Arm_Motor[J3].Data.Position,
-            //M2006_Gripper_Motor.Data.Current,
+            Robotic_Arm_Motor[J4].Data.Position,
+            Robotic_Arm_Motor[J5].Data.Position,
+            Robotic_Arm_Motor[J6].Data.Position,
         };
-        USART_Vofa_SendFloat(key_debug_data, 4);
+        USART_Vofa_SendFloat(key_debug_data, 6);
         /* ========================================================= */
 
         MiniPC_Data_Update_Last();
@@ -280,12 +284,13 @@ static void chassis_wheel_cal(void)
 
 static void MiniPC_Transmit_Robotic_Arm_Info(void)
 {
+    /* 电机空间 → 关节空间逆转换（与 arm_ctrl_info_get 中的正转换互逆） */
     float J1_Pos = Robotic_Arm_Motor[J1].Data.Position;
-    float J2_Pos = Robotic_Arm_Motor[J2].Data.Position;
-    float J3_Pos = Robotic_Arm_Motor[J3].Data.Position;
-    float J4_Pos = Robotic_Arm_Motor[J4].Data.Position;
+    float J2_Pos = Robotic_Arm_Motor[J2].Data.Position + PI - 0.07f;
+    float J3_Pos = Robotic_Arm_Motor[J3].Data.Position / 1.65f - PI - 0.05f;
+    float J4_Pos = -Robotic_Arm_Motor[J4].Data.Position;
     float J5_Pos = Robotic_Arm_Motor[J5].Data.Position;
-    float J6_Pos = Robotic_Arm_Motor[J6].Data.Position;
+    float J6_Pos = -Robotic_Arm_Motor[J6].Data.Position;
 
     float Robotic_Arm_Info[6] = {J1_Pos, J2_Pos, J3_Pos, J4_Pos, J5_Pos, J6_Pos};
     MiniPC_Transmit_Info(Robotic_Arm_Info, 6);
@@ -293,10 +298,17 @@ static void MiniPC_Transmit_Robotic_Arm_Info(void)
 
 static void arm_ctrl_info_get(void)
 {
-    Robotic_Arm_Motor[J1].Data.Target_Position = MiniPC_Data.joint_data[J1];
-    Robotic_Arm_Motor[J2].Data.Target_Position = MiniPC_Data.joint_data[J2]-PI+0.07f;
-    Robotic_Arm_Motor[J3].Data.Target_Position = (PI+MiniPC_Data.joint_data[J3]+0.05f)*1.65f;
-    Robotic_Arm_Motor[J4].Data.Target_Position = -MiniPC_Data.joint_data[J4];
-    Robotic_Arm_Motor[J5].Data.Target_Position = MiniPC_Data.joint_data[J5];
-    Robotic_Arm_Motor[J6].Data.Target_Position = -MiniPC_Data.joint_data[J6];
+    Robotic_Arm_Motor[J1].Data.Target_Position = MiniPC_Data.joint_pos_data[J1];
+    Robotic_Arm_Motor[J2].Data.Target_Position = MiniPC_Data.joint_pos_data[J2]-PI+0.07f;
+    Robotic_Arm_Motor[J3].Data.Target_Position = (PI+MiniPC_Data.joint_pos_data[J3]+0.05f)*1.65f;
+    Robotic_Arm_Motor[J4].Data.Target_Position = -MiniPC_Data.joint_pos_data[J4];
+    Robotic_Arm_Motor[J5].Data.Target_Position = MiniPC_Data.joint_pos_data[J5];
+    Robotic_Arm_Motor[J6].Data.Target_Position = -MiniPC_Data.joint_pos_data[J6];
+
+    Robotic_Arm_Motor[J1].Data.Feedforward = MiniPC_Data.joint_feedforword_data[J1];
+    Robotic_Arm_Motor[J2].Data.Feedforward = MiniPC_Data.joint_feedforword_data[J2];
+    Robotic_Arm_Motor[J3].Data.Feedforward = MiniPC_Data.joint_feedforword_data[J3]/1.65f;
+    Robotic_Arm_Motor[J4].Data.Feedforward = MiniPC_Data.joint_feedforword_data[J4];
+    Robotic_Arm_Motor[J5].Data.Feedforward = MiniPC_Data.joint_feedforword_data[J5];
+    Robotic_Arm_Motor[J6].Data.Feedforward = MiniPC_Data.joint_feedforword_data[J6];
 }

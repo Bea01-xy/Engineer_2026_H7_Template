@@ -46,7 +46,7 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 )
 
 file(GLOB_RECURSE SOURCES
-        "App/BSP/Src/*.c"
+        "App/BSP/*.c"
         "App/Drivers/*.c"
         "App/Algorithm/*.c"
         "App/Module/PowerControl/*.c"
@@ -77,7 +77,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         App/Module/GravityCompensation
         App/Tasks
         App/Config
-        App/BSP/Inc
+        App/BSP
         Middlewares/ST/STM32_USB_Device_Library/Core/Inc
 )
 

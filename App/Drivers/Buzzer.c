@@ -537,15 +537,15 @@ void Buzzer_Demo(void)
 
     n = sizeof(you_melody) / sizeof(you_melody[0]);
     for (i = 0; i < n; i++) {
-        int8_t  oct = you_melody[i].oct;
+        int8_t  oct_minus1 = you_melody[i].oct - 1;
         uint8_t deg = you_melody[i].deg;
         uint16_t ms = you_melody[i].ms;
 
-        if (deg == 0 || oct < -1 || oct > 2) {
+        if (deg == 0 || oct_minus1 < -1 || oct_minus1 > 2) {
             /* 休止符 */
             Buzzer_Stop();
         } else {
-            uint16_t arr = note_arr[oct + 1][deg - 1];
+            uint16_t arr = note_arr[oct_minus1 + 1][deg - 1];
             buzzer_set_arr(arr);
         }
         osDelay(ms);

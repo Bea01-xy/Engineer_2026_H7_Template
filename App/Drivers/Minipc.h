@@ -28,7 +28,8 @@ extern "C" {
 /* MiniPC 数据结构定义 - 用于接收来自上位机的数据 */
 typedef struct {
     /* 关节数据 - 6个float = 24字节 */
-    float joint_data[6];
+    float joint_pos_data[6];
+    float joint_feedforword_data[6];
 
     /* 鼠标数据 - 3个int16_t = 6字节 */
     int16_t mouse_x;
