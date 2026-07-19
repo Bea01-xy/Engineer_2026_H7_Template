@@ -301,6 +301,12 @@ static void USER_USART2_RxHandler(UART_HandleTypeDef *huart,uint16_t Size){
   */
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,uint16_t Size)
 {
+     /* Servo response handled by Servo driver, skip DMA reconfig */
+     if (huart == &huart7) {
+         Servo_RxEventCallback(huart, Size);
+         return;
+     }
+
 	 if(huart == &huart5){
 	
 		  USER_USART5_RxHandler(huart,Size);
