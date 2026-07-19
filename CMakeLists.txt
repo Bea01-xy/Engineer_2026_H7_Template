@@ -65,6 +65,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/Drivers/Buzzer.c
         App/Drivers/lcd.c
         App/Drivers/WS2812.c
+        App/Drivers/ESP32_LOG.c
 )
 
 
