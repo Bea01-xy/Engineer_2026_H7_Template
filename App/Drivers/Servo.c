@@ -25,6 +25,7 @@
 
 #include "Servo.h"
 #include "usart.h"              /* huart7 */
+#include "cmsis_os.h"           /* osDelay */
 
 /* ======================== 协议常量 ======================== */
 #define FRAME_HEADER0           0xFF
@@ -92,8 +93,15 @@ static uint8_t SERVO_Checksum(uint8_t *data, uint8_t len)
   */
 static void SERVO_SendFrame(uint8_t id, uint8_t cmd, uint8_t *params, uint8_t param_len)
 {
+    /* 如果 DMA 正在发送, 等待最多 2ms (115200 下 8 字节约 0.7ms) */
     if (servo_busy) {
-        return;     /* DMA 正在发送, 丢弃本次指令 */
+        uint32_t timeout = 20;
+        while (servo_busy && timeout--) {
+            osDelay(1);
+        }
+        if (servo_busy) {
+            return;     /* 超时, 丢弃 */
+        }
     }
 
     /* 协议数据长度 = ID(1) + Cmd(1) + Param(N) = 2 + N */
@@ -325,6 +333,21 @@ void Servo_RegWritePosition(uint8_t id, uint16_t position, uint16_t run_time)
 void Servo_Action(void)
 {
     SERVO_SendFrame(SERVO_ID_BROADCAST, SERVO_CMD_ACTION, NULL, 0);
+}
+
+/**
+  * @brief  写舵机寄存器 (通用)
+  *         帧: FF FF ID Len 03 addr data[0..N-1] CS
+  */
+void Servo_WriteRegister(uint8_t id, uint8_t addr, uint8_t *data, uint8_t len)
+{
+    /* 参数 = [addr, data0, data1, ...] */
+    uint8_t params[len + 1];
+    params[0] = addr;
+    for (uint8_t i = 0; i < len; i++) {
+        params[1 + i] = data[i];
+    }
+    SERVO_SendFrame(id, SERVO_CMD_WRITE, params, len + 1);
 }
 
 /* ======================== 公有 API - 状态与回调 ======================== */

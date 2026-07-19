@@ -141,6 +141,15 @@ void Servo_RegWritePosition(uint8_t id, uint16_t position, uint16_t run_time);
  */
 void Servo_Action(void);
 
+/**
+ * @brief  写舵机寄存器 (通用, 掉电保存取决于寄存器)
+ * @param  id    舵机 ID
+ * @param  addr  寄存器地址
+ * @param  data  数据指针 (大端)
+ * @param  len   数据长度 (字节)
+ */
+void Servo_WriteRegister(uint8_t id, uint8_t addr, uint8_t *data, uint8_t len);
+
 /* ======================== 状态与回调 ======================== */
 
 /**

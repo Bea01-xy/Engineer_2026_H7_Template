@@ -17,6 +17,8 @@ build
 # Misc
 *.deb
 Tutorial
+Log
+Info
 
 # MDK-ARM / uVision — keep project file & source, ignore build artifacts
 MDK-ARM/DebugConfig/
