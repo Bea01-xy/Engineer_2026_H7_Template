@@ -241,6 +241,8 @@ static void chassis_disabled_handler(void)
         Robotic_Arm_FF_PID[i].PID_Calc_Clear(&Robotic_Arm_FF_PID[i]);
         Robotic_Arm_Motor[i].Data.Feedforward = 0.f;
     }
+    //失能时让目标方向跟随当前 yaw, 避免状态切换瞬间残留误差爆发
+    chassis_info.target_direction = INS_Info.Yaw_Angle;
 }
 
 static void chassis_auto_lifting_handler_2(void)
