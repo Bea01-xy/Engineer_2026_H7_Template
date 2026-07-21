@@ -18,7 +18,7 @@
  * @brief remote control usart RxDMA MultiBuffer
  */
 __attribute__((section (".AXI_SRAM")))uint8_t SBUS_MultiRx_Buf[2][SBUS_RX_BUF_NUM];
- 
+
 /* Private variables ---------------------------------------------------------*/
 /**
  * @brief structure that contains the information of keyboard
@@ -48,8 +48,17 @@ void SBUS_TO_RC(volatile const uint8_t *sbus_buf, Remote_Info_Typedef  *remote_c
 {
 #if defined(DBUS)
     dji_dbus_to_rc(sbus_buf, remote_ctrl);
+    /* DBUS receiver: assume frame is valid (stops sending when offline) */
+    remote_ctrl->online_cnt = 0xFAU;
+    remote_ctrl->rc_lost = false;
 #elif defined(SBUS)
     fs_sbus_to_rc(sbus_buf, remote_ctrl);
+    /* SBUS: only mark online if the frame doesn't report failsafe/lost */
+    if (!(sbus_buf[23] & 0x0CU))
+    {
+        remote_ctrl->online_cnt = 0xFAU;
+        remote_ctrl->rc_lost = false;
+    }
 #endif
 
 }
@@ -86,12 +95,6 @@ static void dji_dbus_to_rc(volatile const uint8_t *sbus_buf, Remote_Info_Typedef
     remote_ctrl->rc.ch[2] -= RC_CH_VALUE_OFFSET;
     remote_ctrl->rc.ch[3] -= RC_CH_VALUE_OFFSET;
     remote_ctrl->rc.ch[4] -= RC_CH_VALUE_OFFSET;
-
-		/* reset the online count */
-		remote_ctrl->online_cnt = 0xFAU;
-
-		/* reset the lost flag */
-		remote_ctrl->rc_lost = false;
 }
 
 //富斯遥控器
@@ -181,12 +184,6 @@ static void fs_sbus_to_rc(volatile const uint8_t *sbus_buf, Remote_Info_Typedef 
     remote_ctrl->rc.s[1] = map_toggle_switch(temp_s[1]);
     remote_ctrl->rc.sw[0] = map_toggle_switch(temp_sw[0]);
     remote_ctrl->rc.sw[1] = map_toggle_switch(temp_sw[1]);
-
-    /* reset the online count */
-    remote_ctrl->online_cnt = 0xFAU;
-
-    /* reset the lost flag */
-    remote_ctrl->rc_lost = false;
 }
 
 /**
@@ -204,10 +201,10 @@ void Remote_Message_Moniter(Remote_Info_Typedef  *remote_ctrl)
     memset(remote_ctrl,0,sizeof(Remote_Info_Typedef));
 
     /* reset the online count */
-		
+
     /* set the lost flag */
 		remote_ctrl->rc_lost = true;
-		
+
   }
   else if(remote_ctrl->online_cnt > 0)
   {

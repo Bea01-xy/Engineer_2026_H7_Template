@@ -2,7 +2,7 @@
 /**
   ******************************************************************************
   * @file           : WS2812_Task.c
-  * @brief          : WS2812 LED demo task — breathing + flowing water loop
+  * @brief          : WS2812 LED task — 正常时绿灯常亮, 机械臂电机离线时红灯呼吸
   * @author         : Ported from CtrBoard-H7_WS2812
   ******************************************************************************
   * @attention      : None
@@ -13,48 +13,66 @@
 /* Includes ------------------------------------------------------------------*/
 #include "cmsis_os.h"
 #include "WS2812.h"
+#include "Motor_DM.h"       /* Robotic_Arm_Motor[].Data.offline */
 
 /**
-  * @brief  WS2812 task: initialise, then run breathing effect in a loop.
-  *         All delays use osDelay — other tasks are not blocked.
+  * @brief  WS2812 task: 监测机械臂 DM 电机在线状态
+  *         全部在线 → 绿灯常亮
+  *         任一离线 → 红灯呼吸 (三角波, 周期 ~3.8s)
   * @param  argument: Not used
   * @retval None
-  *
-  * @note   3 颗灯珠全体同色同步呼吸, 依次切换:
-  *         红 → 暖橙 → 绿 → 蓝 → 青 → 紫, 循环
   */
 void WS2812_Task(void)
 {
-    uint16_t i, step;
-    uint8_t r, g, b;
+    uint16_t i;
+    uint16_t step = 0;
 
     WS2812_Init();
 
     for (;;)
     {
-        for (step = 0; step < 256; step++)
+        /* 检测是否有机械臂电机离线 */
+        bool any_offline = false;
+        for (i = 0; i < 6; i++)
         {
-            uint8_t bright;
+            if (Robotic_Arm_Motor[i].Data.offline)
+            {
+                any_offline = true;
+                break;
+            }
+        }
 
-            /* 三角波: 0 → 255 → 0 */
+        uint8_t r, g, b;
+
+        if (any_offline)
+        {
+            /* 红灯呼吸: 三角波 0→255→0 */
+            uint8_t bright;
             if (step < 128)
                 bright = (uint8_t)(step * 2);
             else
                 bright = (uint8_t)((255 - step) * 2);
 
-            /* 每 ~43 拍换一色 */
-            if (step < 43)               { r = bright; g = 0;       b = 0;      }  /* 红 */
-            else if (step < 85)           { r = bright; g = bright/3; b = 0;     }  /* 暖橙 */
-            else if (step < 128)          { r = 0;      g = bright; b = 0;      }  /* 绿 */
-            else if (step < 170)          { r = 0;      g = 0;       b = bright; }  /* 蓝 */
-            else if (step < 213)          { r = 0;      g = bright/3; b = bright;}  /* 青 */
-            else                          { r = bright; g = 0;       b = bright; }  /* 紫 */
+            r = bright;
+            g = 0;
+            b = 0;
 
-            for (i = 0; i < WS2812_LED_NUM; i++) {
-                WS2812_SetLED(i, r, g, b);
-            }
-            WS2812_Update();
-            osDelay(15);
+            step += 8;
+            if (step >= 256) step = 0;
         }
+        else
+        {
+            /* 全部在线: 绿灯常亮 */
+            r = 0;
+            g = 255;
+            b = 0;
+            step = 0;   /* 复位呼吸相位, 下次离线从亮起开始 */
+        }
+
+        for (i = 0; i < WS2812_LED_NUM; i++) {
+            WS2812_SetLED(i, r, g, b);
+        }
+        WS2812_Update();
+        osDelay(15);
     }
 }

@@ -39,6 +39,7 @@ static void MiniPC_Transmit_Robotic_Arm_Info(void);
 static void Robotic_Arm_Ctrl_Info_Get(void);
 static void Robotic_Arm_MotorPos_To_JointPos(void);
 static void Robotic_Arm_MotorVel_To_JointVel(void);
+static void DM_Motor_Offline_Monitor(void);
 
 extern Chassis_Info_Typedef chassis_info;
 
@@ -72,7 +73,7 @@ void Detect_Task(void)
     for(;;)
     {
         Detect_Task_SysTick = osKernelSysTick();
-        //Remote_Message_Moniter(&remote_ctrl);
+        Remote_Message_Moniter(&remote_ctrl);
         MiniPC_Receive_Info();
         MiniPC_Transmit_Robotic_Arm_Info();
 
@@ -84,6 +85,7 @@ void Detect_Task(void)
 
         Robotic_Arm_MotorPos_To_JointPos();
         Robotic_Arm_MotorVel_To_JointVel();
+        DM_Motor_Offline_Monitor();
 
         UI_Tick();
 
@@ -102,6 +104,7 @@ void Detect_Task(void)
             Robotic_Arm_Motor[J4].Data.Feedforward,
             Robotic_Arm_Motor[J5].Data.Feedforward,
             Robotic_Arm_Motor[J6].Data.Feedforward,
+            //remote_ctrl.rc_lost,
             #endif
         };
         USART10_Vofa_SendFloat(key_debug_data, 6);
@@ -173,15 +176,6 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
         }
     }
     #else
-    // 还是别开遥控器离线检测了
-    // if(remote_ctrl.rc_lost)
-    // {
-    //     chassis->last_mode = chassis->mode;
-    //     chassis->mode = CHASSIS_DISABLE;
-    //     chassis->last_lift_mode = chassis->lift_mode;
-    //     chassis->lift_mode = LIFT_STAGE_1;
-    //     return;
-    // }
     if(remote_ctrl.rc.ch[5] <= -630) HAL_NVIC_SystemReset();
 
     const uint16_t s1 = remote_ctrl.rc.s[1];
@@ -350,4 +344,25 @@ static void Robotic_Arm_MotorVel_To_JointVel(void)
     Robotic_Arm_Motor[J4].Data.Joint_Velocity = -Robotic_Arm_Motor[J4].Data.Velocity;
     Robotic_Arm_Motor[J5].Data.Joint_Velocity =  Robotic_Arm_Motor[J5].Data.Velocity;
     Robotic_Arm_Motor[J6].Data.Joint_Velocity = -Robotic_Arm_Motor[J6].Data.Velocity;
+}
+
+/**
+ * @brief  DM 电机离线检测
+ * @note   每次主循环递减 online_cnt，若连续收不到 CAN 帧则置 offline = true
+ *         online_cnt 由 DM_Motor_Info_Update 在每个 CAN RX 中断中重置为 0xFA
+ *         阈值 0x32 对应约 200 ms 无数据即为离线（1ms 循环）
+ */
+static void DM_Motor_Offline_Monitor(void)
+{
+    for (uint8_t i = J1; i <= J6; i++)
+    {
+        if (Robotic_Arm_Motor[i].Data.online_cnt <= 0x32U)
+        {
+            Robotic_Arm_Motor[i].Data.offline = true;
+        }
+        else if (Robotic_Arm_Motor[i].Data.online_cnt > 0)
+        {
+            Robotic_Arm_Motor[i].Data.online_cnt--;
+        }
+    }
 }

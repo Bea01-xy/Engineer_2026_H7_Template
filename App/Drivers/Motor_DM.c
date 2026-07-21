@@ -522,6 +522,10 @@ void DM_Motor_Info_Update(uint32_t *Identifier,uint8_t *Rx_Buf,DM_Motor_Info_Typ
         DM_Motor->Data.Temperature_MOS   = (float)(Rx_Buf[6]);
 		DM_Motor->Data.Temperature_Rotor = (float)(Rx_Buf[7]);
 
+		/* reset online count & clear offline flag — data just arrived */
+		DM_Motor->Data.online_cnt = 0xFAU;
+		DM_Motor->Data.offline    = false;
+
 }
 //------------------------------------------------------------------------------
 

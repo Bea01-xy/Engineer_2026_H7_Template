@@ -112,6 +112,8 @@ typedef struct
   	float  Temperature_MOS;   /*!< Motor Temperature_MOS   */
   	float  Temperature_Rotor; /*!< Motor Temperature_Rotor */
 	bool   overheat;          /*!< 转子温度超软件阈值时为 true (机械臂关节使用) */
+	uint8_t online_cnt;      /*!< online count, reset in CAN RX, decremented in Detect_Task */
+	bool    offline;         /*!< 离线标志，online_cnt 归零时置 true */
 
 	float  Target_Position;   /*!< Target Motor Positon  */
 	float  Start_Position;
