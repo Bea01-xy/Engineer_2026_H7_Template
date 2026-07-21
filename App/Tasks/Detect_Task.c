@@ -30,12 +30,15 @@
 #include "Referee_System.h"
 #include "UI.h"
 #include "arm_math.h"
+#include "Servo.h"
 /* USER CODE BEGIN Header_Detect_Task */
 static void chassis_set_mode(Chassis_Info_Typedef* chassis);
 static void chassis_ctrl_info_get(void);
 static void chassis_wheel_cal(void);
 static void MiniPC_Transmit_Robotic_Arm_Info(void);
-static void arm_ctrl_info_get(void);
+static void Robotic_Arm_Ctrl_Info_Get(void);
+static void Robotic_Arm_MotorPos_To_JointPos(void);
+static void Robotic_Arm_MotorVel_To_JointVel(void);
 
 extern Chassis_Info_Typedef chassis_info;
 
@@ -77,11 +80,14 @@ void Detect_Task(void)
         chassis_ctrl_info_get();
         chassis_wheel_cal();
 
-        arm_ctrl_info_get();
+        Robotic_Arm_Ctrl_Info_Get();
+
+        Robotic_Arm_MotorPos_To_JointPos();
+        Robotic_Arm_MotorVel_To_JointVel();
 
         UI_Tick();
 
-        float key_debug_data[6] = {
+        float key_debug_data[12] = {
             #if 0
             Robotic_Arm_Motor[J1].Data.Position,
             Robotic_Arm_Motor[J2].Data.Position,
@@ -90,12 +96,12 @@ void Detect_Task(void)
             Robotic_Arm_Motor[J5].Data.Position,
             Robotic_Arm_Motor[J6].Data.Position,
             #else
-            MiniPC_Data.joint_feedforword_data[J1],
-            MiniPC_Data.joint_feedforword_data[J2],
-            MiniPC_Data.joint_feedforword_data[J3],
-            MiniPC_Data.joint_feedforword_data[J4],
-            MiniPC_Data.joint_feedforword_data[J5],
-            MiniPC_Data.joint_feedforword_data[J6],
+            Robotic_Arm_Motor[J1].Data.Feedforward,
+            Robotic_Arm_Motor[J2].Data.Feedforward,
+            Robotic_Arm_Motor[J3].Data.Feedforward,
+            Robotic_Arm_Motor[J4].Data.Feedforward,
+            Robotic_Arm_Motor[J5].Data.Feedforward,
+            Robotic_Arm_Motor[J6].Data.Feedforward,
             #endif
         };
         USART10_Vofa_SendFloat(key_debug_data, 6);
@@ -299,7 +305,7 @@ static void MiniPC_Transmit_Robotic_Arm_Info(void)
     MiniPC_Transmit_Info(Robotic_Arm_Info, 6);
 }
 
-static void arm_ctrl_info_get(void)
+static void Robotic_Arm_Ctrl_Info_Get(void)
 {
     Robotic_Arm_Motor[J1].Data.Target_Position = MiniPC_Data.joint_pos_data[J1];
     Robotic_Arm_Motor[J2].Data.Target_Position = MiniPC_Data.joint_pos_data[J2]-PI+0.07f;
@@ -308,10 +314,40 @@ static void arm_ctrl_info_get(void)
     Robotic_Arm_Motor[J5].Data.Target_Position = MiniPC_Data.joint_pos_data[J5];
     Robotic_Arm_Motor[J6].Data.Target_Position = -MiniPC_Data.joint_pos_data[J6];
 
+    #if 0
     Robotic_Arm_Motor[J1].Data.Feedforward = MiniPC_Data.joint_feedforword_data[J1];
     Robotic_Arm_Motor[J2].Data.Feedforward = MiniPC_Data.joint_feedforword_data[J2];
     Robotic_Arm_Motor[J3].Data.Feedforward = MiniPC_Data.joint_feedforword_data[J3]/1.65f;
     Robotic_Arm_Motor[J4].Data.Feedforward = MiniPC_Data.joint_feedforword_data[J4];
     Robotic_Arm_Motor[J5].Data.Feedforward = MiniPC_Data.joint_feedforword_data[J5];
     Robotic_Arm_Motor[J6].Data.Feedforward = MiniPC_Data.joint_feedforword_data[J6];
+    #endif
+}
+
+/**
+ * @brief  电机空间 → 关节空间转换
+ * @note   将 DM 电机原始位置转换为机械臂关节角度
+ */
+static void Robotic_Arm_MotorPos_To_JointPos(void)
+{
+    Robotic_Arm_Motor[J1].Data.Joint_Position =  Robotic_Arm_Motor[J1].Data.Position;
+    Robotic_Arm_Motor[J2].Data.Joint_Position =  Robotic_Arm_Motor[J2].Data.Position + PI - 0.07f;
+    Robotic_Arm_Motor[J3].Data.Joint_Position =  Robotic_Arm_Motor[J3].Data.Position / 1.65f - PI - 0.05f;
+    Robotic_Arm_Motor[J4].Data.Joint_Position = -Robotic_Arm_Motor[J4].Data.Position;
+    Robotic_Arm_Motor[J5].Data.Joint_Position =  Robotic_Arm_Motor[J5].Data.Position;
+    Robotic_Arm_Motor[J6].Data.Joint_Position = -Robotic_Arm_Motor[J6].Data.Position;
+}
+
+/**
+ * @brief  电机速度 → 关节速度转换
+ * @note   对 MotorPos → JointPos 转换求导得到速度映射关系
+ */
+static void Robotic_Arm_MotorVel_To_JointVel(void)
+{
+    Robotic_Arm_Motor[J1].Data.Joint_Velocity =  Robotic_Arm_Motor[J1].Data.Velocity;
+    Robotic_Arm_Motor[J2].Data.Joint_Velocity =  Robotic_Arm_Motor[J2].Data.Velocity;
+    Robotic_Arm_Motor[J3].Data.Joint_Velocity =  Robotic_Arm_Motor[J3].Data.Velocity / 1.65f;
+    Robotic_Arm_Motor[J4].Data.Joint_Velocity = -Robotic_Arm_Motor[J4].Data.Velocity;
+    Robotic_Arm_Motor[J5].Data.Joint_Velocity =  Robotic_Arm_Motor[J5].Data.Velocity;
+    Robotic_Arm_Motor[J6].Data.Joint_Velocity = -Robotic_Arm_Motor[J6].Data.Velocity;
 }

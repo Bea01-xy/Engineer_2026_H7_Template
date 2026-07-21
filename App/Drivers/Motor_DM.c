@@ -143,7 +143,7 @@ DM_Motor_Info_Typedef Robotic_Arm_Motor[6] = {
     .Param_Range = {
       .P_MAX = 12.5f,
       .V_MAX = 45.f,
-      .T_MAX = 8.f
+      .T_MAX = 40.f
     },
     .FDCANFrame = {
       .TxIdentifier = 0x0B,

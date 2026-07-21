@@ -105,6 +105,8 @@ typedef struct
   	uint16_t  V_int;   /*!< Motor Velocity uint16 */
   	uint16_t  T_int;   /*!< Motor Torque   uint16 */
   	float  Position;   /*!< Motor Positon  */
+  	float  Joint_Position;
+  	float  Joint_Velocity;
   	float  Velocity;   /*!< Motor Velocity */
   	float  Torque;     /*!< Motor Torque   */
   	float  Temperature_MOS;   /*!< Motor Temperature_MOS   */
