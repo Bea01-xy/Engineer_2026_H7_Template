@@ -565,7 +565,7 @@ static void Robotic_Arm_set_start_error_pos(void)
     Robotic_Arm_Motor[J6].Data.Error_Position = Robotic_Arm_Motor[J6].Data.Target_Position - Robotic_Arm_Motor[J6].Data.Start_Position;
 }
 
-#define GravityCompensation 0
+#define GravityCompensation 1
 static void Robotic_Arm_set_feedfoward(void)
 {
     PID_Calculate(&Robotic_Arm_FF_PID[J1], Robotic_Arm_Motor[J1].Data.Temp_Target_Position, Robotic_Arm_Motor[J1].Data.Position);
@@ -583,29 +583,46 @@ static void Robotic_Arm_set_feedfoward(void)
     Robotic_Arm_Motor[J4].Data.Feedforward =  Robotic_Arm_FF_PID[J4].Output;
     Robotic_Arm_Motor[J5].Data.Feedforward =  Robotic_Arm_FF_PID[J5].Output;
     Robotic_Arm_Motor[J6].Data.Feedforward =  Robotic_Arm_FF_PID[J6].Output;
+    #else
+    Robotic_Arm_Motor[J1].Data.Feedforward = 0.0f;
+    Robotic_Arm_Motor[J2].Data.Feedforward = 0.0f;
+    Robotic_Arm_Motor[J3].Data.Feedforward = 0.0f;
+    Robotic_Arm_Motor[J4].Data.Feedforward = 0.0f;
+    Robotic_Arm_Motor[J5].Data.Feedforward = 0.0f;
+    Robotic_Arm_Motor[J6].Data.Feedforward = 0.0f;
     #endif
 
 #else
-    float J1_Pos = Robotic_Arm_Motor[J1].Data.Position;
-    float J2_Pos = Robotic_Arm_Motor[J2].Data.Position + PI - 0.07f;
-    float J3_Pos = Robotic_Arm_Motor[J3].Data.Position / 1.65f - PI - 0.05f;
-    float J4_Pos = -Robotic_Arm_Motor[J4].Data.Position;
-    float J5_Pos = Robotic_Arm_Motor[J5].Data.Position;
-    float J6_Pos = -Robotic_Arm_Motor[J6].Data.Position;
-    float theta[6] = {J1_Pos, J2_Pos, J3_Pos, J4_Pos, J5_Pos, J6_Pos};
+    /* J2/J3: 2-DOF RR 动力学前馈 (纯前馈, 不含 PID 修正) */
+    const float rr_q1  = Robotic_Arm_Motor[J2].Data.Joint_Position;
+    const float rr_q2  = Robotic_Arm_Motor[J3].Data.Joint_Position;
+    const float rr_dq1 = Robotic_Arm_Motor[J2].Data.Joint_Velocity;
+    const float rr_dq2 = Robotic_Arm_Motor[J3].Data.Joint_Velocity;
 
-    GravityComp_UpdateFeedforward(theta);
-    Robotic_Arm_Motor[J1].Data.Feedforward =      gGravityComp.feedforward_torque[J1] + Robotic_Arm_FF_PID[J1].Output;
-    VAL_LIMIT(Robotic_Arm_Motor[J1].Data.Feedforward, -9.0f, 9.0f);
-    Robotic_Arm_Motor[J2].Data.Feedforward =  0.6*gGravityComp.feedforward_torque[J2] + Robotic_Arm_FF_PID[J2].Output;
+    const float rr_s2  = sinf(rr_q2);
+    const float rr_c12 = cosf(rr_q1 + rr_q2);
+    const float rr_c1  = cosf(rr_q1);
+
+    const float rr_tau_J2 = -RR_M2 * (
+        - RR_L1 * RR_L2 * rr_s2 * rr_dq2 * rr_dq2
+        - 2.0f * RR_L1 * RR_L2 * rr_s2 * rr_dq1 * rr_dq2
+        + RR_L2 * 9.81f * rr_c12
+    ) - (RR_M1 + RR_M2) * RR_L1 * 9.81f * rr_c1;
+
+    const float rr_tau_J3 = -RR_M2 * (
+        + RR_L1 * RR_L2 * rr_s2 * rr_dq1 * rr_dq1
+        + RR_L2 * 9.81f * rr_c12
+    );
+
+    Robotic_Arm_Motor[J1].Data.Feedforward =  Robotic_Arm_FF_PID[J1].Output;
     VAL_LIMIT(Robotic_Arm_Motor[J2].Data.Feedforward, -9.0f, 9.0f);
-    Robotic_Arm_Motor[J3].Data.Feedforward =     -gGravityComp.feedforward_torque[J3] + Robotic_Arm_FF_PID[J3].Output;
+    Robotic_Arm_Motor[J2].Data.Feedforward =  -rr_tau_J2 + Robotic_Arm_FF_PID[J2].Output;
     VAL_LIMIT(Robotic_Arm_Motor[J3].Data.Feedforward, -9.0f, 9.0f);
-    Robotic_Arm_Motor[J4].Data.Feedforward =     -gGravityComp.feedforward_torque[J4] + Robotic_Arm_FF_PID[J4].Output;
-    Robotic_Arm_Motor[J5].Data.Feedforward =      gGravityComp.feedforward_torque[J5] + Robotic_Arm_FF_PID[J5].Output;
-    VAL_LIMIT(Robotic_Arm_Motor[J5].Data.Feedforward, -0.6f, 0.6f);
-    Robotic_Arm_Motor[J6].Data.Feedforward =     -gGravityComp.feedforward_torque[J6] + Robotic_Arm_FF_PID[J6].Output;
-    VAL_LIMIT(Robotic_Arm_Motor[J6].Data.Feedforward, -1.0f, 1.0f);
+    Robotic_Arm_Motor[J3].Data.Feedforward =  (-rr_tau_J3 + Robotic_Arm_FF_PID[J3].Output)/1.65f;
+    Robotic_Arm_Motor[J4].Data.Feedforward =  Robotic_Arm_FF_PID[J4].Output;
+    Robotic_Arm_Motor[J5].Data.Feedforward =  Robotic_Arm_FF_PID[J5].Output;
+    Robotic_Arm_Motor[J6].Data.Feedforward =  Robotic_Arm_FF_PID[J6].Output;
+
 #endif
 }
 /* USER CODE END Control_Task */

@@ -35,19 +35,6 @@
 #define J5 4u
 #define J6 5u
 
-#define J1_MIN_ANGLE_DEG -180.0f
-#define J1_MAX_ANGLE_DEG 180.0f
-#define J2_MIN_ANGLE_DEG -180.0f
-#define J2_MAX_ANGLE_DEG 180.0f
-#define J3_MIN_ANGLE_DEG -180.0f
-#define J3_MAX_ANGLE_DEG 180.0f
-#define J4_MIN_ANGLE_DEG -180.0f
-#define J4_MAX_ANGLE_DEG 180.0f
-#define J5_MIN_ANGLE_DEG -180.0f
-#define J5_MAX_ANGLE_DEG 180.0f
-#define J6_MIN_ANGLE_DEG -180.0f
-#define J6_MAX_ANGLE_DEG 180.0f
-
 typedef enum
 {
   HAND_OPEN = 0U,
@@ -61,7 +48,7 @@ typedef enum
 #define J5_INITIAL_POS 0.00f
 #define J6_INITIAL_POS 0.00f 
 
-#define ROBOTIC_ARM_MOVING_TIME 1000u //ms
+#define ROBOTIC_ARM_MOVING_TIME 1500u //ms
 
 #define GRIPPER_OPEN_POS -21.0f
 #define GRIPPER_CLOSE_POS 133.8f
@@ -88,9 +75,9 @@ typedef enum
  * -------------------------------------------------------------------------- */
 
 /* ---------- Group A: J1 / J2 / J3 ---------- */
-#define ROBOTIC_ARM_FF_A_KP              0.55f
-#define ROBOTIC_ARM_FF_A_KI              0.09f
-#define ROBOTIC_ARM_FF_A_KD              1200.7f
+#define ROBOTIC_ARM_FF_A_KP              0.25f
+#define ROBOTIC_ARM_FF_A_KI              0.1f
+#define ROBOTIC_ARM_FF_A_KD              12.7f
 #define ROBOTIC_ARM_FF_A_Alpha           0.5f
 #define ROBOTIC_ARM_FF_A_Deadband        0.00f
 #define ROBOTIC_ARM_FF_A_LimitIntegral   9400.0f     /* 单位: rad·tick (累加误差) */
@@ -104,6 +91,18 @@ typedef enum
 #define ROBOTIC_ARM_FF_B_Deadband        0.00f      /* rad, 约 1.15° */
 #define ROBOTIC_ARM_FF_B_LimitIntegral   100.0f      /* 单位: rad·tick (累加误差) */
 #define ROBOTIC_ARM_FF_B_LimitOutput     2.0f       /* N·m */
+
+/* ----------------------------------------------------------------------------
+ * 2-DOF RR 动力学补偿参数 (J2=肩关节, J3=肘关节)
+ * 经典平面 RR 构型, 忽略加速度项:
+ *   τ₁ = -m₂·l₁·l₂·sin(q₂)·(dq₂² + 2·dq₁·dq₂)  + m₂·g·l₂·cos(q₁+q₂)
+ *        + (m₁+m₂)·g·l₁·cos(q₁)
+ *   τ₂ = +m₂·l₁·l₂·sin(q₂)·dq₁²                   + m₂·g·l₂·cos(q₁+q₂)
+ * 用户自行标定调参                                                    */
+#define RR_M1  1.8f    /* 连杆 1 质量 (kg) */
+#define RR_M2  1.8f    /* 连杆 2 质量 (kg) */
+#define RR_L1  0.4f    /* 连杆 1 长度 (m) */
+#define RR_L2  0.25f    /* 连杆 2 长度 (m) */
 
 #endif /* ROBOTIC_ARM_CONFIG_H */
 
