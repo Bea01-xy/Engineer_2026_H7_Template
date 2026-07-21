@@ -18,8 +18,10 @@
 #include "stdbool.h"
 
 /* 前向声明: Servo_RxEventCallback 使用 UART_HandleTypeDef* (仅指针, 无需完整定义) */
+#ifndef UART_HandleTypeDef
 struct __UART_HandleTypeDef;
 typedef struct __UART_HandleTypeDef UART_HandleTypeDef;
+#endif
 
 #ifdef __cplusplus
 extern "C" {

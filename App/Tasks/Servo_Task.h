@@ -17,11 +17,11 @@
 #define SERVO_ANGLE_TO_POS(angle_deg)  ((uint16_t)(((int32_t)(angle_deg) + 90) * 2845 / 180))
 #define SERVO_YAW   1u
 #define SERVO_PITCH 2u
-#define SERVO_YAW_OFFSET   0
-#define SERVO_PITCH_OFFSET 0
+#define SERVO_YAW_OFFSET   -10
+#define SERVO_PITCH_OFFSET  10
 
-#define SERVO_PITCH_MAX 2372
-#define SERVO_PITCH_MIN  375
+#define SERVO_PITCH_MAX  30
+#define SERVO_PITCH_MIN -50
 /* ======================== 共享显示状态 ======================== */
 /* Servo_Task 写入 → LCD_Task 只读 */
 

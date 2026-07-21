@@ -14,6 +14,10 @@
 #include "Servo.h"
 #include "Servo_Task.h"
 #include <math.h>
+#include "Robotic_Arm_Config.h"
+#include "Motor_DM.h"
+#include "bsp_uart.h"
+#include "Config.h"
 /* ========================= 全局共享状态 ========================= */
 
 volatile ServoDisplayState servo_display = {0};
@@ -55,10 +59,12 @@ void Servo_Task(void const *argument)
 
     for (;;)
     {
-        float target_yaw_angle   = -90.0f;
-        float target_pitch_angle = 0.0f;
-        Servo_SetPosition(SERVO_YAW, (uint16_t)SERVO_ANGLE_TO_POS(target_yaw_angle), 100);
-        Servo_SetPosition(SERVO_PITCH, 1000, 100);
+        float target_yaw_angle   = (- Robotic_Arm_Motor[J1].Data.Joint_Position) * 180.0f / 3.1415926f;
+        float target_pitch_angle = (- Robotic_Arm_Motor[J2].Data.Joint_Position - Robotic_Arm_Motor[J3].Data.Joint_Position) * 180.0f / 3.1415926f;
+        USART10_Vofa_SendFloat(&target_pitch_angle, 1);
+        VAL_LIMIT(target_pitch_angle, SERVO_PITCH_MIN, SERVO_PITCH_MAX);
+        Servo_SetPosition(SERVO_YAW, (uint16_t)SERVO_ANGLE_TO_POS(target_yaw_angle + SERVO_YAW_OFFSET), 10);
+        Servo_SetPosition(SERVO_PITCH, (uint16_t)SERVO_ANGLE_TO_POS(target_pitch_angle + SERVO_PITCH_OFFSET), 10);
         osDelay(5);
     }
 }
