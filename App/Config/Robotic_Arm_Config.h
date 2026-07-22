@@ -76,8 +76,8 @@ typedef enum
 
 /* ---------- Group A: J1 / J2 / J3 ---------- */
 #define ROBOTIC_ARM_FF_A_KP              0.25f
-#define ROBOTIC_ARM_FF_A_KI              0.1f
-#define ROBOTIC_ARM_FF_A_KD              12.7f
+#define ROBOTIC_ARM_FF_A_KI              0.01f
+#define ROBOTIC_ARM_FF_A_KD              22.7f
 #define ROBOTIC_ARM_FF_A_Alpha           0.5f
 #define ROBOTIC_ARM_FF_A_Deadband        0.00f
 #define ROBOTIC_ARM_FF_A_LimitIntegral   9400.0f     /* 单位: rad·tick (累加误差) */

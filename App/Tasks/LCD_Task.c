@@ -23,8 +23,8 @@ void LCD_Task(void const *argument)
     for (;;)
     {
         //LCD_ShowChinese(80, 30, (const uint8_t *)"\xB4\xEF\xC3\xEE", CYAN, BLACK, 24, 0);
-        LCD_ShowFloatNum(80, 30, 3.145f, 1, 3, CYAN, BLACK, 24);
-        LCD_ShowPicture(100, 82, 80, 76, gImage_1);
+        //LCD_ShowFloatNum(80, 30, 3.145f, 1, 3, CYAN, BLACK, 24);
+        //LCD_ShowPicture(100, 82, 80, 76, gImage_1);
         osDelay(50);
     }
 }

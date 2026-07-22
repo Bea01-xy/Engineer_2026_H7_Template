@@ -139,7 +139,7 @@ void Robotic_Arm_set(const int part, const bool activated)
 		#else
 		if (part == 0) {
 			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], 5.0f, 0.02f);
-			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], 2.5f, 11.4f);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], 1.5f, 21.4f);
 		} else if (part == 1) {
 			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], 3.4f, 0.2f);
 			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], 0.7f, 0.02f);
