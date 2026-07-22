@@ -34,6 +34,7 @@
 #include "bsp_mcu.h"
 #include "Motor_DM.h"
 #include "bsp_can.h"
+#include "lcd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -127,6 +128,7 @@ int main(void)
   MX_USART10_UART_Init();
   /* USER CODE BEGIN 2 */
   MCU_Init();
+  LCD_Init();
 
 
   /* USER CODE END 2 */

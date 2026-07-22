@@ -19,7 +19,6 @@
 void LCD_Task(void const *argument)
 {
     (void)argument;
-    LCD_Init();
     LCD_Fill(0, 0, LCD_W, LCD_H, BLACK);
 
     /* 标题 — 只画一次 */

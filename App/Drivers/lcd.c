@@ -525,30 +525,39 @@ void LCD_ShowPicture(uint16_t x, uint16_t y, uint16_t length, uint16_t width, co
 
 void LCD_Init(void)
 {
-    /* ---- 0. 释放 PB3: 切换调试端口到 SWD-only 模式 ---- */
+    /* ========== 阶段 0: 上电稳定 (等待 LCD 内部电荷泵电压建立) ========== */
+    HAL_Delay(200);
+
+    /* ---- 释放 PB3: 切换调试端口到 SWD-only 模式 ---- */
     /* PB3 复位后默认为 JTDO, 需要释放以作 SPI1_SCK 使用 */
     /* SW_CFG[1:0] = 10: SW-DP only, JTAG-DP disabled */
     __HAL_RCC_SYSCFG_CLK_ENABLE();
     SYSCFG->CCCSR = (SYSCFG->CCCSR & ~0xC0000000U) | 0x80000000U;
 
-    /* ---- 1. GPIO 初始化 ---- */
+    /* ---- GPIO 初始化 ---- */
     lcd_gpio_init();
 
-    /* ---- 2. SPI1 初始化 ---- */
+    /* ========== 阶段 1: 提前复位 (在 SPI 初始化前拉低 RESET) ========== */
+    /* 确保 SPI 引脚配置时的毛刺被 LCD 忽略 */
+    LCD_RES_Clr();
+    HAL_Delay(150);
+
+    /* ========== 阶段 2: SPI1 初始化 ========== */
     lcd_spi_init();
 
-    /* ---- 3. 硬件复位 ---- */
-    LCD_RES_Clr();
-    HAL_Delay(100);
+    /* SPI 空操作: 刷掉 FIFO 中可能存在的残留数据 */
+    {
+        uint8_t dummy = 0x00;
+        HAL_SPI_Transmit(&hspi1, &dummy, 1, 0xffff);
+    }
+
+    /* ========== 阶段 3: 释放复位 ========== */
     LCD_RES_Set();
-    HAL_Delay(100);
+    HAL_Delay(150);
 
-    LCD_BLK_Set();      /* 开启背光 */
-    HAL_Delay(100);
-
-    /* ---- 4. LCD 驱动 IC 初始化序列 (ST7789) ---- */
+    /* ========== 阶段 4: LCD 驱动 IC 初始化序列 (ST7789) ========== */
     LCD_WR_REG(0x11);   /* Sleep out */
-    HAL_Delay(120);
+    HAL_Delay(150);
 
     /* Memory Data Access Control */
     LCD_WR_REG(0x36);
@@ -608,4 +617,8 @@ void LCD_Init(void)
 
     LCD_WR_REG(0x21);   /* Display inversion on */
     LCD_WR_REG(0x29);   /* Display on */
+
+    /* ========== 阶段 5: 背光 (初始化完成后再开启, 避免电源毛刺) ========== */
+    LCD_BLK_Set();
+    HAL_Delay(50);
 }
