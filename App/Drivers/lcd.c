@@ -452,56 +452,65 @@ void LCD_ShowIntNum(uint16_t x, uint16_t y, uint16_t num, uint8_t len, uint16_t 
 
 void LCD_ShowFloatNum(uint16_t x, uint16_t y, float num, uint8_t len, uint8_t decimal, uint16_t fc, uint16_t bc, uint8_t sizey)
 {
-    int16_t num_int;
+    int32_t num_int;
     uint8_t t, temp, sizex;
+    uint8_t pos_x;
+    uint8_t is_negative;
     sizex = sizey / 2;
-    num_int = num * mypow(10, decimal);
 
-    if (num < 0) {
+    is_negative = (num < 0);
+    if (is_negative) num = -num;
+    num_int = (int32_t)(num * mypow(10, decimal) + 0.5f);
+
+    /* 符号位 */
+    if (is_negative) {
         LCD_ShowChar(x, y, '-', fc, bc, sizey, 0);
-        num_int = -num_int;
-        x += sizex;
-        len++;
     } else {
         LCD_ShowChar(x, y, ' ', fc, bc, sizey, 0);
-        x += sizex;
-        len++;
     }
 
-    LCD_Fill(x, y, x + len * sizex + decimal + 1, y + sizey + 1, bc);
+    pos_x = x + sizex;
 
-    for (t = 0; t < len; t++) {
-        if (t == (len - decimal)) {
-            LCD_ShowChar(x + (len - decimal) * sizex, y, '.', fc, bc, sizey, 0);
-            t++;
-            len += 1;
+    /* 清除背景: 整数(len) + 小数点(1) + 小数(decimal) */
+    LCD_Fill(pos_x, y, pos_x + (len + 1 + decimal) * sizex, y + sizey + 1, bc);
+
+    /* 依次显示所有数字: 先整数位, 再小数点, 再小数位 */
+    for (t = 0; t < len + decimal; t++) {
+        if (t == len) {
+            LCD_ShowChar(pos_x, y, '.', fc, bc, sizey, 0);
+            pos_x += sizex;
         }
-        temp = ((num_int / mypow(10, len - t - 1)) % 10) + '0';
-        LCD_ShowChar(x + t * sizex, y, temp, fc, bc, sizey, 0);
+        temp = ((num_int / mypow(10, len + decimal - t - 1)) % 10) + '0';
+        LCD_ShowChar(pos_x, y, temp, fc, bc, sizey, 0);
+        pos_x += sizex;
     }
 }
 
 void LCD_ShowFloatNum1(uint16_t x, uint16_t y, float num, uint8_t len, uint8_t decimal, uint16_t fc, uint16_t bc, uint8_t sizey)
 {
-    int16_t num_int;
+    int32_t num_int;
     uint8_t t, temp, sizex;
+    uint8_t pos_x;
     sizex = sizey / 2;
-    num_int = num * mypow(10, decimal);
 
-    num_int = num_int;
-    x += sizex;
-    len++;
+    /* 取绝对值, 四舍五入 */
+    if (num < 0) num = -num;
+    num_int = (int32_t)(num * mypow(10, decimal) + 0.5f);
 
-    LCD_Fill(x, y, x + len * sizex + decimal + 1, y + sizey + 1, bc);
+    pos_x = x + sizex;
 
-    for (t = 0; t < len; t++) {
-        if (t == (len - decimal)) {
-            LCD_ShowChar(x + (len - decimal) * sizex, y, '.', fc, bc, sizey, 0);
-            t++;
-            len += 1;
+    /* 清除背景: 整数(len) + 小数点(1) + 小数(decimal) */
+    LCD_Fill(pos_x, y, pos_x + (len + 1 + decimal) * sizex, y + sizey + 1, bc);
+
+    /* 依次显示所有数字 */
+    for (t = 0; t < len + decimal; t++) {
+        if (t == len) {
+            LCD_ShowChar(pos_x, y, '.', fc, bc, sizey, 0);
+            pos_x += sizex;
         }
-        temp = ((num_int / mypow(10, len - t - 1)) % 10) + '0';
-        LCD_ShowChar(x + t * sizex, y, temp, fc, bc, sizey, 0);
+        temp = ((num_int / mypow(10, len + decimal - t - 1)) % 10) + '0';
+        LCD_ShowChar(pos_x, y, temp, fc, bc, sizey, 0);
+        pos_x += sizex;
     }
 }
 

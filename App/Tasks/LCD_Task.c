@@ -12,37 +12,19 @@
 /* Includes ------------------------------------------------------------------*/
 #include "cmsis_os.h"
 #include "lcd.h"
-#include "Servo_Task.h"     /* 共享状态 servo_display */
-
+#include "pic.h"
 /* ========================= 任务入口 ========================= */
 
 void LCD_Task(void const *argument)
 {
     (void)argument;
+    //(280×240 屏幕)
     LCD_Fill(0, 0, LCD_W, LCD_H, BLACK);
-
-    /* 标题 — 只画一次 */
-    LCD_ShowString(50, 30, (const uint8_t *)"SERVO POS", CYAN, BLACK, 24, 0);
-
-    uint16_t prev_pos = 0xFFFF;  /* 保证第一次一定刷新 */
-
     for (;;)
     {
-        uint16_t pos = servo_display.resp_position;
-
-        if (pos != prev_pos) {
-            /* 用大号字体显示位置值 */
-            LCD_Fill(30, 80, 250, 140, BLACK);           /* 清数字区域 */
-            LCD_ShowIntNum(40, 90, pos, 4, GREEN, BLACK, 48);  /* 大字号显示 */
-
-            /* 换算成角度显示 (-180° ~ +180°, 0~4095) */
-            int16_t angle_deg = ((int32_t)pos * 360 / 4096) - 180;
-            LCD_ShowIntNum(50, 155, angle_deg, 4, WHITE, BLACK, 24);
-            LCD_ShowString(130, 155, (const uint8_t *)"deg", WHITE, BLACK, 24, 0);
-
-            prev_pos = pos;
-        }
-
+        //LCD_ShowChinese(80, 30, (const uint8_t *)"\xB4\xEF\xC3\xEE", CYAN, BLACK, 24, 0);
+        LCD_ShowFloatNum(80, 30, 3.145f, 1, 3, CYAN, BLACK, 24);
+        LCD_ShowPicture(100, 82, 80, 76, gImage_1);
         osDelay(50);
     }
 }
