@@ -61,7 +61,7 @@ void Servo_Task(void const *argument)
     {
         float target_yaw_angle   = (- Robotic_Arm_Motor[J1].Data.Joint_Position) * 180.0f / 3.1415926f;
         float target_pitch_angle = (- Robotic_Arm_Motor[J2].Data.Joint_Position - Robotic_Arm_Motor[J3].Data.Joint_Position) * 180.0f / 3.1415926f;
-        USART10_Vofa_SendFloat(&target_pitch_angle, 1);
+        //USART10_Vofa_SendFloat(&target_pitch_angle, 1);
         VAL_LIMIT(target_pitch_angle, SERVO_PITCH_MIN, SERVO_PITCH_MAX);
         Servo_SetPosition(SERVO_YAW, (uint16_t)SERVO_ANGLE_TO_POS(target_yaw_angle + SERVO_YAW_OFFSET), 10);
         Servo_SetPosition(SERVO_PITCH, (uint16_t)SERVO_ANGLE_TO_POS(target_pitch_angle + SERVO_PITCH_OFFSET), 10);

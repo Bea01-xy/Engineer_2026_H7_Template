@@ -32,7 +32,8 @@ static void  float_to_bytes_union(float value, uint8_t *buffer);
 MiniPC_DataTypeDef MiniPC_Data = {
     .joint_pos_data = {J1_INITIAL_POS, J2_INITIAL_POS, J3_INITIAL_POS,
                    J4_INITIAL_POS, J5_INITIAL_POS, J6_INITIAL_POS},
-    .joint_feedforword_data = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+    .main_buttons = 0, .handle_buttons = 0,
+    .joystick_x = 0, .joystick_y = 0,
     .mouse_x = 0, .mouse_y = 0, .mouse_z = 0,
     .mouse_left = 0, .mouse_right = 0, .mouse_mid = 0,
     .key_w = 0, .key_s = 0, .key_a = 0, .key_d = 0,
@@ -45,7 +46,8 @@ MiniPC_DataTypeDef MiniPC_Data = {
 MiniPC_DataTypeDef MiniPC_Data_Last = {
     .joint_pos_data = {J1_INITIAL_POS, J2_INITIAL_POS, J3_INITIAL_POS,
                    J4_INITIAL_POS, J5_INITIAL_POS, J6_INITIAL_POS},
-    .joint_feedforword_data = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, 
+    .main_buttons = 0, .handle_buttons = 0,
+    .joystick_x = 0, .joystick_y = 0,
     .mouse_x = 0, .mouse_y = 0, .mouse_z = 0,
     .mouse_left = 0, .mouse_right = 0, .mouse_mid = 0,
     .key_w = 0, .key_s = 0, .key_a = 0, .key_d = 0,
@@ -101,16 +103,16 @@ uint8_t MiniPC_Transmit_Info(float* Buf, uint16_t Len)
 
 /**
   * @brief  解析从小电脑接收的 USB 虚拟串口数据
-  * @note   数据包格式：帧头(0xAA) + 数据(51字节) + 校验和(1字节) + 帧尾(0x55)
-  *         数据布局：6个float(24B) + 3个int16_t(6B) + 21个uint8_t(21B)
-  *         总长度：54字节
+  * @note   数据包格式：帧头(0xAA) + 数据(57字节) + 校验和(1字节) + 帧尾(0x55)
+  *         数据布局：6个float(24B) + 自定义控制器(6B) + 3个int16_t(6B) + 21个uint8_t(21B)
+  *         总长度：60字节
   * @retval None - 解析结果存入全局变量 MiniPC_Data
   */
 void MiniPC_Receive_Info(void)
 {
-    /* 数据部分大小：6*4 + 3*2 + 21*1 = 51字节 */
-    const uint32_t data_len = 48; 
-    /* 完整数据包：帧头(1) + 数据(51) + 校验(1) + 帧尾(1) = 54字节 */
+    /* 数据部分大小：6*4 + 6 + 3*2 + 21*1 = 57字节 */
+    const uint32_t data_len = 57;
+    /* 完整数据包：帧头(1) + 数据(57) + 校验(1) + 帧尾(1) = 60字节 */
     const uint32_t packet_len = data_len + 3;
 
     /* 检查是否有新数据到达 */
@@ -146,12 +148,16 @@ void MiniPC_Receive_Info(void)
         MiniPC_Data.joint_pos_data[i] = bytes_to_float_union(&pbuf[idx]);
         idx += 4;
     }
-    for (uint32_t i = 0; i < 6; i++) {
-        MiniPC_Data.joint_feedforword_data[i] = bytes_to_float_union(&pbuf[idx]);
-        idx += 4;
-    }
 
-    /* 解析3个int16_t - 鼠标数据 (偏移 24-29) */
+    /* 解析自定义控制器数据 - 6字节 (偏移 24-29) */
+    MiniPC_Data.main_buttons   = pbuf[idx++];
+    MiniPC_Data.handle_buttons = pbuf[idx++];
+    MiniPC_Data.joystick_x     = pbuf[idx] | (pbuf[idx + 1] << 8);
+    idx += 2;
+    MiniPC_Data.joystick_y     = pbuf[idx] | (pbuf[idx + 1] << 8);
+    idx += 2;
+
+    /* 解析3个int16_t - 鼠标数据 (偏移 30-35) */
     MiniPC_Data.mouse_x = (int16_t)(pbuf[idx] | (pbuf[idx + 1] << 8));
     idx += 2;
     MiniPC_Data.mouse_y = (int16_t)(pbuf[idx] | (pbuf[idx + 1] << 8));

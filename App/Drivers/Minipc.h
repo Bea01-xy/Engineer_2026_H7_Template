@@ -29,7 +29,12 @@ extern "C" {
 typedef struct {
     /* 关节数据 - 6个float = 24字节 */
     float joint_pos_data[6];
-    float joint_feedforword_data[6];
+
+    /* 自定义控制器数据 - 6字节*/
+    uint8_t main_buttons;
+    uint8_t handle_buttons;
+    uint16_t joystick_x;
+    uint16_t joystick_y;
 
     /* 鼠标数据 - 3个int16_t = 6字节 */
     int16_t mouse_x;
