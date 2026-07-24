@@ -32,7 +32,11 @@ typedef struct {
 
     /* 自定义控制器数据 - 6字节*/
     uint8_t main_buttons;
-    uint8_t handle_buttons;
+    uint8_t handle_buttons;             /*!< 位域: bit0=btn1(1), bit1=btn2(2), bit2=btn3(4), bit3=btn4(8) */
+    uint8_t btn1;                       /*!< handle_buttons bit0 拆出的独立标志 (0/1), 配合 MINIPC_KEY_RISING_EDGE 使用 */
+    uint8_t btn2;                       /*!< handle_buttons bit1 */
+    uint8_t btn3;                       /*!< handle_buttons bit2 */
+    uint8_t btn4;                       /*!< handle_buttons bit3 */
     uint16_t joystick_x;
     uint16_t joystick_y;
 

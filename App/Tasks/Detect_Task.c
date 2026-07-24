@@ -92,25 +92,18 @@ void Detect_Task(void)
 
         float key_debug_data[12] = {
             #if 0
-            Robotic_Arm_Motor[J1].Data.Position,
             Robotic_Arm_Motor[J2].Data.Position,
+            Robotic_Arm_Motor[J2].Data.Target_Position,
             Robotic_Arm_Motor[J3].Data.Position,
-            Robotic_Arm_Motor[J4].Data.Position,
-            Robotic_Arm_Motor[J5].Data.Position,
-            Robotic_Arm_Motor[J6].Data.Position,
-            //MiniPC_Data.main_buttons,
-            //MiniPC_Data.handle_buttons,
-            //MiniPC_Data.joystick_x,
-            //MiniPC_Data.joystick_y,
+            Robotic_Arm_Motor[J3].Data.Target_Position,
             #else
             MiniPC_Data.main_buttons,
             MiniPC_Data.handle_buttons,
-            MiniPC_Data.joystick_x,
-            MiniPC_Data.joystick_y,
-            MiniPC_Data.lost,
+            MiniPC_Data.btn1,
+            MiniPC_Data.btn2,
             #endif
         };
-        USART10_Vofa_SendFloat(key_debug_data, 5);
+        USART10_Vofa_SendFloat(key_debug_data, 4);
         /* ========================================================= */
 
         MiniPC_Data_Update_Last();
@@ -170,7 +163,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
                 chassis->gear = 0;
             }
         }
-        if(MINIPC_KEY_RISING_EDGE(handle_buttons)) {
+        if(MINIPC_KEY_RISING_EDGE(btn1)) {
             if (hand_state == HAND_OPEN) {
                 hand_state = HAND_CLOSE;
             } else {
@@ -227,7 +220,7 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
             }
         }
 
-        if(MINIPC_KEY_RISING_EDGE(handle_buttons)) {
+        if(MINIPC_KEY_RISING_EDGE(btn1)) {
             if (hand_state == HAND_OPEN) {
                 hand_state = HAND_CLOSE;
             } else {

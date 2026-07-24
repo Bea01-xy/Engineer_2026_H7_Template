@@ -34,7 +34,8 @@ MiniPC_DataTypeDef MiniPC_Data = {
     .joint_pos_data = {J1_INITIAL_POS, J2_INITIAL_POS, J3_INITIAL_POS,
                    J4_INITIAL_POS, J5_INITIAL_POS, J6_INITIAL_POS},
     .main_buttons = 0, .handle_buttons = 0,
-    .joystick_x = 0, .joystick_y = 0,
+    .btn1 = 0, .btn2 = 0, .btn3 = 0, .btn4 = 0,
+    .joystick_x = 2048, .joystick_y = 2048,
     .mouse_x = 0, .mouse_y = 0, .mouse_z = 0,
     .mouse_left = 0, .mouse_right = 0, .mouse_mid = 0,
     .key_w = 0, .key_s = 0, .key_a = 0, .key_d = 0,
@@ -49,6 +50,7 @@ MiniPC_DataTypeDef MiniPC_Data_Last = {
     .joint_pos_data = {J1_INITIAL_POS, J2_INITIAL_POS, J3_INITIAL_POS,
                    J4_INITIAL_POS, J5_INITIAL_POS, J6_INITIAL_POS},
     .main_buttons = 0, .handle_buttons = 0,
+    .btn1 = 0, .btn2 = 0, .btn3 = 0, .btn4 = 0,
     .joystick_x = 0, .joystick_y = 0,
     .mouse_x = 0, .mouse_y = 0, .mouse_z = 0,
     .mouse_left = 0, .mouse_right = 0, .mouse_mid = 0,
@@ -155,6 +157,11 @@ void MiniPC_Receive_Info(void)
     /* 解析自定义控制器数据 - 6字节 (偏移 24-29) */
     MiniPC_Data.main_buttons   = pbuf[idx++];
     MiniPC_Data.handle_buttons = pbuf[idx++];
+    /* 从 handle_buttons 位域拆出独立按键标志, 适配 MINIPC_KEY_RISING_EDGE 边沿检测宏 */
+    MiniPC_Data.btn1 = (MiniPC_Data.handle_buttons >> 0) & 0x01U;
+    MiniPC_Data.btn2 = (MiniPC_Data.handle_buttons >> 1) & 0x01U;
+    MiniPC_Data.btn3 = (MiniPC_Data.handle_buttons >> 2) & 0x01U;
+    MiniPC_Data.btn4 = (MiniPC_Data.handle_buttons >> 3) & 0x01U;
     MiniPC_Data.joystick_x     = pbuf[idx] | (pbuf[idx + 1] << 8);
     idx += 2;
     MiniPC_Data.joystick_y     = pbuf[idx] | (pbuf[idx + 1] << 8);
@@ -208,8 +215,6 @@ void MiniPC_Offline_Monitor(void)
 {
     if (MiniPC_Data.online_cnt <= 0x32U)
     {
-        /* 离线: 清零数据, 置离线标志 */
-        memset(&MiniPC_Data, 0, sizeof(MiniPC_DataTypeDef));
         MiniPC_Data.lost = true;
     }
     else if (MiniPC_Data.online_cnt > 0)
