@@ -22,6 +22,8 @@
 
 #define SERVO_PITCH_MAX  30
 #define SERVO_PITCH_MIN -50
+#define SERVO_YAW_MAX  50
+#define SERVO_YAW_MIN -50
 /* ======================== 共享显示状态 ======================== */
 /* Servo_Task 写入 → LCD_Task 只读 */
 
