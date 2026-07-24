@@ -99,10 +99,10 @@ typedef enum
  *        + (m₁+m₂)·g·l₁·cos(q₁)
  *   τ₂ = +m₂·l₁·l₂·sin(q₂)·dq₁²                   + m₂·g·l₂·cos(q₁+q₂)
  * 用户自行标定调参                                                    */
-#define RR_M1  1.8f    /* 连杆 1 质量 (kg) */
-#define RR_M2  1.8f    /* 连杆 2 质量 (kg) */
-#define RR_L1  0.4f    /* 连杆 1 长度 (m) */
-#define RR_L2  0.25f    /* 连杆 2 长度 (m) */
+#define RR_M1  2.0f    /* 连杆 1 质量 (kg) */
+#define RR_M2  2.0f    /* 连杆 2 质量 (kg) */
+#define RR_L1  0.32f    /* 连杆 1 长度 (m) */
+#define RR_L2  0.18f    /* 连杆 2 长度 (m) */
 
 #endif /* ROBOTIC_ARM_CONFIG_H */
 
