@@ -65,6 +65,10 @@ typedef struct {
     uint8_t key_b;
     uint8_t key_1;
     uint8_t key_2;
+
+    /* 在线状态 - 用法同 Remote_Info_Typedef / DM_Motor_Info_Typedef */
+    uint8_t online_cnt;     /*!< 在线计数, 收到有效帧时复位 0xFA, 主循环递减 */
+    bool    lost;           /*!< 离线标志, online_cnt ≤ 0x32 时置 true */
 } MiniPC_DataTypeDef;
 
 /* Exported variables --------------------------------------------------------*/
@@ -83,6 +87,7 @@ extern MiniPC_DataTypeDef MiniPC_Data_Last;
 /* Exported functions prototypes ---------------------------------------------*/
 uint8_t MiniPC_Transmit_Info(float* Buf, uint16_t Len);
 void    MiniPC_Receive_Info(void);
+void    MiniPC_Offline_Monitor(void);
 /* 将当前 MiniPC_Data 拷贝到 MiniPC_Data_Last，应在每个循环末尾调用一次 */
 void    MiniPC_Data_Update_Last(void);
 

@@ -16,6 +16,7 @@
 #include "Minipc.h"
 #include "usbd_cdc_if.h"
 #include "Robotic_Arm_Config.h"
+#include <string.h>
 
 /* Private typedef -----------------------------------------------------------*/
 typedef union {
@@ -39,7 +40,8 @@ MiniPC_DataTypeDef MiniPC_Data = {
     .key_w = 0, .key_s = 0, .key_a = 0, .key_d = 0,
     .key_shift = 0, .key_ctrl = 0, .key_q = 0, .key_e = 0,
     .key_r = 0, .key_f = 0, .key_g = 0, .key_z = 0,
-    .key_x = 0, .key_c = 0, .key_v = 0, .key_b = 0
+    .key_x = 0, .key_c = 0, .key_v = 0, .key_b = 0,
+    .online_cnt = 0, .lost = true
 };
 
 /* MiniPC 数据上一循环状态镜像 - 用于边沿/跳变检测 */
@@ -53,7 +55,8 @@ MiniPC_DataTypeDef MiniPC_Data_Last = {
     .key_w = 0, .key_s = 0, .key_a = 0, .key_d = 0,
     .key_shift = 0, .key_ctrl = 0, .key_q = 0, .key_e = 0,
     .key_r = 0, .key_f = 0, .key_g = 0, .key_z = 0,
-    .key_x = 0, .key_c = 0, .key_v = 0, .key_b = 0
+    .key_x = 0, .key_c = 0, .key_v = 0, .key_b = 0,
+    .online_cnt = 0, .lost = true
 };
 
 /* Private variables ---------------------------------------------------------*/
@@ -187,6 +190,32 @@ void MiniPC_Receive_Info(void)
     MiniPC_Data.key_b       = pbuf[idx++];
     MiniPC_Data.key_1       = pbuf[idx++];
     MiniPC_Data.key_2       = pbuf[idx++];
+
+    /* 收到完整有效帧 → 复位在线计数, 清除离线标志 */
+    MiniPC_Data.online_cnt = 0xFAU;
+    MiniPC_Data.lost       = false;
+}
+
+/**
+ * @brief  MiniPC 离线监测
+ * @note   用法与 Remote_Message_Moniter / DM_Motor_Offline_Monitor 一致:
+ *         - 每收到一帧有效 USB 数据, MiniPC_Receive_Info 将 online_cnt 重置为 0xFA
+ *         - 本函数每主循环调用, 递减 online_cnt
+ *         - 连续约 200 次循环未收到新数据 (online_cnt ≤ 0x32) 视为离线,
+ *           清零数据并置 lost = true, 直到下一帧有效数据恢复
+ */
+void MiniPC_Offline_Monitor(void)
+{
+    if (MiniPC_Data.online_cnt <= 0x32U)
+    {
+        /* 离线: 清零数据, 置离线标志 */
+        memset(&MiniPC_Data, 0, sizeof(MiniPC_DataTypeDef));
+        MiniPC_Data.lost = true;
+    }
+    else if (MiniPC_Data.online_cnt > 0)
+    {
+        MiniPC_Data.online_cnt--;
+    }
 }
 
 void MiniPC_Data_Update_Last(void)

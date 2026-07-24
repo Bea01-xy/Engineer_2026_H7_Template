@@ -74,6 +74,7 @@ void Detect_Task(void)
     {
         Detect_Task_SysTick = osKernelSysTick();
         Remote_Message_Moniter(&remote_ctrl);
+        MiniPC_Offline_Monitor();
         MiniPC_Receive_Info();
         MiniPC_Transmit_Robotic_Arm_Info();
 
@@ -102,20 +103,14 @@ void Detect_Task(void)
             //MiniPC_Data.joystick_x,
             //MiniPC_Data.joystick_y,
             #else
-            Robotic_Arm_Motor[J1].Data.Target_Position,
-            Robotic_Arm_Motor[J2].Data.Target_Position,
-            Robotic_Arm_Motor[J3].Data.Target_Position,
-            Robotic_Arm_Motor[J4].Data.Target_Position,
-            Robotic_Arm_Motor[J5].Data.Target_Position,
-            Robotic_Arm_Motor[J6].Data.Target_Position,
-            MiniPC_Data.key_f,
-            //Robotic_Arm_Motor[J4].Data.Feedforward,
-            //Robotic_Arm_Motor[J4].Data.Position,
-            //Robotic_Arm_Motor[J4].Data.Temp_Target_Position,
-            remote_ctrl.rc_lost,
+            MiniPC_Data.main_buttons,
+            MiniPC_Data.handle_buttons,
+            MiniPC_Data.joystick_x,
+            MiniPC_Data.joystick_y,
+            MiniPC_Data.lost,
             #endif
         };
-        USART10_Vofa_SendFloat(key_debug_data, 8);
+        USART10_Vofa_SendFloat(key_debug_data, 5);
         /* ========================================================= */
 
         MiniPC_Data_Update_Last();
