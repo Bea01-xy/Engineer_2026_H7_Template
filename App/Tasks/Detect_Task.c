@@ -90,7 +90,7 @@ void Detect_Task(void)
         UI_Tick();
 
         float key_debug_data[12] = {
-            #if 1
+            #if 0
             Robotic_Arm_Motor[J1].Data.Position,
             Robotic_Arm_Motor[J2].Data.Position,
             Robotic_Arm_Motor[J3].Data.Position,
@@ -102,13 +102,20 @@ void Detect_Task(void)
             //MiniPC_Data.joystick_x,
             //MiniPC_Data.joystick_y,
             #else
-            Robotic_Arm_Motor[J4].Data.Feedforward,
-            Robotic_Arm_Motor[J4].Data.Position,
-            Robotic_Arm_Motor[J4].Data.Temp_Target_Position,
-            //remote_ctrl.rc_lost,
+            Robotic_Arm_Motor[J1].Data.Target_Position,
+            Robotic_Arm_Motor[J2].Data.Target_Position,
+            Robotic_Arm_Motor[J3].Data.Target_Position,
+            Robotic_Arm_Motor[J4].Data.Target_Position,
+            Robotic_Arm_Motor[J5].Data.Target_Position,
+            Robotic_Arm_Motor[J6].Data.Target_Position,
+            MiniPC_Data.key_f,
+            //Robotic_Arm_Motor[J4].Data.Feedforward,
+            //Robotic_Arm_Motor[J4].Data.Position,
+            //Robotic_Arm_Motor[J4].Data.Temp_Target_Position,
+            remote_ctrl.rc_lost,
             #endif
         };
-        USART10_Vofa_SendFloat(key_debug_data, 6);
+        USART10_Vofa_SendFloat(key_debug_data, 8);
         /* ========================================================= */
 
         MiniPC_Data_Update_Last();
@@ -117,170 +124,165 @@ void Detect_Task(void)
     /* USER CODE END Detect_Task */
 }
 
-#define KEYBOARD_CTL 0
 static void chassis_set_mode(Chassis_Info_Typedef* chassis)
 {
     if(chassis == NULL)
         return;
 
-    #if KEYBOARD_CTL
-    if(MiniPC_Data.key_r) HAL_NVIC_SystemReset();
-    chassis->last_mode = chassis->mode;
-    chassis->last_lift_mode = chassis->lift_mode;
-    if(MINIPC_KEY_RISING_EDGE(key_f)) {
-        if (chassis->last_mode == CHASSIS_LIFT) {
-            chassis->lift_mode = LIFT_STAGE_1;
-            chassis->mode = CHASSIS_AUTO_LIFT_1;
-        } else if(chassis->last_mode == CHASSIS_AUTO_LIFT_1) {
-            chassis->lift_mode = LIFT_STAGE_1;
-            chassis->mode = CHASSIS_AUTO_LIFT_2;
-        } else if(chassis->last_mode == CHASSIS_AUTO_LIFT_2) {
-            chassis->lift_mode = LIFT_STAGE_3;
-            chassis->mode = CHASSIS_LIFT;
-        } else {
-            chassis->mode = CHASSIS_DISABLE;
+    if (remote_ctrl.rc_lost) {
+        if(MiniPC_Data.key_r) HAL_NVIC_SystemReset();
+        chassis->last_mode = chassis->mode;
+        chassis->last_lift_mode = chassis->lift_mode;
+        if(MINIPC_KEY_RISING_EDGE(key_f)) {
+            if (chassis->last_mode == CHASSIS_LIFT) {
+                chassis->lift_mode = LIFT_STAGE_1;
+                chassis->mode = CHASSIS_AUTO_LIFT_1;
+            } else if(chassis->last_mode == CHASSIS_AUTO_LIFT_1) {
+                chassis->lift_mode = LIFT_STAGE_1;
+                chassis->mode = CHASSIS_AUTO_LIFT_2;
+            } else if(chassis->last_mode == CHASSIS_AUTO_LIFT_2) {
+                chassis->lift_mode = LIFT_STAGE_3;
+                chassis->mode = CHASSIS_LIFT;
+            } else {
+                chassis->mode = CHASSIS_DISABLE;
+            }
+        }else if(MINIPC_KEY_RISING_EDGE(key_q)) {
+            if (chassis->mode == CHASSIS_LIFT) {
+                chassis->mode = CHASSIS_DISABLE;
+            } else {
+                chassis->mode = CHASSIS_LIFT;
+            }
         }
-    }else if(MINIPC_KEY_RISING_EDGE(key_q)) {
-        if (chassis->mode == CHASSIS_LIFT) {
-            chassis->mode = CHASSIS_DISABLE;
-        } else {
-            chassis->mode = CHASSIS_LIFT;
+        if(MINIPC_KEY_RISING_EDGE(key_z)) {
+            if (chassis->lift_mode == LIFT_STAGE_3) {
+                chassis->lift_mode = LIFT_STAGE_5;
+            } else if (chassis->lift_mode == LIFT_STAGE_5) {
+                chassis->lift_mode = LIFT_STAGE_1;
+            } else if (chassis->lift_mode == LIFT_STAGE_1 || chassis->lift_mode == LIFT_STAGE_6) {
+                chassis->lift_mode = LIFT_STAGE_3;
+            }
+        }else if(MINIPC_KEY_RISING_EDGE(key_x)) {
+            if(chassis->lift_mode == LIFT_STAGE_4) {
+                chassis->lift_mode = LIFT_STAGE_3;
+            } else {
+                chassis->lift_mode = LIFT_STAGE_4;
+            }
         }
-    }
-    if(MINIPC_KEY_RISING_EDGE(key_z)) {
-        if (chassis->lift_mode == LIFT_STAGE_3) {
-            chassis->lift_mode = LIFT_STAGE_5;
-        } else if (chassis->lift_mode == LIFT_STAGE_5) {
-            chassis->lift_mode = LIFT_STAGE_1;
-        } else if (chassis->lift_mode == LIFT_STAGE_1 || chassis->lift_mode == LIFT_STAGE_6) {
-            chassis->lift_mode = LIFT_STAGE_3;
+        if(MINIPC_KEY_RISING_EDGE(key_e)) {
+            if (chassis->gear == 0) {
+                chassis->gear = 1;
+            } else {
+                chassis->gear = 0;
+            }
         }
-    }else if(MINIPC_KEY_RISING_EDGE(key_x)) {
-        if(chassis->lift_mode == LIFT_STAGE_4) {
-            chassis->lift_mode = LIFT_STAGE_3;
-        } else {
-            chassis->lift_mode = LIFT_STAGE_4;
+        if(MINIPC_KEY_RISING_EDGE(handle_buttons)) {
+            if (hand_state == HAND_OPEN) {
+                hand_state = HAND_CLOSE;
+            } else {
+                hand_state = HAND_OPEN;
+            }
         }
-    }
-    if(MINIPC_KEY_RISING_EDGE(key_2)) {
-        if (hand_state == HAND_OPEN) {
-            hand_state = HAND_CLOSE;
-        } else {
-            hand_state = HAND_OPEN;
-        }
-    }
-    if(MINIPC_KEY_RISING_EDGE(key_e)) {
-        if (chassis->gear == 0) {
-            chassis->gear = 1;
-        } else {
-            chassis->gear = 0;
-        }
-    }
-    #else
-    if(remote_ctrl.rc.ch[5] <= -630) HAL_NVIC_SystemReset();
-
-    const uint16_t s1 = remote_ctrl.rc.s[1];
-    const uint16_t s0 = remote_ctrl.rc.s[0];
-    const uint16_t sw0 = remote_ctrl.rc.sw[0];
-    const uint16_t sw1 = remote_ctrl.rc.sw[1];
-
-    #if 0
-    if (switch_is_up(sw1)) {
-        hand_state = HAND_OPEN;
-        M2006_Gripper_Motor.Data.Target_Angle = GRIPPER_OPEN_POS;
     } else {
-        hand_state = HAND_CLOSE;
-        M2006_Gripper_Motor.Data.Target_Angle = GRIPPER_CLOSE_POS;
-    }
-    #endif
+        if(remote_ctrl.rc.ch[5] <= -630) HAL_NVIC_SystemReset();
 
-    if (switch_is_up(sw0)) {
-        chassis->last_mode = chassis->mode;
-        chassis->mode = CHASSIS_DISABLE;
-    } else if (remote_ctrl.rc.ch[4] >= 630) {
-        chassis->last_mode = chassis->mode;
-        chassis->last_lift_mode = chassis->lift_mode;
-        chassis->mode = CHASSIS_LIFT;
-        chassis->lift_mode = LIFT_STAGE_4;
-    } else if (switch_is_up(s1) && switch_is_up(sw1)) {
-        chassis->last_mode = chassis->mode;
-        chassis->last_lift_mode = chassis->lift_mode;
-        chassis->mode = CHASSIS_LIFT;
-        switch (s0) {
-            case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_1; break;
-            case RC_SW_MID:  chassis->lift_mode = LIFT_STAGE_5; break;
-            case RC_SW_UP:   chassis->lift_mode = LIFT_STAGE_3; break;
-            default: break;
-        }
-    } else if (switch_is_down(s1)) {
-        chassis->last_mode = chassis->mode;
-        chassis->last_lift_mode = chassis->lift_mode;
-        chassis->mode = CHASSIS_AUTO_LIFT_1;
-        if(chassis->last_mode == CHASSIS_LIFT) {
-            chassis->lift_mode = LIFT_STAGE_1;
-        }
-    } else if (switch_is_down(sw1)) {
-        chassis->last_mode = chassis->mode;
-        chassis->last_lift_mode = chassis->lift_mode;
-        chassis->mode = CHASSIS_AUTO_LIFT_2;
-        if(chassis->last_mode == CHASSIS_LIFT) {
-            chassis->lift_mode = LIFT_STAGE_1;
-        }
-    }
+        const uint16_t s1 = remote_ctrl.rc.s[1];
+        const uint16_t s0 = remote_ctrl.rc.s[0];
+        const uint16_t sw0 = remote_ctrl.rc.sw[0];
+        const uint16_t sw1 = remote_ctrl.rc.sw[1];
 
-    if(MINIPC_KEY_RISING_EDGE(handle_buttons)) {
-        if (hand_state == HAND_OPEN) {
-            hand_state = HAND_CLOSE;
-        } else {
-            hand_state = HAND_OPEN;
-        }
-    }
+        //if (switch_is_up(sw1)) {
+            //hand_state = HAND_OPEN;
+            //M2006_Gripper_Motor.Data.Target_Angle = GRIPPER_OPEN_POS;
+        //} else {
+            //hand_state = HAND_CLOSE;
+            //M2006_Gripper_Motor.Data.Target_Angle = GRIPPER_CLOSE_POS;
+        //}
 
-    #endif
+        if (switch_is_up(sw0)) {
+            chassis->last_mode = chassis->mode;
+            chassis->mode = CHASSIS_DISABLE;
+        } else if (remote_ctrl.rc.ch[4] >= 630) {
+            chassis->last_mode = chassis->mode;
+            chassis->last_lift_mode = chassis->lift_mode;
+            chassis->mode = CHASSIS_LIFT;
+            chassis->lift_mode = LIFT_STAGE_4;
+        } else if (switch_is_up(s1) && switch_is_up(sw1)) {
+            chassis->last_mode = chassis->mode;
+            chassis->last_lift_mode = chassis->lift_mode;
+            chassis->mode = CHASSIS_LIFT;
+            switch (s0) {
+                case RC_SW_DOWN: chassis->lift_mode = LIFT_STAGE_1; break;
+                case RC_SW_MID:  chassis->lift_mode = LIFT_STAGE_5; break;
+                case RC_SW_UP:   chassis->lift_mode = LIFT_STAGE_3; break;
+                default: break;
+            }
+        } else if (switch_is_down(s1)) {
+            chassis->last_mode = chassis->mode;
+            chassis->last_lift_mode = chassis->lift_mode;
+            chassis->mode = CHASSIS_AUTO_LIFT_1;
+            if(chassis->last_mode == CHASSIS_LIFT) {
+                chassis->lift_mode = LIFT_STAGE_1;
+            }
+        } else if (switch_is_down(sw1)) {
+            chassis->last_mode = chassis->mode;
+            chassis->last_lift_mode = chassis->lift_mode;
+            chassis->mode = CHASSIS_AUTO_LIFT_2;
+            if(chassis->last_mode == CHASSIS_LIFT) {
+                chassis->lift_mode = LIFT_STAGE_1;
+            }
+        }
+
+        if(MINIPC_KEY_RISING_EDGE(handle_buttons)) {
+            if (hand_state == HAND_OPEN) {
+                hand_state = HAND_CLOSE;
+            } else {
+                hand_state = HAND_OPEN;
+            }
+        }
+
+    }
 }
 
 static void chassis_ctrl_info_get(void)
 {
-    #if KEYBOARD_CTL
-    if(chassis_info.mode == CHASSIS_LIFT){
-        chassis_info.target_vx = ((MiniPC_Data.key_w-MiniPC_Data.key_s) * 0.15f) * (1+MiniPC_Data.key_shift) * (1+1.5*chassis_info.gear);
-        chassis_info.target_vy = ((MiniPC_Data.key_a-MiniPC_Data.key_d) * 0.15f) * (1+MiniPC_Data.key_shift) * (1+1.5*chassis_info.gear);
-        chassis_info.target_vw = (float)MiniPC_Data.mouse_x * -0.015f + (MiniPC_Data.key_c - MiniPC_Data.key_v) * 0.3f;
+    if (remote_ctrl.rc_lost) {
+        if(chassis_info.mode == CHASSIS_LIFT){
+            chassis_info.target_vx = ((MiniPC_Data.key_w-MiniPC_Data.key_s) * 0.15f) * (1+MiniPC_Data.key_shift) * (1+1.5*chassis_info.gear);
+            chassis_info.target_vy = ((MiniPC_Data.key_a-MiniPC_Data.key_d) * 0.15f) * (1+MiniPC_Data.key_shift) * (1+1.5*chassis_info.gear);
+            chassis_info.target_vw = (float)MiniPC_Data.mouse_x * -0.015f + (MiniPC_Data.key_c - MiniPC_Data.key_v) * 0.3f;
 
-        /* 主动旋转时禁用方向锁定, 让目标方向跟随当前 yaw, 避免松杆瞬间残留误差爆发。
-         * 仅用 C/V 时 mouse_x 为 0, 若仍走 else 会把 Chassis_Direction_PID 叠到 target_vw 上, 与按键角速度对冲。 */
-        if (MiniPC_Data.mouse_x != 0 || MiniPC_Data.key_c != MiniPC_Data.key_v) {
-            chassis_info.target_direction = INS_Info.Yaw_Angle;
-            Chassis_Direction_PID.PID_Calc_Clear(&Chassis_Direction_PID);
-        } else {
-            Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
-            chassis_info.target_vw += Chassis_Direction_PID.Output;
+            /* 主动旋转时禁用方向锁定, 让目标方向跟随当前 yaw, 避免松杆瞬间残留误差爆发。
+             * 仅用 C/V 时 mouse_x 为 0, 若仍走 else 会把 Chassis_Direction_PID 叠到 target_vw 上, 与按键角速度对冲。 */
+            if (MiniPC_Data.mouse_x != 0 || MiniPC_Data.key_c != MiniPC_Data.key_v) {
+                chassis_info.target_direction = INS_Info.Yaw_Angle;
+                Chassis_Direction_PID.PID_Calc_Clear(&Chassis_Direction_PID);
+            } else {
+                Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
+                chassis_info.target_vw += Chassis_Direction_PID.Output;
+            }
+            chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
         }
+    } else {
+        RC_CH_APPLY_DEADBAND(remote_ctrl.rc.ch[0]);
+        RC_CH_APPLY_DEADBAND(remote_ctrl.rc.ch[2]);
+        RC_CH_APPLY_DEADBAND(remote_ctrl.rc.ch[3]);
 
-        chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
-    }
-    #else
-    RC_CH_APPLY_DEADBAND(remote_ctrl.rc.ch[0]);
-    RC_CH_APPLY_DEADBAND(remote_ctrl.rc.ch[2]);
-    RC_CH_APPLY_DEADBAND(remote_ctrl.rc.ch[3]);
+        if(chassis_info.mode == CHASSIS_LIFT){
+            chassis_info.target_vx = (float)remote_ctrl.rc.ch[3] * RC_TO_VX;
+            chassis_info.target_vy = (float)remote_ctrl.rc.ch[2] * RC_TO_VY;
+            chassis_info.target_vw = (float)remote_ctrl.rc.ch[0] * RC_TO_VW;
 
-    if(chassis_info.mode == CHASSIS_LIFT){
-        chassis_info.target_vx = (float)remote_ctrl.rc.ch[3] * RC_TO_VX;
-        chassis_info.target_vy = (float)remote_ctrl.rc.ch[2] * RC_TO_VY;
-        chassis_info.target_vw = (float)remote_ctrl.rc.ch[0] * RC_TO_VW;
-
-        /* 用户主动旋转时禁用方向锁定, 让目标方向跟随当前 yaw, 避免松杆瞬间残留误差爆发 */
-        if (remote_ctrl.rc.ch[0] != 0) {
-            chassis_info.target_direction = INS_Info.Yaw_Angle;
-            Chassis_Direction_PID.PID_Calc_Clear(&Chassis_Direction_PID);
-        } else {
-            Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
-            chassis_info.target_vw += Chassis_Direction_PID.Output;
+            /* 用户主动旋转时禁用方向锁定, 让目标方向跟随当前 yaw, 避免松杆瞬间残留误差爆发 */
+            if (remote_ctrl.rc.ch[0] != 0) {
+                chassis_info.target_direction = INS_Info.Yaw_Angle;
+                Chassis_Direction_PID.PID_Calc_Clear(&Chassis_Direction_PID);
+            } else {
+                Single_Angle_PID_Calculate(&Chassis_Direction_PID, chassis_info.target_direction, INS_Info.Yaw_Angle);
+                chassis_info.target_vw += Chassis_Direction_PID.Output;
+            }
+            chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
         }
-
-        chassis_info.target_direction = F_Loop_Constrain(chassis_info.target_direction, -180.0f, 180.0f);
     }
-    #endif
 }
 
 static void chassis_wheel_cal(void)
