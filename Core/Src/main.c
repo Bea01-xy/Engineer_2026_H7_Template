@@ -111,6 +111,12 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
   SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));
+
+  /* 冷启动 (POR) 时延时等待另一路电源稳定后再初始化 CAN/UART 等外设 */
+  if (__HAL_RCC_GET_FLAG(RCC_FLAG_PORRST)) {
+      HAL_Delay(600);
+  }
+  __HAL_RCC_CLEAR_RESET_FLAGS();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -184,7 +190,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 6;
-  RCC_OscInitStruct.PLL.PLLN = 160;
+  RCC_OscInitStruct.PLL.PLLN = 100;  /* HSE=24MHz → VCO=4×100=400MHz (H750 VCO 最大 560MHz, 原 160→640MHz 超规格) */
   RCC_OscInitStruct.PLL.PLLP = 1;
   RCC_OscInitStruct.PLL.PLLQ = 2;
   RCC_OscInitStruct.PLL.PLLR = 2;
@@ -209,7 +215,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
   {
     Error_Handler();
   }

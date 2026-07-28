@@ -23,6 +23,9 @@
 
 volatile ServoDisplayState servo_display = {0};
 
+float target_yaw_angle = 0.0f;
+float target_pitch_angle = 0.0f;
+
 /* ========================= 应答回调 ========================= */
 
 static void Servo_StateCallback(const Servo_ResponsePacket *resp)
@@ -58,8 +61,6 @@ void Servo_Task(void const *argument)
     Servo_SetTorque(2, 1);
     osDelay(20);
 
-    float target_yaw_angle = 0.0f;
-    float target_pitch_angle = 0.0f;
     for (;;)
     {
     /* ---- 摇杆速率 → 角度积分 ----

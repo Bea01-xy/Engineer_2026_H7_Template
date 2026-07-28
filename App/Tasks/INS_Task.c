@@ -85,9 +85,10 @@ static void BMI088_Temp_Control(float temp);
   * @retval None
   */
 /* USER CODE END Header_INS_Task */
-void INS_Task(void)
+void INS_Task(void const * argument)
 {
     /* USER CODE BEGIN INS_Task */
+    (void)argument;
     TickType_t INS_Task_SysTick = 0;
 
     /* Initializes the INS_Task. */

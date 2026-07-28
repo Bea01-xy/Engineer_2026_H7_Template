@@ -267,18 +267,23 @@ static void BMI088_Offset_Update(BMI088_Info_Typedef *BMI088_Info)
 void BMI088_Init(void)
 {
   BMI088_Status_e status = BMI088_NO_ERROR;
+  uint8_t retry_cnt = 0;
+  const uint8_t max_retry = 5;
 
-  /* Initializes the BMI088 */
- 
-	do{	
+  /* Initializes the BMI088 -- with retry limit to prevent hang
+     when the sensor is not yet ready during power-up */
+	do {
+    status = BMI088_NO_ERROR;
     status |= BMI088_Accel_Init();
-		
     status |= BMI088_Gyro_Init();
 
-    Delay_ms(2);
-	
-	}while(status);
-  
+    if (status != BMI088_NO_ERROR) {
+      retry_cnt++;
+      Delay_ms(20);
+    }
+  } while (status != BMI088_NO_ERROR && retry_cnt < max_retry);
+
+  /* Continue even on final failure -- INS task NaN-checks sensor data */
 	BMI088_Offset_Update(&BMI088_Info);
 
 }

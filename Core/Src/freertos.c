@@ -71,6 +71,9 @@ osStaticThreadDef_t Start_WS2812_TaskControlBlock;
 osThreadId Start_Servo_TaskHandle;
 uint32_t Start_Servo_TaskBuffer[ 256 ];
 osStaticThreadDef_t Start_Servo_TaskControlBlock;
+osThreadId Start_LOG_TaskHandle;
+uint32_t Start_LOG_TaskBuffer[ 256 ];
+osStaticThreadDef_t Start_LOG_TaskControlBlock;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -85,6 +88,7 @@ void Buzzer_Task(void const * argument);
 void LCD_Task(void const * argument);
 void WS2812_Task(void const * argument);
 void Servo_Task(void const * argument);
+void LOG_Task(void const * argument);
 
 extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -163,6 +167,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of Start_Servo_Task */
   osThreadStaticDef(Start_Servo_Task, Servo_Task, osPriorityNormal, 0, 256, Start_Servo_TaskBuffer, &Start_Servo_TaskControlBlock);
   Start_Servo_TaskHandle = osThreadCreate(osThread(Start_Servo_Task), NULL);
+
+  /* definition and creation of Start_LOG_Task */
+  osThreadStaticDef(Start_LOG_Task, LOG_Task, osPriorityLow, 0, 256, Start_LOG_TaskBuffer, &Start_LOG_TaskControlBlock);
+  Start_LOG_TaskHandle = osThreadCreate(osThread(Start_LOG_Task), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -323,6 +331,25 @@ __weak void Servo_Task(void const * argument)
     osDelay(1);
   }
   /* USER CODE END Servo_Task */
+}
+
+/* USER CODE BEGIN Header_LOG_Task */
+/**
+* @brief Function implementing the Start_LOG_Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_LOG_Task */
+__weak void LOG_Task(void const * argument)
+{
+  /* USER CODE BEGIN LOG_Task */
+  (void)argument;
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END LOG_Task */
 }
 
 /* Private application code --------------------------------------------------*/

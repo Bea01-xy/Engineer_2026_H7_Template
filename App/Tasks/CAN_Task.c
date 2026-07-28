@@ -49,15 +49,16 @@ static void Robotic_Arm_Motor_MIT_Or_Disable(FDCAN_TxFrame_TypeDef *frame,
 extern Chassis_Info_Typedef chassis_info;
 extern uint8_t hand_state;
 
-void CAN_Task(void)
+void CAN_Task(void const * argument)
 {
+    (void)argument;
 	//DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[LF],Motor_Save_Zero_Position);
 	//DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[LB],Motor_Save_Zero_Position);
     osDelay(1);
 	//DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RB],Motor_Save_Zero_Position);
 	//DM_Motor_Command(&FDCAN1_TxFrame,&Elevator_Motor[RF],Motor_Save_Zero_Position);
 
-	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J2],Motor_Save_Zero_Position);
+	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J5],Motor_Save_Zero_Position);
 	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J3],Motor_Save_Zero_Position);
 	//DM_Motor_Command(&FDCAN3_TxFrame,&Robotic_Arm_Motor[J6],Motor_Save_Zero_Position);
 	static int robotic_arm_part = 0;
@@ -139,7 +140,7 @@ void Robotic_Arm_set(const int part, const bool activated)
 		#else
 		if (part == 0) {
 			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], 5.0f, 0.02f);
-			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], 1.5f, 21.4f);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], 1.5f, 41.4f);
 		} else if (part == 1) {
 			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], 3.4f, 0.2f);
 			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J4], 0.7f, 0.02f);
@@ -172,11 +173,11 @@ void Chassis_set(const bool activated)
 							 Chassis_Motor[RB].Data.Final_Output,
 							 Chassis_Motor[RF].Data.Final_Output);
 		if (hand_state == HAND_OPEN) {
-			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 3500, 0, 0, 0);
+			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 2500, 0, 0, 0);
 			//M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
 		} else {
-			//M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -3000, 0, 0, 0);
-			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
+			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -3500, 0, 0, 0);
+			//M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
 		}
 	} else {
 		M3508_motor_crt_ctrl(&hfdcan2, 0x200, 0, 0, 0, 0);

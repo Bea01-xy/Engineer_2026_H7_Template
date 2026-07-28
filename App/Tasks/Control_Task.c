@@ -87,9 +87,10 @@ PID_Info_TypeDef Robotic_Arm_FF_PID[ROBOTIC_ARM_DOF];
 TickType_t Control_Task_SysTick = 0;
 TickType_t Timer_When_Lift_Stage_Changed = 0;
 TickType_t Timer_When_Mode_Changed = 0;
-void Control_Task(void)
+void Control_Task(void const * argument)
 {
     /* USER CODE BEGIN Control_Task */
+    (void)argument;
 	Control_Init();
     /* Infinite loop */
 	for(;;)
@@ -122,7 +123,7 @@ void Control_Task(void)
             Chassis_Motor[RB].Data.Velocity, Chassis_Motor[RF].Data.Velocity,
             PowerMeter_Get_Power(),
         };
-        //USART_Vofa_SendFloat(power_data, 9);
+        //USART10_Vofa_SendFloat(power_data, 9);
 		osDelayUntil(&Control_Task_SysTick, 1);
     }
 }

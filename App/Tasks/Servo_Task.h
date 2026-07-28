@@ -29,6 +29,8 @@
 
 #define SERVO_DIAG_LEN          32
 
+extern float target_yaw_angle;
+extern float target_pitch_angle;
 typedef struct {
     /* --- 控制状态 (Servo_Task 写入) --- */
     uint8_t  phase;                /* 当前测试阶段 (0~7) */

@@ -43,7 +43,7 @@ void BSP_USART_Init(void){
 	  * .ioc 配置: RCC_USART16910CLKSOURCE_D2PCLK2 (APB2 = 80MHz)
 	  * 原代码错误地使用了 PLL2_Q (100MHz)，导致 25% 波特率误差
 	  */
-	 uint32_t USART1_ClockFreq = 80000000U;  // APB2 时钟 = 80MHz
+	 uint32_t USART1_ClockFreq = 50000000U;  // APB2 时钟 = 50MHz
 	
 	#if USART1_RX_Switch
 	

@@ -103,8 +103,10 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
-
+  /* 电源瞬态导致的 Flash/Bus 故障：短暂延时后复位，而非永久卡死 */
+  HAL_Delay(50);
   /* USER CODE END HardFault_IRQn 0 */
+  NVIC_SystemReset();
   while (1)
   {
     /* USER CODE BEGIN W1_HardFault_IRQn 0 */

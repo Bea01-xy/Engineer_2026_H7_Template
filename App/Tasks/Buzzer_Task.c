@@ -19,8 +19,9 @@
   * @param  argument: Not used
   * @retval None
   */
-void Buzzer_Task(void)
+void Buzzer_Task(void const * argument)
 {
+    (void)argument;
     Buzzer_Init();
 
     osDelay(100);  /* 等待 TIM12 稳定输出 */

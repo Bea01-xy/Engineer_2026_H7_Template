@@ -31,6 +31,7 @@
 #include "UI.h"
 #include "arm_math.h"
 #include "Servo.h"
+#include "Servo_Task.h"
 /* USER CODE BEGIN Header_Detect_Task */
 static void chassis_set_mode(Chassis_Info_Typedef* chassis);
 static void chassis_ctrl_info_get(void);
@@ -42,6 +43,8 @@ static void Robotic_Arm_MotorVel_To_JointVel(void);
 static void DM_Motor_Offline_Monitor(void);
 
 extern Chassis_Info_Typedef chassis_info;
+extern float target_yaw_angle;
+extern float target_pitch_angle;
 
 static float Chassis_Direction_PID_Param[PID_PARAMETER_NUM] = {
     CHASSIS_DIRECTION_KP,
@@ -64,9 +67,10 @@ TickType_t Detect_Task_SysTick = 0;
 * @retval None
 */
 /* USER CODE END Header_Detect_Task */
-void Detect_Task(void)
+void Detect_Task(void const * argument)
 {
     /* USER CODE BEGIN Detect_Task */
+    (void)argument;
     PID_Init(&Chassis_Direction_PID,PID_POSITION,Chassis_Direction_PID_Param);
 
     /* Infinite loop */
@@ -92,15 +96,17 @@ void Detect_Task(void)
 
         float key_debug_data[12] = {
             #if 0
-            Robotic_Arm_Motor[J2].Data.Position,
-            Robotic_Arm_Motor[J2].Data.Target_Position,
-            Robotic_Arm_Motor[J3].Data.Position,
-            Robotic_Arm_Motor[J3].Data.Target_Position,
+            Robotic_Arm_Motor[J1].Data.Joint_Position,
+            Robotic_Arm_Motor[J2].Data.Joint_Position,
+            Robotic_Arm_Motor[J3].Data.Joint_Position,
+            Robotic_Arm_Motor[J4].Data.Joint_Position,
+            Robotic_Arm_Motor[J5].Data.Joint_Position,
+            Robotic_Arm_Motor[J6].Data.Joint_Position,
             #else
             MiniPC_Data.main_buttons,
             MiniPC_Data.handle_buttons,
-            MiniPC_Data.btn1,
             MiniPC_Data.btn2,
+            remote_ctrl.rc_lost,
             #endif
         };
         USART10_Vofa_SendFloat(key_debug_data, 4);
@@ -226,6 +232,11 @@ static void chassis_set_mode(Chassis_Info_Typedef* chassis)
             } else {
                 hand_state = HAND_OPEN;
             }
+        }
+
+        if(MINIPC_KEY_RISING_EDGE(btn3)) {
+            target_yaw_angle = 0.0f;
+            target_pitch_angle = 0.0f;
         }
 
     }
