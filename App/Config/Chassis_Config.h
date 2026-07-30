@@ -160,7 +160,7 @@ typedef struct
 #define ELEVATOR_RF_4th_ACTIVATED_POS (ELEVATOR_RF_1st_ACTIVATED_POS*0.2f)
 /* @brief Chassis auto-lifting parameters */
 #define CHASSIS_AUTO_LIFT_TARGET_VELOCITY       650     // 自动抬升时底盘电机目标转速 (rpm)
-#define CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH     50      // 判定电机堵转的速度阈值 (rpm)
+#define CHASSIS_AUTO_LIFT_STALL_VELOCITY_TH     80      // 判定电机堵转的速度阈值 (rpm)
 #define CHASSIS_AUTO_LIFT_STAGE1_COUNTER_TH     100     // 阶段1->阶段2 堵转计数阈值 (ms)
 #define CHASSIS_AUTO_LIFT_STAGE2_COUNTER_TH     300     // 阶段2->阶段3 堵转计数阈值 (ms)
 

@@ -93,6 +93,24 @@
 #define TEXT_GEAR_START_X            (SCREEN_RES_WIDTH / 2U + 750U)
 #define TEXT_GEAR_START_Y            (SCREEN_RES_HEIGHT / 2U + 246U)
 
+/* 夹爪状态文字：ON / OFF，显示在档位文字下方 */
+#define TEXT_GRIPPER_ON               "OPEN"
+#define TEXT_GRIPPER_OFF              "CLOSE"
+#define TEXT_GRIPPER_ON_LEN           (sizeof(TEXT_GRIPPER_ON) - 1U)
+#define TEXT_GRIPPER_OFF_LEN          (sizeof(TEXT_GRIPPER_OFF) - 1U)
+#define TEXT_GRIPPER_FONT_SIZE        28U
+#define TEXT_GRIPPER_LINE_WIDTH       4U
+#define TEXT_GRIPPER_START_X          (SCREEN_RES_WIDTH / 2U + 750U)
+#define TEXT_GRIPPER_START_Y          (SCREEN_RES_HEIGHT / 2U + 212U)
+
+/* 关节电机状态文字：全部在线显示 "ALLRIGHT"，否则显示最先断线电机的 J(ID) */
+#define TEXT_JOINT_ALLRIGHT            "ALLRIGHT"
+#define TEXT_JOINT_ALLRIGHT_LEN        (sizeof(TEXT_JOINT_ALLRIGHT) - 1U)
+#define TEXT_JOINT_FONT_SIZE           28U
+#define TEXT_JOINT_LINE_WIDTH          4U
+#define TEXT_JOINT_START_X             (SCREEN_RES_WIDTH / 2U + 750U)
+#define TEXT_JOINT_START_Y             (SCREEN_RES_HEIGHT / 2U + 178U)
+
 /* 表 2-23 浮点数：details_a=字体大小，details_b 无作用；details_c~e 共 32 位整型，显示值=整型/1000 */
 #define FLOAT_TEST_FONT_SIZE        40U
 #define FLOAT_TEST_LINE_WIDTH       4U       /* 建议 字体:线宽 ≈ 10:1 */

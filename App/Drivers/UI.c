@@ -18,17 +18,21 @@
 *********************************************************************************************************/
 #include "UI.h"
 #include "string.h"
+#include "stdio.h"
 #include "usart.h"
 #include "stm32h7xx_hal_uart.h"
 #include "CRC.h"
 #include "Referee_System.h"
 #include "Chassis_Config.h"
+#include "Robotic_Arm_Config.h"
+#include "Motor_DM.h"
 
 /*********************************************************************************************************
 *                                              外部变量声明
 *********************************************************************************************************/
 extern Referee_System_Info_TypeDef Referee_System_Info;
 extern Chassis_Info_Typedef chassis_info;
+extern uint8_t hand_state;
 
 /*********************************************************************************************************
 *                                              内部变量
@@ -56,6 +60,8 @@ static void     UI_Pack_And_Send_Shapes(Graphic_Operate_e op);
 static void     UI_Pack_And_Send_Char(Graphic_Operate_e op);
 static void     UI_Pack_And_Send_ModeChar(Graphic_Operate_e op);
 static void     UI_Pack_And_Send_GearChar(Graphic_Operate_e op);
+static void     UI_Pack_And_Send_GripperChar(Graphic_Operate_e op);
+static void     UI_Pack_And_Send_JointChar(Graphic_Operate_e op);
 static void     UI_Pack_And_Send_FloatTest(Graphic_Operate_e op);
 
 /*********************************************************************************************************
@@ -95,10 +101,16 @@ void UI_Tick(void)
         UI_Pack_And_Send_GearChar(UI_ADD);
         init_cnt++;
     } else if (init_cnt < 25) {
+        UI_Pack_And_Send_GripperChar(UI_ADD);
+        init_cnt++;
+    } else if (init_cnt < 30) {
+        UI_Pack_And_Send_JointChar(UI_ADD);
+        init_cnt++;
+    } else if (init_cnt < 35) {
         UI_Pack_And_Send_FloatTest(UI_ADD);
         init_cnt++;
     } else {
-        switch (tx_sel % 5U) {
+        switch (tx_sel % 7U) {
         case 0U:
             UI_Pack_And_Send_Shapes(UI_MODIFY);
             break;
@@ -110,6 +122,12 @@ void UI_Tick(void)
             break;
         case 3U:
             UI_Pack_And_Send_GearChar(UI_MODIFY);
+            break;
+        case 4U:
+            UI_Pack_And_Send_GripperChar(UI_MODIFY);
+            break;
+        case 5U:
+            UI_Pack_And_Send_JointChar(UI_MODIFY);
             break;
         default:
             UI_Pack_And_Send_FloatTest(UI_MODIFY);
@@ -206,31 +224,10 @@ static void UI_Pack_And_Send_Shapes(Graphic_Operate_e op)
     pkt.interact_header.sender_id   = Referee_System_Info.robot_status.robot_id;
     pkt.interact_header.receiver_id = Get_Self_Client_ID(Referee_System_Info.robot_status.robot_id);
 
-    {
-        const uint8_t nm[3] = {'R', 'C', '1'};
-        EncodeGraphic15(pkt.graphic, nm, op, UI_RECTANGLE, UI_LAYER_0, UI_ORANGE,
-                        RECTANGLE_LINE_WIDTH,
-                        RECTANGLE_START_X, RECTANGLE_START_Y,
-                        0, 0, 0,
-                        (uint16_t)(RECTANGLE_START_X + RECTANGLE_WIDTH),
-                        (uint16_t)(RECTANGLE_START_Y + RECTANGLE_HEIGHT));
-    }
-    {
-        const uint8_t nm[3] = {'L', 'N', '1'};
-        EncodeGraphic15(&pkt.graphic[15], nm, op, UI_LINE, UI_LAYER_0, UI_SELF_COLOR,
-                        LINE1_WIDTH,
-                        LINE1_START_X, LINE1_START_Y,
-                        0, 0, 0,
-                        LINE1_END_X, LINE1_END_Y);
-    }
-    {
-        const uint8_t nm[3] = {'L', 'N', '2'};
-        EncodeGraphic15(&pkt.graphic[30], nm, op, UI_LINE, UI_LAYER_0, UI_SELF_COLOR,
-                        LINE2_WIDTH,
-                        LINE2_START_X, LINE2_START_Y,
-                        0, 0, 0,
-                        LINE2_END_X, LINE2_END_Y);
-    }
+    /* 空操作占位 ①②③ — 矩形及其内部横线已移除 */
+    EncodeGraphic15_Nop(pkt.graphic,      (const uint8_t[3]){'R','C','1'});
+    EncodeGraphic15_Nop(&pkt.graphic[15], (const uint8_t[3]){'L','N','1'});
+    EncodeGraphic15_Nop(&pkt.graphic[30], (const uint8_t[3]){'L','N','2'});
     {    
         const uint8_t nm[3] = {'L', 'N', '3'};
         EncodeGraphic15(&pkt.graphic[45], nm, op, UI_LINE, UI_LAYER_0, UI_FUCHSIA,
@@ -417,6 +414,111 @@ static void UI_Pack_And_Send_GearChar(Graphic_Operate_e op)
     }
     memset(pkt.char_data, 0, sizeof(pkt.char_data));
     memcpy(pkt.char_data, gear_str, gear_len);
+
+    memcpy(ClientTxBuffer, &pkt, sizeof(pkt));
+    Append_CRC8_Check_Sum(ClientTxBuffer, REFEREE_LEN_FRAME_HEAD);
+    Append_CRC16_Check_Sum(ClientTxBuffer, sizeof(pkt));
+    HAL_UART_Transmit_DMA(&huart1, ClientTxBuffer, sizeof(pkt));
+}
+
+/** 第四段字符：夹爪状态 ON / OFF，图名 GRP，显示在档位文字下方 */
+static void UI_Pack_And_Send_GripperChar(Graphic_Operate_e op)
+{
+    ext_graphic_char_data_t pkt;
+    const char *gripper_str;
+    uint16_t    gripper_len;
+
+    if (HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX) {
+        return;
+    }
+
+    if (hand_state == HAND_OPEN) {
+        gripper_str = TEXT_GRIPPER_ON;
+        gripper_len = (uint16_t)TEXT_GRIPPER_ON_LEN;
+    } else {
+        gripper_str = TEXT_GRIPPER_OFF;
+        gripper_len = (uint16_t)TEXT_GRIPPER_OFF_LEN;
+    }
+
+    pkt.frame_header.SOF         = REFEREE_HEADER_SOF;
+    pkt.frame_header.data_length = UI_LEN_REFEREE_DATA_CHAR;
+    pkt.frame_header.seq         = ui_seq++;
+    pkt.frame_header.CRC8        = 0;
+
+    pkt.cmd_id = REFEREE_CMD_ID_INTERACT;
+    pkt.interact_header.data_cmd_id = UI_INTERACT_ID_DRAW_CHAR;
+    pkt.interact_header.sender_id   = Referee_System_Info.robot_status.robot_id;
+    pkt.interact_header.receiver_id = Get_Self_Client_ID(Referee_System_Info.robot_status.robot_id);
+
+    {
+        const uint8_t nm[3] = {'G', 'R', 'P'};
+        EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_2, UI_CYAN_BLUE,
+                        TEXT_GRIPPER_LINE_WIDTH,
+                        (uint16_t)TEXT_GRIPPER_START_X, (uint16_t)TEXT_GRIPPER_START_Y,
+                        (uint16_t)TEXT_GRIPPER_FONT_SIZE, gripper_len,
+                        0, 0, 0);
+    }
+    memset(pkt.char_data, 0, sizeof(pkt.char_data));
+    memcpy(pkt.char_data, gripper_str, gripper_len);
+
+    memcpy(ClientTxBuffer, &pkt, sizeof(pkt));
+    Append_CRC8_Check_Sum(ClientTxBuffer, REFEREE_LEN_FRAME_HEAD);
+    Append_CRC16_Check_Sum(ClientTxBuffer, sizeof(pkt));
+    HAL_UART_Transmit_DMA(&huart1, ClientTxBuffer, sizeof(pkt));
+}
+
+/** 第五段字符：关节电机状态 — 全部在线显示 ALLRIGHT，否则最先断线的电机 J(ID) */
+static void UI_Pack_And_Send_JointChar(Graphic_Operate_e op)
+{
+    ext_graphic_char_data_t pkt;
+    char   buf[16];
+    const char *str;
+    uint16_t    len;
+    int8_t  first_offline = -1;
+    uint8_t i;
+
+    if (HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX) {
+        return;
+    }
+
+    /* 扫描最先离线电机 */
+    for (i = 0; i < 6; i++) {
+        if (Robotic_Arm_Motor[i].Data.offline) {
+            first_offline = (int8_t)i;
+            break;
+        }
+    }
+
+    if (first_offline < 0) {
+        str = TEXT_JOINT_ALLRIGHT;
+        len = (uint16_t)TEXT_JOINT_ALLRIGHT_LEN;
+    } else {
+        /* 构建 "J1" ~ "J6" */
+        (void)sprintf(buf, "J%d", first_offline + 1);
+        str = buf;
+        len = (uint16_t)strlen(buf);
+    }
+
+    pkt.frame_header.SOF         = REFEREE_HEADER_SOF;
+    pkt.frame_header.data_length = UI_LEN_REFEREE_DATA_CHAR;
+    pkt.frame_header.seq         = ui_seq++;
+    pkt.frame_header.CRC8        = 0;
+
+    pkt.cmd_id = REFEREE_CMD_ID_INTERACT;
+    pkt.interact_header.data_cmd_id = UI_INTERACT_ID_DRAW_CHAR;
+    pkt.interact_header.sender_id   = Referee_System_Info.robot_status.robot_id;
+    pkt.interact_header.receiver_id = Get_Self_Client_ID(Referee_System_Info.robot_status.robot_id);
+
+    {
+        const uint8_t nm[3] = {'J', 'N', 'T'};
+        EncodeGraphic15(pkt.char_config, nm, op, UI_CHAR, UI_LAYER_2, UI_CYAN_BLUE,
+                        TEXT_JOINT_LINE_WIDTH,
+                        (uint16_t)TEXT_JOINT_START_X, (uint16_t)TEXT_JOINT_START_Y,
+                        (uint16_t)TEXT_JOINT_FONT_SIZE, len,
+                        0, 0, 0);
+    }
+    memset(pkt.char_data, 0, sizeof(pkt.char_data));
+    memcpy(pkt.char_data, str, len);
 
     memcpy(ClientTxBuffer, &pkt, sizeof(pkt));
     Append_CRC8_Check_Sum(ClientTxBuffer, REFEREE_LEN_FRAME_HEAD);

@@ -95,13 +95,13 @@ void Detect_Task(void const * argument)
         UI_Tick();
 
         float key_debug_data[12] = {
-            #if 0
-            Robotic_Arm_Motor[J1].Data.Joint_Position,
-            Robotic_Arm_Motor[J2].Data.Joint_Position,
-            Robotic_Arm_Motor[J3].Data.Joint_Position,
-            Robotic_Arm_Motor[J4].Data.Joint_Position,
-            Robotic_Arm_Motor[J5].Data.Joint_Position,
-            Robotic_Arm_Motor[J6].Data.Joint_Position,
+            #if 1
+            MiniPC_Data.key_f,
+            MiniPC_Data.key_e,
+            //Robotic_Arm_Motor[J3].Data.Target_Position,
+            //Robotic_Arm_Motor[J4].Data.Target_Position,
+            //Robotic_Arm_Motor[J5].Data.Target_Position,
+            //Robotic_Arm_Motor[J6].Data.Target_Position,
             #else
             MiniPC_Data.main_buttons,
             MiniPC_Data.handle_buttons,
@@ -109,7 +109,7 @@ void Detect_Task(void const * argument)
             remote_ctrl.rc_lost,
             #endif
         };
-        USART10_Vofa_SendFloat(key_debug_data, 4);
+        USART10_Vofa_SendFloat(key_debug_data, 2);
         /* ========================================================= */
 
         MiniPC_Data_Update_Last();

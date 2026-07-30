@@ -116,7 +116,7 @@ static void Robotic_Arm_Motor_MIT_Or_Disable(FDCAN_TxFrame_TypeDef *frame,
 {
 	if (!m->Data.overheat) {
 		DM_Motor_Command(frame, m, Motor_Enable);
-		DM_Motor_CAN_TxMessage(frame, m, m->Data.Temp_Target_Position, MIT_NO_USE, kp, kd, m->Data.Feedforward, 16);
+		//DM_Motor_CAN_TxMessage(frame, m, m->Data.Temp_Target_Position, MIT_NO_USE, kp, kd, m->Data.Feedforward, 16);
 	} else {
 		DM_Motor_Command(frame, m, Motor_Disable);
 	}
@@ -139,7 +139,7 @@ void Robotic_Arm_set(const int part, const bool activated)
 		}
 		#else
 		if (part == 0) {
-			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], 5.0f, 0.02f);
+			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J1], 2.5f, 2.2f);
 			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J2], 1.5f, 41.4f);
 		} else if (part == 1) {
 			Robotic_Arm_Motor_MIT_Or_Disable(&FDCAN3_TxFrame, &Robotic_Arm_Motor[J3], 3.4f, 0.2f);
@@ -173,7 +173,7 @@ void Chassis_set(const bool activated)
 							 Chassis_Motor[RB].Data.Final_Output,
 							 Chassis_Motor[RF].Data.Final_Output);
 		if (hand_state == HAND_OPEN) {
-			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 2500, 0, 0, 0);
+			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 3500, 0, 0, 0);
 			//M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
 		} else {
 			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -3500, 0, 0, 0);
@@ -182,8 +182,8 @@ void Chassis_set(const bool activated)
 	} else {
 		M3508_motor_crt_ctrl(&hfdcan2, 0x200, 0, 0, 0, 0);
 		if (hand_state == HAND_CLOSE) {
-			//M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -3000, 0, 0, 0);
-			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
+			M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, -3000, 0, 0, 0);
+			//M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
 		} else {
 		    M2006_motor_crt_ctrl(&hfdcan2, 0x1FF, 0, 0, 0, 0);
 		}

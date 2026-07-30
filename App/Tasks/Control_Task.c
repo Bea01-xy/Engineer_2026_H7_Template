@@ -70,6 +70,11 @@ static LimiterScheduler_t chassis_scheduler;
 
 static float Chassis_PID_Param[PID_PARAMETER_NUM] = {CHASSIS_KP, CHASSIS_KI, CHASSIS_KD, CHASSIS_Alpha, CHASSIS_Deadband, CHASSIS_LimitIntegral, CHASSIS_LimitOutput};
 
+static float Robotic_Arm_FF_PID_Param_J1[PID_PARAMETER_NUM] = {
+    ROBOTIC_ARM_FF_J1_KP, ROBOTIC_ARM_FF_J1_KI, ROBOTIC_ARM_FF_J1_KD,
+    ROBOTIC_ARM_FF_J1_Alpha, ROBOTIC_ARM_FF_J1_Deadband,
+    ROBOTIC_ARM_FF_J1_LimitIntegral, ROBOTIC_ARM_FF_J1_LimitOutput
+};
 static float Robotic_Arm_FF_PID_Param_A[PID_PARAMETER_NUM] = {
     ROBOTIC_ARM_FF_A_KP, ROBOTIC_ARM_FF_A_KI, ROBOTIC_ARM_FF_A_KD,
     ROBOTIC_ARM_FF_A_Alpha, ROBOTIC_ARM_FF_A_Deadband,
@@ -117,13 +122,14 @@ void Control_Task(void const * argument)
         Timer_When_Mode_Changed++;
 
         float power_data[9] = {
-            Chassis_Motor[LF].Data.Current, Chassis_Motor[LB].Data.Current,
-            Chassis_Motor[RB].Data.Current, Chassis_Motor[RF].Data.Current,
-            Chassis_Motor[LF].Data.Velocity, Chassis_Motor[LB].Data.Velocity,
-            Chassis_Motor[RB].Data.Velocity, Chassis_Motor[RF].Data.Velocity,
+            //Chassis_Motor[LF].Data.Current, Chassis_Motor[LB].Data.Current,
+            //Chassis_Motor[RB].Data.Current, Chassis_Motor[RF].Data.Current,
+            //Chassis_Motor[LF].Data.Velocity, Chassis_Motor[LB].Data.Velocity,
+            //Chassis_Motor[RB].Data.Velocity, Chassis_Motor[RF].Data.Velocity,
             PowerMeter_Get_Power(),
+            Referee_System_Info.power_heat_data.buffer_energy,
         };
-        //USART10_Vofa_SendFloat(power_data, 9);
+        //USART10_Vofa_SendFloat(power_data, 2);
 		osDelayUntil(&Control_Task_SysTick, 1);
     }
 }
@@ -135,7 +141,7 @@ static void Control_Init(void)
     PID_Init(&Chassis_PID[RB],PID_POSITION,Chassis_PID_Param);
     PID_Init(&Chassis_PID[RF],PID_POSITION,Chassis_PID_Param);
 
-    PID_Init(&Robotic_Arm_FF_PID[J1], PID_POSITION, Robotic_Arm_FF_PID_Param_A);
+    PID_Init(&Robotic_Arm_FF_PID[J1], PID_POSITION, Robotic_Arm_FF_PID_Param_J1);
     PID_Init(&Robotic_Arm_FF_PID[J2], PID_POSITION, Robotic_Arm_FF_PID_Param_A);
     PID_Init(&Robotic_Arm_FF_PID[J3], PID_POSITION, Robotic_Arm_FF_PID_Param_A);
     PID_Init(&Robotic_Arm_FF_PID[J4], PID_POSITION, Robotic_Arm_FF_PID_Param_B);

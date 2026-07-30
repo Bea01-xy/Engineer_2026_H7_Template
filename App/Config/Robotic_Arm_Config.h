@@ -70,20 +70,30 @@ typedef enum
  *          所以为了让 Iout 能达到 LimitOutput, 需保证 KI * LimitIntegral >= LimitOutput
  *
  *  分组:
- *      Group A (大关节, 靠近基座, 承重大): J1, J2, J3
- *      Group B (小关节, 末端三轴, 负载小): J4, J5, J6
+ *      Group J1 (基座回转, 单独一组): J1
+ *      Group A  (大关节, 靠近基座, 承重大): J2, J3
+ *      Group B  (小关节, 末端三轴, 负载小): J4, J5, J6
  * -------------------------------------------------------------------------- */
 
-/* ---------- Group A: J1 / J2 / J3 ---------- */
+/* ---------- Group J1: 基座回转关节 (单独调参) ---------- */
+#define ROBOTIC_ARM_FF_J1_KP              0.15f
+#define ROBOTIC_ARM_FF_J1_KI              0.01f
+#define ROBOTIC_ARM_FF_J1_KD              2.7f
+#define ROBOTIC_ARM_FF_J1_Alpha           0.5f
+#define ROBOTIC_ARM_FF_J1_Deadband        0.00f
+#define ROBOTIC_ARM_FF_J1_LimitIntegral   9400.0f     /* 单位: rad·tick (累加误差) */
+#define ROBOTIC_ARM_FF_J1_LimitOutput     2.0f       /* N·m */
+
+/* ---------- Group A: J2 / J3 (肩/肘关节) ---------- */
 #define ROBOTIC_ARM_FF_A_KP              0.25f
 #define ROBOTIC_ARM_FF_A_KI              0.01f
 #define ROBOTIC_ARM_FF_A_KD              22.7f
 #define ROBOTIC_ARM_FF_A_Alpha           0.5f
 #define ROBOTIC_ARM_FF_A_Deadband        0.00f
 #define ROBOTIC_ARM_FF_A_LimitIntegral   9400.0f     /* 单位: rad·tick (累加误差) */
-#define ROBOTIC_ARM_FF_A_LimitOutput     10.0f       /* N·m */
+#define ROBOTIC_ARM_FF_A_LimitOutput     5.0f       /* N·m */
 
-/* ---------- Group B: J4 / J5 / J6 ---------- */
+/* ---------- Group B: J4 / J5 / J6 (末端三轴) ---------- */
 #define ROBOTIC_ARM_FF_B_KP              0.14f
 #define ROBOTIC_ARM_FF_B_KI              0.02f
 #define ROBOTIC_ARM_FF_B_KD              0.03f
